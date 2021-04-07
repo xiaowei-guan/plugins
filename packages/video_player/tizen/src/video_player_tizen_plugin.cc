@@ -89,8 +89,10 @@ TextureMessage VideoPlayerTizenPlugin::create(const CreateMessage &createMsg) {
             createMsg.getFormatHint().c_str());
 
   std::string uri;
+  VideoPlayerType type = VideoPlayerType::kMMPlayer;
   if (createMsg.getAsset().empty()) {
     uri = createMsg.getUri();
+    type = VideoPlayerType::kPlusPlayer;
   } else {
     char *resPath = app_get_resource_path();
     if (resPath) {
@@ -107,8 +109,8 @@ TextureMessage VideoPlayerTizenPlugin::create(const CreateMessage &createMsg) {
   LOG_DEBUG("[VideoPlayerTizenPlugin.create] uri of video player: %s",
             uri.c_str());
 
-  auto player = std::make_unique<VideoPlayer>(pluginRegistrar_,
-                                              textureRegistrar_, uri, options_);
+  auto player = VideoPlayer::create(type, pluginRegistrar_, textureRegistrar_,
+                                    uri, options_);
   long textureId = player->getTextureId();
   videoPlayers_[textureId] = std::move(player);
 

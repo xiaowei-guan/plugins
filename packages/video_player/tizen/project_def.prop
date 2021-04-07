@@ -3,10 +3,10 @@
 
 APPNAME = video_player_tizen_plugin
 type = sharedLib
-profile = common-4.0
+profile = common-6.0
 
 # Source files
-USER_SRCS += src/message.cc src/video_player.cc src/video_player_tizen_plugin.cc
+USER_SRCS += src/message.cc src/mmplayer.cc src/plus_player.cc src/video_player.cc src/video_player_tizen_plugin.cc
 
 # User defines
 USER_DEFS =
@@ -21,7 +21,7 @@ USER_LFLAGS =
 
 # Libraries and objects
 USER_LIB_DIRS = lib
-USER_LIBS =
+USER_LIBS = plusplayer
 USER_OBJS =
 
 # User includes
