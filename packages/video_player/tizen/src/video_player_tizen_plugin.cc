@@ -15,10 +15,13 @@
 
 class VideoPlayerTizenPlugin : public flutter::Plugin, public VideoPlayerApi {
  public:
-  static void RegisterWithRegistrar(flutter::PluginRegistrar *pluginRegistrar,
-                                    FlutterTextureRegistrar *textureRegistrar);
+  static void RegisterWithRegistrar(
+      FlutterDesktopPluginRegistrarRef registrar_ref,
+      flutter::PluginRegistrar *pluginRegistrar,
+      FlutterTextureRegistrar *textureRegistrar);
   // Creates a plugin that communicates on the given channel.
-  VideoPlayerTizenPlugin(flutter::PluginRegistrar *pluginRegistrar,
+  VideoPlayerTizenPlugin(FlutterDesktopPluginRegistrarRef registrar_ref,
+                         flutter::PluginRegistrar *pluginRegistrar,
                          FlutterTextureRegistrar *textureRegistrar);
   virtual ~VideoPlayerTizenPlugin();
 
@@ -34,29 +37,35 @@ class VideoPlayerTizenPlugin : public flutter::Plugin, public VideoPlayerApi {
   virtual void seekTo(const PositionMessage &positionMsg) override;
   virtual void setMixWithOthers(
       const MixWithOthersMessage &mixWithOthersMsg) override;
+  virtual void setDisplayRoi(const GeometryMessage &geometryMsg) override;
 
  private:
   void disposeAllPlayers();
 
   flutter::PluginRegistrar *pluginRegistrar_;
   FlutterTextureRegistrar *textureRegistrar_;
+  FlutterDesktopPluginRegistrarRef registrar_ref_;
   VideoPlayerOptions options_;
   std::map<long, std::unique_ptr<VideoPlayer>> videoPlayers_;
 };
 
 // static
 void VideoPlayerTizenPlugin::RegisterWithRegistrar(
+    FlutterDesktopPluginRegistrarRef registrar_ref,
     flutter::PluginRegistrar *pluginRegistrar,
     FlutterTextureRegistrar *textureRegistrar) {
-  auto plugin = std::make_unique<VideoPlayerTizenPlugin>(pluginRegistrar,
-                                                         textureRegistrar);
+  auto plugin = std::make_unique<VideoPlayerTizenPlugin>(
+      registrar_ref, pluginRegistrar, textureRegistrar);
   pluginRegistrar->AddPlugin(std::move(plugin));
 }
 
 VideoPlayerTizenPlugin::VideoPlayerTizenPlugin(
+    FlutterDesktopPluginRegistrarRef registrar_ref,
     flutter::PluginRegistrar *pluginRegistrar,
     FlutterTextureRegistrar *textureRegistrar)
-    : pluginRegistrar_(pluginRegistrar), textureRegistrar_(textureRegistrar) {
+    : pluginRegistrar_(pluginRegistrar),
+      textureRegistrar_(textureRegistrar),
+      registrar_ref_(registrar_ref) {
   VideoPlayerApi::setup(pluginRegistrar->messenger(), this);
 }
 
@@ -109,8 +118,8 @@ TextureMessage VideoPlayerTizenPlugin::create(const CreateMessage &createMsg) {
   LOG_DEBUG("[VideoPlayerTizenPlugin.create] uri of video player: %s",
             uri.c_str());
 
-  auto player = VideoPlayer::create(type, pluginRegistrar_, textureRegistrar_,
-                                    uri, options_);
+  auto player = VideoPlayer::create(registrar_ref_, type, pluginRegistrar_,
+                                    textureRegistrar_, uri, options_);
   long textureId = player->getTextureId();
   videoPlayers_[textureId] = std::move(player);
 
@@ -187,6 +196,16 @@ void VideoPlayerTizenPlugin::pause(const TextureMessage &textureMsg) {
   }
 }
 
+void VideoPlayerTizenPlugin::setDisplayRoi(const GeometryMessage &geometryMsg) {
+  LOG_DEBUG("[VideoPlayerTizenPlugin.setDisplayRoi] textureId: %ld",
+            geometryMsg.getTextureId());
+  auto iter = videoPlayers_.find(geometryMsg.getTextureId());
+  if (iter != videoPlayers_.end()) {
+    iter->second->setDisplayRoi(geometryMsg.getX(), geometryMsg.getY(),
+                                geometryMsg.getW(), geometryMsg.getH());
+  }
+}
+
 PositionMessage VideoPlayerTizenPlugin::position(
     const TextureMessage &textureMsg) {
   LOG_DEBUG("[VideoPlayerTizenPlugin.position] textureId: %ld",
@@ -223,6 +242,7 @@ void VideoPlayerTizenPlugin::setMixWithOthers(
 void VideoPlayerTizenPluginRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
   VideoPlayerTizenPlugin::RegisterWithRegistrar(
+      registrar,
       flutter::PluginRegistrarManager::GetInstance()
           ->GetRegistrar<flutter::PluginRegistrar>(registrar),
       FlutterPluginRegistrarGetTexture(registrar));

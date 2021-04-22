@@ -1,12 +1,14 @@
 #ifndef PLUS_PLAYER_H_
 #define PLUS_PLAYER_H_
 
+#include "flutter_tizen.h"
 #include "plusplayer/plusplayer.h"
 #include "video_player.h"
 
 class PlusPlayer : public VideoPlayer {
  public:
-  PlusPlayer(const std::string& uri, const VideoPlayerOptions& options);
+  PlusPlayer(FlutterWindowRef flutter_window_ref, const std::string& uri,
+             const VideoPlayerOptions& options);
   ~PlusPlayer();
 
   void play() override;
@@ -17,9 +19,11 @@ class PlusPlayer : public VideoPlayer {
   void seekTo(int position) override;  // milliseconds
   int getPosition() override;          // milliseconds
   void dispose() override;
+  void setDisplayRoi(int x, int y, int w, int h) override;
 
  private:
   void initialize() override;
+  FlutterWindowRef flutter_window_ref_;
 
   class PlusPlayerEventListener : public plusplayer::EventListener {
    public:

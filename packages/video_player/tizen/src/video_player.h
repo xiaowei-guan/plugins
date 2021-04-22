@@ -9,12 +9,15 @@
 
 #include "flutter_tizen_texture_registrar.h"
 #include "video_player_options.h"
+#include "flutter_tizen.h"
+#include "message.h"
 
 enum VideoPlayerType { kMMPlayer, kPlusPlayer };
 
 class VideoPlayer {
  public:
   static std::unique_ptr<VideoPlayer> create(
+      FlutterDesktopPluginRegistrarRef registrar_ref,
       VideoPlayerType type, flutter::PluginRegistrar *pluginRegistrar,
       FlutterTextureRegistrar *textureRegistrar, const std::string &uri,
       VideoPlayerOptions &options);
@@ -30,6 +33,7 @@ class VideoPlayer {
   virtual void seekTo(int position) = 0;  // milliseconds
   virtual int getPosition() = 0;          // milliseconds
   virtual void dispose() = 0;
+  virtual void setDisplayRoi(int x, int y, int w, int h) = 0;
 
  private:
   virtual void initialize() = 0;

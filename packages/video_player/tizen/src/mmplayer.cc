@@ -219,6 +219,10 @@ void MMPlayer::pause() {
   }
 }
 
+void MMPlayer::setDisplayRoi(int x, int y, int w, int h){
+  LOG_DEBUG("MM player not support set roi");
+}
+
 void MMPlayer::setLooping(bool isLooping) {
   LOG_DEBUG("set video loop: %d", isLooping);
   int ret = player_set_looping(player_, isLooping);

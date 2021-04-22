@@ -10,7 +10,9 @@
 #include "plus_player.h"
 #include "video_player_error.h"
 
+
 std::unique_ptr<VideoPlayer> VideoPlayer::create(
+    FlutterDesktopPluginRegistrarRef registrar_ref,
     VideoPlayerType type, flutter::PluginRegistrar *pluginRegistrar,
     FlutterTextureRegistrar *textureRegistrar, const std::string &uri,
     VideoPlayerOptions &options) {
@@ -20,7 +22,7 @@ std::unique_ptr<VideoPlayer> VideoPlayer::create(
     mmplayer->setupEventChannel(pluginRegistrar->messenger());
     return std::move(mmplayer);
   } else {
-    auto plusPlayer = std::make_unique<PlusPlayer>(uri, options);
+    auto plusPlayer = std::make_unique<PlusPlayer>(FlutterPluginRegistrarGetWindow(registrar_ref), uri, options);
     plusPlayer->isInitialized_ = false;
     plusPlayer->setupEventChannel(pluginRegistrar->messenger());
     return std::move(plusPlayer);

@@ -1,10 +1,14 @@
 #include "plus_player.h"
 
 #include <Ecore.h>
+#include <Elementary.h>
 #include <app_manager.h>
 
 #include "log.h"
 #include "video_player_error.h"
+
+#define EFL_BETA_API_SUPPORT
+#include <Ecore_Wl2.h>
 
 static std::string ErrorToString(plusplayer::ErrorType code) {
   std::string ret;
@@ -93,9 +97,11 @@ static std::string ErrorToString(plusplayer::ErrorType code) {
 
 static int gPlayerIndex = 1;
 
-PlusPlayer::PlusPlayer(const std::string &uri,
+PlusPlayer::PlusPlayer(FlutterWindowRef flutter_window_ref,
+                       const std::string &uri,
                        const VideoPlayerOptions &options) {
   LOG_DEBUG("PlusPlayer costructor");
+  flutter_window_ref_ = flutter_window_ref;
   isLooping_ = false;
   auto player = plusplayer::PlusPlayer::Create();
   if (player != nullptr) {
@@ -120,9 +126,15 @@ PlusPlayer::PlusPlayer(const std::string &uri,
 
     LOG_DEBUG("call RegisterListener");
     player->RegisterListener(listener_.get());
+    Ecore_Wl2_Window *pWindowHandle =
+        (Ecore_Wl2_Window *)FlutterGetWaylandWindowHandle(flutter_window_ref_);
 
-    // TODO, set display
-
+    ret = player->SetDisplay(plusplayer::DisplayType::kOverlay,
+                             ecore_wl2_window_surface_id_get(pWindowHandle), 0,
+                             0, 1920, 1080);
+    LOG_DEBUG("SetDisplay ret == %d", ret);
+    ret = player->SetDisplayMode(plusplayer::DisplayMode::kDstRoi);
+    LOG_DEBUG("SetDisplayMode ret == %d", ret);
     LOG_DEBUG("call PrepareAsync");
     if (!player->PrepareAsync()) {
       LOG_ERROR("PrepareAsync operation failed");
@@ -191,12 +203,31 @@ void PlusPlayer::pause() {
 void PlusPlayer::setLooping(bool isLooping) {
   LOG_DEBUG("set looping: %d", isLooping);
   isLooping_ = isLooping;
-  throw VideoPlayerError("PlusPlayer - Not support looping");
+  // throw VideoPlayerError("PlusPlayer - Not support looping");
+}
+
+void PlusPlayer::setDisplayRoi(int x, int y, int w, int h) {
+  LOG_DEBUG("setDisplayRoi PlusPlayer x == %d, y == %d, w == %d, h == %d", x, y,
+            w, h);
+  if (player_ == nullptr) {
+    LOG_ERROR("Plusplayer isn't created");
+    throw VideoPlayerError("PlusPlayer - Not created");
+  }
+  plusplayer::Geometry roi;
+  roi.x = x;
+  roi.y = y;
+  roi.w = w;
+  roi.h = h;
+  bool ret = player_->SetDisplayRoi(roi);
+
+  if (!ret) {
+    LOG_ERROR("Plusplayer SetDisplayRoi failed");
+  }
 }
 
 void PlusPlayer::setVolume(double volume) {
   LOG_ERROR("PlusPlayer doesn't support to set volume");
-  throw VideoPlayerError("PlusPlayer - Not support to set volume");
+  // throw VideoPlayerError("PlusPlayer - Not support to set volume");
 }
 
 void PlusPlayer::setPlaybackSpeed(double speed) {

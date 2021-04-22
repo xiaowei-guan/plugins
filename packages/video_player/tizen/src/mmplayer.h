@@ -19,6 +19,7 @@ class MMPlayer : public VideoPlayer {
   void seekTo(int position) override;  // milliseconds
   int getPosition() override;          // milliseconds
   void dispose() override;
+  void setDisplayRoi(int x, int y, int w, int h) override;
 
  private:
   void initialize() override;

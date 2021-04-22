@@ -291,6 +291,76 @@ PositionMessage PositionMessage::fromMap(const flutter::EncodableValue &value) {
   return fromMapResult;
 }
 
+long GeometryMessage::getTextureId() const { return textureId_; }
+void GeometryMessage::setTextureId(long textureId) { textureId_ = textureId; }
+int GeometryMessage::getX() const { return x_; }
+void GeometryMessage::setX(int x) { x_ = x; }
+int GeometryMessage::getY() const { return y_; }
+void GeometryMessage::setY(int y) { y_ = y; }
+int GeometryMessage::getW() const { return w_; }
+void GeometryMessage::setW(int w) { w_ = w; }
+int GeometryMessage::getH() const { return h_; }
+void GeometryMessage::setH(int h) { h_ = h; }
+
+flutter::EncodableValue GeometryMessage::toMap() {
+  LOG_DEBUG("[GeometryMessage.toMap] textureId: %ld", textureId_);
+  LOG_DEBUG("[GeometryMessage.toMap] x_: %d", x_);
+  LOG_DEBUG("[GeometryMessage.toMap] x_: %d", x_);
+  LOG_DEBUG("[GeometryMessage.toMap] w_: %d", w_);
+  LOG_DEBUG("[GeometryMessage.toMap] h_: %d", h_);
+
+  flutter::EncodableMap toMapResult = {
+      {flutter::EncodableValue("textureId"),
+       flutter::EncodableValue((int64_t)textureId_)},
+      {flutter::EncodableValue("x"), flutter::EncodableValue(x_)},
+      {flutter::EncodableValue("y"), flutter::EncodableValue(y_)},
+      {flutter::EncodableValue("w"), flutter::EncodableValue(w_)},
+      {flutter::EncodableValue("h"), flutter::EncodableValue(h_)}};
+
+  return flutter::EncodableValue(toMapResult);
+}
+
+GeometryMessage GeometryMessage::fromMap(const flutter::EncodableValue &value) {
+  GeometryMessage fromMapResult;
+  if (std::holds_alternative<flutter::EncodableMap>(value)) {
+    flutter::EncodableMap emap = std::get<flutter::EncodableMap>(value);
+    flutter::EncodableValue &textureId =
+        emap[flutter::EncodableValue("textureId")];
+    if (std::holds_alternative<int32_t>(textureId) ||
+        std::holds_alternative<int64_t>(textureId)) {
+      fromMapResult.setTextureId(textureId.LongValue());
+      LOG_DEBUG("[GeometryMessage.fromMap] textureId: %ld",
+                fromMapResult.getTextureId());
+    }
+
+    flutter::EncodableValue &x = emap[flutter::EncodableValue("x")];
+    if (std::holds_alternative<int>(x)) {
+      fromMapResult.setX(std::get<int>(x));
+      LOG_DEBUG("[GeometryMessage.fromMap] x: %d", fromMapResult.getX());
+    }
+
+    flutter::EncodableValue &y = emap[flutter::EncodableValue("y")];
+    if (std::holds_alternative<int>(y)) {
+      fromMapResult.setY(std::get<int>(y));
+      LOG_DEBUG("[GeometryMessage.fromMap] y: %d", fromMapResult.getY());
+    }
+
+    flutter::EncodableValue &w = emap[flutter::EncodableValue("w")];
+    if (std::holds_alternative<int>(w)) {
+      fromMapResult.setW(std::get<int>(w));
+      LOG_DEBUG("[GeometryMessage.fromMap] w: %d", fromMapResult.getW());
+    }
+
+    flutter::EncodableValue &h = emap[flutter::EncodableValue("h")];
+    if (std::holds_alternative<int>(h)) {
+      fromMapResult.setH(std::get<int>(h));
+      LOG_DEBUG("[GeometryMessage.fromMap] h: %d", fromMapResult.getH());
+    }
+  }
+
+  return fromMapResult;
+}
+
 bool MixWithOthersMessage::getMixWithOthers() const { return mixWithOthers_; }
 
 void MixWithOthersMessage::setMixWithOthers(bool mixWithOthers) {
@@ -575,6 +645,30 @@ void VideoPlayerApi::setup(flutter::BinaryMessenger *binaryMessenger,
           reply(flutter::EncodableValue(wrapped));
         });
   }
+
+  LOG_DEBUG("[VideoPlayerApi.setup] setup setDisplayRoi channel");
+  auto roiChannel =
+      std::make_unique<flutter::BasicMessageChannel<flutter::EncodableValue>>(
+          binaryMessenger, "dev.flutter.pigeon.VideoPlayerApi.setDisplayRoi",
+          &flutter::StandardMessageCodec::GetInstance());
+  if (api != nullptr) {
+    roiChannel->SetMessageHandler(
+        [api](const flutter::EncodableValue &message,
+              flutter::MessageReply<flutter::EncodableValue> reply) {
+          GeometryMessage input = GeometryMessage::fromMap(message);
+          flutter::EncodableMap wrapped;
+          try {
+            api->setDisplayRoi(input);
+            wrapped.emplace(flutter::EncodableValue("result"),
+                            flutter::EncodableValue());
+          } catch (const VideoPlayerError &e) {
+            wrapped.emplace(flutter::EncodableValue("error"),
+                            VideoPlayerApi::wrapError(e));
+          }
+          reply(flutter::EncodableValue(wrapped));
+        });
+  }
+
 }
 
 flutter::EncodableValue VideoPlayerApi::wrapError(

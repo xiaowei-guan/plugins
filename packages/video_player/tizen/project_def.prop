@@ -21,7 +21,7 @@ USER_LFLAGS =
 
 # Libraries and objects
 USER_LIB_DIRS = lib
-USER_LIBS = plusplayer
+USER_LIBS = plusplayer ecore_wl2
 USER_OBJS =
 
 # User includes

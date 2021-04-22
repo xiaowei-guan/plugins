@@ -123,6 +123,33 @@ class PositionMessage {
   long position_;
 };
 
+class GeometryMessage {
+ public:
+  GeometryMessage() : textureId_(0), x_(0), y_(0), w_(0), h_(0) {}
+  ~GeometryMessage() = default;
+  GeometryMessage(GeometryMessage const &) = default;
+  GeometryMessage &operator=(GeometryMessage const &) = default;
+  long getTextureId() const;
+  void setTextureId(long textureId);
+  int getX() const;
+  void setX(int x);
+  int getY() const;
+  void setY(int y);
+  int getW() const;
+  void setW(int w);
+  int getH() const;
+  void setH(int h);
+  flutter::EncodableValue toMap();
+  static GeometryMessage fromMap(const flutter::EncodableValue &value);
+
+ private:
+  long textureId_;
+  int x_;
+  int y_;
+  int w_;
+  int h_;
+};
+
 class MixWithOthersMessage {
  public:
   MixWithOthersMessage() : mixWithOthers_(false) {}
@@ -153,6 +180,7 @@ class VideoPlayerApi {
   virtual void seekTo(const PositionMessage &positionMsg) = 0;
   virtual void setMixWithOthers(
       const MixWithOthersMessage &mixWithOthersMsg) = 0;
+  virtual void setDisplayRoi(const GeometryMessage &geometryMsg) = 0;
 
   static void setup(flutter::BinaryMessenger *binaryMessenger,
                     VideoPlayerApi *api);
