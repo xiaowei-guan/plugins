@@ -8,7 +8,7 @@ dependencies:
   video_player:
     git:
       url: git@github.sec.samsung.net:xiaowei-guan/video_player.git
-      ref: e1001f4afc55779b5e333c471ec1d1fc65a70ee9
+      ref: 220726de451262692a1a951262dd273231675302
   video_player_tizen:
     path: ../
 

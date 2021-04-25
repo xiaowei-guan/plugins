@@ -12,7 +12,10 @@ flutter:
         fileName: video_player_tizen_plugin.h
 
 dependencies:
-  video_player_platform_interface: ^4.1.0
+  video_player_platform_interface:
+    git:
+      url: git@github.sec.samsung.net:xiaowei-guan/video_player_platform_interface.git
+      ref: 17229244247466adb4bd93298b4f1aaafc9960b9
   flutter:
     sdk: flutter
 
