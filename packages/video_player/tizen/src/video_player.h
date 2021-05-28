@@ -35,8 +35,8 @@ class VideoPlayer {
   void sendBufferingStart();
   void sendBufferingUpdate(int position);  // milliseconds
   void sendBufferingEnd();
-  FlutterDesktopGpuBuffer *CopyGpuBuffer(size_t width, size_t height);
-  void Destruction(void* buffer);
+  FlutterDesktopGpuBuffer *ObtainGpuBuffer(size_t width, size_t height);
+  void Destruct(void* buffer);
 
   static void onPrepared(void *data);
   static void onBuffering(int percent, void *data);
@@ -52,7 +52,7 @@ class VideoPlayer {
   long textureId_;
   flutter::TextureRegistrar *textureRegistrar_;
   std::unique_ptr<flutter::TextureVariant> textureVariant_;
-  std::unique_ptr<FlutterDesktopGpuBuffer> flutterDesttopGpuBuffer_;
+  std::unique_ptr<FlutterDesktopGpuBuffer> flutterDesktopGpuBuffer_;
   std::mutex mutex_;
   media_packet_h mediaPacket_ = nullptr;
 };

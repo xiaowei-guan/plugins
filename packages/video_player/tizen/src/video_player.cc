@@ -113,7 +113,7 @@ static std::string ErrorToString(int code) {
   return ret;
 }
 
-FlutterDesktopGpuBuffer *VideoPlayer::CopyGpuBuffer(size_t width,
+FlutterDesktopGpuBuffer *VideoPlayer::ObtainGpuBuffer(size_t width,
                                                     size_t height) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (mediaPacket_ == nullptr) {
@@ -132,14 +132,13 @@ FlutterDesktopGpuBuffer *VideoPlayer::CopyGpuBuffer(size_t width,
     return nullptr;
   }
 
-  flutterDesttopGpuBuffer_->buffer = surface;
-  flutterDesttopGpuBuffer_->width = width;
-  flutterDesttopGpuBuffer_->height = height;
-  return flutterDesttopGpuBuffer_.get();
+  flutterDesktopGpuBuffer_->buffer = surface;
+  flutterDesktopGpuBuffer_->width = width;
+  flutterDesktopGpuBuffer_->height = height;
+  return flutterDesktopGpuBuffer_.get();
 }
 
-void VideoPlayer::Destruction(void* buffer) {
-  LOG_ERROR("[VideoPlayer.CopyGpuBuffer] Destruction");
+void VideoPlayer::Destruct(void* buffer) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (mediaPacket_) {
     media_packet_destroy(mediaPacket_);
@@ -157,11 +156,11 @@ VideoPlayer::VideoPlayer(flutter::PluginRegistrar *pluginRegistrar,
       std::make_unique<flutter::TextureVariant>(flutter::GpuBufferTexture(
           [this](size_t width,
                  size_t height) -> const FlutterDesktopGpuBuffer * {
-            return this->CopyGpuBuffer(width, height);
+            return this->ObtainGpuBuffer(width, height);
           },
-          [this](void* buffer) -> void { this->Destruction(buffer); }));
+          [this](void* buffer) -> void { this->Destruct(buffer); }));
   
-  flutterDesttopGpuBuffer_ = std::make_unique<FlutterDesktopGpuBuffer>();
+  flutterDesktopGpuBuffer_ = std::make_unique<FlutterDesktopGpuBuffer>();
   
 
   LOG_DEBUG("[VideoPlayer] register texture");
@@ -377,6 +376,12 @@ void VideoPlayer::dispose() {
     textureRegistrar_->UnregisterTexture(textureId_);
     textureRegistrar_ = nullptr;
   }
+
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (mediaPacket_) {
+    media_packet_destroy(mediaPacket_);
+    mediaPacket_ = nullptr;
+  }
 }
 
 void VideoPlayer::setupEventChannel(flutter::BinaryMessenger *messenger) {
@@ -571,7 +576,6 @@ void VideoPlayer::onErrorOccurred(int code, void *data) {
 }
 
 void VideoPlayer::onVideoFrameDecoded(media_packet_h packet, void *data) {
-  LOG_DEBUG("onVideoFrameDecoded");
   VideoPlayer *player = (VideoPlayer *)data;
   tbm_surface_h surface;
   int ret = media_packet_get_tbm_surface(packet, &surface);
