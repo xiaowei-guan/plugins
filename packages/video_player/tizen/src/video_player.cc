@@ -2,11 +2,16 @@
 
 #include <flutter/event_stream_handler_functions.h>
 #include <flutter/standard_method_codec.h>
+#include <metadata_extractor.h>
 
 #include <functional>
 
 #include "log.h"
 #include "video_player_error.h"
+
+static bool StartWith(std::string s, std::string sub) {
+  return s.find(sub) == 0 ? true : false;
+}
 
 static std::string RotationToString(player_display_rotation_e rotation) {
   std::string ret;
@@ -168,7 +173,9 @@ VideoPlayer::VideoPlayer(flutter::PluginRegistrar *pluginRegistrar,
     throw VideoPlayerError("player_set_error_cb failed",
                            get_error_message(ret));
   }
-
+  if (!StartWith(uri, "http")) {
+    SetRotation(uri);
+  }
   LOG_DEBUG("[VideoPlayer] call player_prepare_async");
   ret = player_prepare_async(player_, onPrepared, (void *)this);
   if (ret != PLAYER_ERROR_NONE) {
@@ -180,6 +187,34 @@ VideoPlayer::VideoPlayer(flutter::PluginRegistrar *pluginRegistrar,
   }
 
   setupEventChannel(pluginRegistrar->messenger());
+}
+
+void VideoPlayer::SetRotation(const std::string &path) {
+  metadata_extractor_h metadata_h;
+  metadata_extractor_create(&metadata_h);
+  metadata_extractor_set_path(metadata_h, path.c_str());
+  char *value = nullptr;
+  metadata_extractor_get_metadata(metadata_h, METADATA_ROTATE, &value);
+  if (value != nullptr) {
+    player_display_rotation_e rotation;
+    int rotationValue = atoi(value);
+    switch (rotationValue) {
+      case 90:
+        rotation = PLAYER_DISPLAY_ROTATION_90;
+        break;
+      case 180:
+        rotation = PLAYER_DISPLAY_ROTATION_180;
+        break;
+      case 270:
+        rotation = PLAYER_DISPLAY_ROTATION_270;
+        break;
+      default:
+        rotation = PLAYER_DISPLAY_ROTATION_NONE;
+    }
+    player_set_display_rotation(player_, rotation);
+    free(value);
+    value = nullptr;
+  }
 }
 
 VideoPlayer::~VideoPlayer() {

@@ -37,6 +37,7 @@ class VideoPlayer {
   void sendBufferingEnd();
   FlutterDesktopGpuBuffer *ObtainGpuBuffer(size_t width, size_t height);
   void Destruct(void *buffer);
+  void SetRotation(const std::string &path);
 
   static void onPrepared(void *data);
   static void onBuffering(int percent, void *data);
