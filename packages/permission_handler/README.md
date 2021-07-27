@@ -43,7 +43,7 @@ You can use this plugin to ask the user for runtime permissions if your app perf
    ```yaml
    dependencies:
      permission_handler: ^6.1.1
-     permission_handler_tizen: ^1.0.0
+     permission_handler_tizen: ^1.1.0
    ```
 
    Then you can import `permission_handler` in your Dart code:
@@ -54,7 +54,6 @@ You can use this plugin to ask the user for runtime permissions if your app perf
 
    For detailed usage of the plugin, see https://github.com/Baseflow/flutter-permission-handler#how-to-use.
 
-## Limitations
+## Notes
 
-- This plugin is only supported on **Galaxy Watch** devices running **Tizen 5.5** or later. On **TV**s, you don't need to request permissions since they are already granted to apps by default.
-- `openAppSettings()` will open the system settings instead of the app settings on Tizen. To use it, add the app manager privilege (`http://tizen.org/privilege/appmanager.launch`) in your `tizen-manifest.xml` file.
+This plugin is intended for **Galaxy Watch** devices only. On **TV**s, you don't need to request permissions since they are already granted to apps by default.

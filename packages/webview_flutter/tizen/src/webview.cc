@@ -15,6 +15,7 @@
 #include <sstream>
 #include <string>
 
+#include "buffer_pool.h"
 #include "log.h"
 #include "lwe/LWEWebView.h"
 #include "lwe/PlatformIntegrationData.h"
@@ -125,39 +126,26 @@ static std::string ErrorCodeToString(int error_code) {
   throw std::invalid_argument(message);
 }
 
-std::string ExtractStringFromMap(const flutter::EncodableValue& arguments,
-                                 const char* key) {
-  if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
-    flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
-    flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<std::string>(value))
-      return std::get<std::string>(value);
+template <typename T>
+bool GetValueFromEncodableMap(const flutter::EncodableValue& arguments,
+                              std::string key, T* out) {
+  if (auto pmap = std::get_if<flutter::EncodableMap>(&arguments)) {
+    auto iter = pmap->find(flutter::EncodableValue(key));
+    if (iter != pmap->end() && !iter->second.IsNull()) {
+      if (auto pval = std::get_if<T>(&iter->second)) {
+        *out = *pval;
+        return true;
+      }
+    }
   }
-  return std::string();
-}
-int ExtractIntFromMap(const flutter::EncodableValue& arguments,
-                      const char* key) {
-  if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
-    flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
-    flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<int>(value)) return std::get<int>(value);
-  }
-  return -1;
-}
-double ExtractDoubleFromMap(const flutter::EncodableValue& arguments,
-                            const char* key) {
-  if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
-    flutter::EncodableMap values = std::get<flutter::EncodableMap>(arguments);
-    flutter::EncodableValue value = values[flutter::EncodableValue(key)];
-    if (std::holds_alternative<double>(value)) return std::get<double>(value);
-  }
-  return -1;
+  return false;
 }
 
 WebView::WebView(flutter::PluginRegistrar* registrar, int viewId,
                  flutter::TextureRegistrar* texture_registrar, double width,
-                 double height, flutter::EncodableMap& params)
-    : PlatformView(registrar, viewId),
+                 double height, flutter::EncodableMap& params,
+                 void* platform_window)
+    : PlatformView(registrar, viewId, platform_window),
       texture_registrar_(texture_registrar),
       webview_instance_(nullptr),
       width_(width),
@@ -170,6 +158,7 @@ WebView::WebView(flutter::PluginRegistrar* registrar, int viewId,
       context_(nullptr),
       texture_variant_(nullptr),
       gpu_buffer_(nullptr) {
+  tbm_pool_ = std::make_unique<BufferPool>(width, height);
   texture_variant_ = new flutter::TextureVariant(flutter::GpuBufferTexture(
       [this](size_t width, size_t height) -> const FlutterDesktopGpuBuffer* {
         return this->ObtainGpuBuffer(width, height);
@@ -404,7 +393,14 @@ void WebView::Dispose() {
 
 void WebView::Resize(double width, double height) {
   LOG_DEBUG("WebView::Resize width: %f height: %f \n", width, height);
-  // NOTE: Not supported by LWE on Tizen.
+  width_ = width;
+  height_ = height;
+
+  if (candidate_surface_) {
+    candidate_surface_ = nullptr;
+  }
+  tbm_pool_->Prepare(width_, height_);
+  webview_instance_->ResizeTo(width_, height_);
 }
 
 void WebView::Touch(int type, int button, double x, double y, double dx,
@@ -779,10 +775,14 @@ void WebView::InitWebView() {
         std::lock_guard<std::mutex> lock(mutex_);
         LWE::WebContainer::ExternalImageInfo result;
         if (!candidate_surface_) {
-          candidate_surface_ =
-              tbm_surface_create(width_, height_, TBM_FORMAT_ARGB8888);
+          candidate_surface_ = tbm_pool_->GetAvailableBuffer();
         }
-        result.imageAddress = (void*)candidate_surface_;
+        if (candidate_surface_) {
+          result.imageAddress =
+              static_cast<void*>(candidate_surface_->Surface());
+        } else {
+          result.imageAddress = nullptr;
+        }
         return result;
       },
       [this](LWE::WebContainer* c, bool isRendered) {
@@ -810,9 +810,13 @@ void WebView::HandleMethodCall(
   LOG_DEBUG("WebView::HandleMethodCall : %s \n ", method_name.c_str());
 
   if (method_name.compare("loadUrl") == 0) {
-    std::string url = ExtractStringFromMap(arguments, "url");
-    webview_instance_->LoadURL(url);
-    result->Success();
+    std::string url;
+    if (GetValueFromEncodableMap(arguments, "viewType", &url)) {
+      webview_instance_->LoadURL(url);
+      result->Success();
+      return;
+    }
+    result->Error("Invalid Arguments", "Invalid Arguments");
   } else if (method_name.compare("updateSettings") == 0) {
     if (std::holds_alternative<flutter::EncodableMap>(arguments)) {
       auto settings = std::get<flutter::EncodableMap>(arguments);
@@ -883,15 +887,23 @@ void WebView::HandleMethodCall(
   } else if (method_name.compare("getTitle") == 0) {
     result->Success(flutter::EncodableValue(webview_instance_->GetTitle()));
   } else if (method_name.compare("scrollTo") == 0) {
-    int x = ExtractIntFromMap(arguments, "x");
-    int y = ExtractIntFromMap(arguments, "y");
-    webview_instance_->ScrollTo(x, y);
-    result->Success();
+    int x = 0, y = 0;
+    if (GetValueFromEncodableMap(arguments, "x", &x) &&
+        GetValueFromEncodableMap(arguments, "y", &y)) {
+      webview_instance_->ScrollTo(x, y);
+      result->Success();
+      return;
+    }
+    result->Error("Invalid Arguments", "Invalid Arguments");
   } else if (method_name.compare("scrollBy") == 0) {
-    int x = ExtractIntFromMap(arguments, "x");
-    int y = ExtractIntFromMap(arguments, "y");
-    webview_instance_->ScrollBy(x, y);
-    result->Success();
+    int x = 0, y = 0;
+    if (GetValueFromEncodableMap(arguments, "x", &x) &&
+        GetValueFromEncodableMap(arguments, "y", &y)) {
+      webview_instance_->ScrollBy(x, y);
+      result->Success();
+      return;
+    }
+    result->Error("Invalid Arguments", "Invalid Arguments");
   } else if (method_name.compare("getScrollX") == 0) {
     result->Success(flutter::EncodableValue(webview_instance_->GetScrollX()));
   } else if (method_name.compare("getScrollY") == 0) {
@@ -924,20 +936,17 @@ void WebView::HandleCookieMethodCall(
 
 FlutterDesktopGpuBuffer* WebView::ObtainGpuBuffer(size_t width, size_t height) {
   if (!candidate_surface_) {
-    return nullptr;
+    if (!rendered_surface_) {
+      return nullptr;
+    } else {
+      return gpu_buffer_;
+    }
   }
-
   std::lock_guard<std::mutex> lock(mutex_);
-  if (rendered_surface_) {
-    tbm_surface_destroy(rendered_surface_);
-    rendered_surface_ = nullptr;
-  }
-
   rendered_surface_ = candidate_surface_;
   candidate_surface_ = nullptr;
-
   if (gpu_buffer_) {
-    gpu_buffer_->buffer = rendered_surface_;
+    gpu_buffer_->buffer = static_cast<void*>(rendered_surface_->Surface());
     gpu_buffer_->width = width;
     gpu_buffer_->height = height;
   }
@@ -946,10 +955,9 @@ FlutterDesktopGpuBuffer* WebView::ObtainGpuBuffer(size_t width, size_t height) {
 
 void WebView::DestructBuffer(void* buffer) {
   if (buffer) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    tbm_surface_destroy((tbm_surface_h)buffer);
-    if (rendered_surface_ == buffer) {
-      rendered_surface_ = nullptr;
+    BufferUnit* unit = tbm_pool_->Find((tbm_surface_h)buffer);
+    if (unit) {
+      tbm_pool_->Release(unit);
     }
   }
 }

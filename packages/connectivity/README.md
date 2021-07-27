@@ -9,7 +9,7 @@ This package is not an _endorsed_ implementation of `connectivity`. Therefore, y
 ```yaml
 dependencies:
   connectivity: ^3.0.3
-  connectivity_tizen: ^2.0.0
+  connectivity_tizen: ^2.0.1
 ```
 
 Then you can import `connectivity` in your Dart code:
@@ -19,12 +19,6 @@ import 'package:connectivity/connectivity.dart';
 ```
 
 For detailed usage, see https://github.com/flutter/plugins/tree/master/packages/connectivity/connectivity#usage.
-
-## Supported devices
-
-This plugin is supported on these types of devices:
-
-- Galaxy Watch (running Tizen 4.0 or later)
 
 ## Required privileges
 

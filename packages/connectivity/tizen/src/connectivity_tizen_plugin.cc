@@ -23,93 +23,62 @@
 class ConnectivityTizenPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrar *registrar) {
-    LOG_INFO("RegisterWithRegistrar");
-    auto method_channel =
-        std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-            registrar->messenger(), "plugins.flutter.io/connectivity",
-            &flutter::StandardMethodCodec::GetInstance());
-    auto event_channel =
-        std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
-            registrar->messenger(), "plugins.flutter.io/connectivity_status",
-            &flutter::StandardMethodCodec::GetInstance());
-
     auto plugin = std::make_unique<ConnectivityTizenPlugin>();
-    method_channel->SetMethodCallHandler(
-        [plugin_pointer = plugin.get()](const auto &call, auto result) {
-          plugin_pointer->HandleMethodCall(call, std::move(result));
-        });
-    auto event_channel_handler =
-        std::make_unique<flutter::StreamHandlerFunctions<>>(
-            [plugin_pointer = plugin.get()](
-                const flutter::EncodableValue *arguments,
-                std::unique_ptr<flutter::EventSink<>> &&events)
-                -> std::unique_ptr<flutter::StreamHandlerError<>> {
-              LOG_INFO("OnListen");
-              plugin_pointer->registerObsever(std::move(events));
-              return nullptr;
-            },
-            [plugin_pointer =
-                 plugin.get()](const flutter::EncodableValue *arguments)
-                -> std::unique_ptr<flutter::StreamHandlerError<>> {
-              LOG_INFO("OnCancel");
-              plugin_pointer->clearObserver();
-              return nullptr;
-            });
-    event_channel->SetStreamHandler(std::move(event_channel_handler));
+    plugin->SetupChannels(registrar);
     registrar->AddPlugin(std::move(plugin));
   }
 
-  ConnectivityTizenPlugin() : m_connection(nullptr), m_events(nullptr) {
-    ensureConnectionHandle();
+  ConnectivityTizenPlugin() : connection_(nullptr), events_(nullptr) {
+    EnsureConnectionHandle();
   }
 
   virtual ~ConnectivityTizenPlugin() {
-    if (m_connection != nullptr) {
-      connection_destroy(m_connection);
-      m_connection = nullptr;
+    if (connection_ != nullptr) {
+      connection_destroy(connection_);
+      connection_ = nullptr;
     }
   }
 
-  void registerObsever(
+  void RegisterObserver(
       std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> &&events) {
-    ensureConnectionHandle();
-    if (connection_set_type_changed_cb(m_connection, connetionTypeChangedCB,
+    EnsureConnectionHandle();
+    if (connection_set_type_changed_cb(connection_, ConnectionTypeChangedCB,
                                        this) != CONNECTION_ERROR_NONE) {
       return;
     }
-    m_events = std::move(events);
+    events_ = std::move(events);
   }
 
-  void clearObserver() {
-    if (m_connection == nullptr || m_events == nullptr) return;
+  void ClearObserver() {
+    if (connection_ == nullptr || events_ == nullptr) return;
 
-    connection_unset_type_changed_cb(m_connection);
-    m_events = nullptr;
+    connection_unset_type_changed_cb(connection_);
+    events_ = nullptr;
   }
 
-  void sendConnectivityChangedEvent(connection_type_e state) {
-    if (m_events == nullptr) return;
-    std::string replay = convertConnectionTypeToString(state);
+  void SendConnectivityChangedEvent(connection_type_e state) {
+    if (events_ == nullptr) return;
+    std::string replay = ConvertConnectionTypeToString(state);
     flutter::EncodableValue msg(replay);
-    m_events->Success(msg);
+    events_->Success(msg);
   }
 
  private:
-  static void connetionTypeChangedCB(connection_type_e state, void *data) {
-    LOG_DEBUG("connetionTypeChangedCB");
+  static void ConnectionTypeChangedCB(connection_type_e state, void *data) {
+    LOG_DEBUG("connectionTypeChangedCB");
     ConnectivityTizenPlugin *plugin_pointer = (ConnectivityTizenPlugin *)data;
-    plugin_pointer->sendConnectivityChangedEvent(state);
+    plugin_pointer->SendConnectivityChangedEvent(state);
   }
 
-  void ensureConnectionHandle() {
-    if (m_connection == nullptr) {
-      if (connection_create(&m_connection) != CONNECTION_ERROR_NONE) {
-        m_connection = nullptr;
+  void EnsureConnectionHandle() {
+    if (connection_ == nullptr) {
+      if (connection_create(&connection_) != CONNECTION_ERROR_NONE) {
+        connection_ = nullptr;
       }
     }
   }
 
-  std::string convertConnectionTypeToString(connection_type_e net_state) {
+  std::string ConvertConnectionTypeToString(connection_type_e net_state) {
     std::string result;
     switch (net_state) {
       case CONNECTION_TYPE_WIFI:
@@ -129,17 +98,17 @@ class ConnectivityTizenPlugin : public flutter::Plugin {
   void HandleMethodCall(
       const flutter::MethodCall<flutter::EncodableValue> &method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-    ensureConnectionHandle();
+    EnsureConnectionHandle();
     LOG_INFO("method : %s", method_call.method_name().data());
     std::string replay = "";
     if (method_call.method_name().compare("check") == 0) {
       connection_type_e net_state;
-      if (connection_get_type(m_connection, &net_state) !=
+      if (connection_get_type(connection_, &net_state) !=
           CONNECTION_ERROR_NONE) {
         result->Error("-1", "Couldn't know current connection type");
         return;
       }
-      replay = convertConnectionTypeToString(net_state);
+      replay = ConvertConnectionTypeToString(net_state);
     } else {
       result->Error("-1", "Not supported method");
       return;
@@ -152,8 +121,42 @@ class ConnectivityTizenPlugin : public flutter::Plugin {
     flutter::EncodableValue msg(replay);
     result->Success(msg);
   }
-  connection_h m_connection;
-  std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> m_events;
+
+  void SetupChannels(flutter::PluginRegistrar *registrar) {
+    auto method_channel =
+        std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            registrar->messenger(), "plugins.flutter.io/connectivity",
+            &flutter::StandardMethodCodec::GetInstance());
+    event_channel_ =
+        std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
+            registrar->messenger(), "plugins.flutter.io/connectivity_status",
+            &flutter::StandardMethodCodec::GetInstance());
+    method_channel->SetMethodCallHandler([this](const auto &call, auto result) {
+      HandleMethodCall(call, std::move(result));
+    });
+
+    auto event_channel_handler =
+        std::make_unique<flutter::StreamHandlerFunctions<>>(
+            [this](const flutter::EncodableValue *arguments,
+                   std::unique_ptr<flutter::EventSink<>> &&events)
+                -> std::unique_ptr<flutter::StreamHandlerError<>> {
+              LOG_INFO("OnListen");
+              RegisterObserver(std::move(events));
+              return nullptr;
+            },
+            [this](const flutter::EncodableValue *arguments)
+                -> std::unique_ptr<flutter::StreamHandlerError<>> {
+              LOG_INFO("OnCancel");
+              ClearObserver();
+              return nullptr;
+            });
+    event_channel_->SetStreamHandler(std::move(event_channel_handler));
+  }
+
+  std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>
+      event_channel_;
+  connection_h connection_;
+  std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> events_;
 };
 
 void ConnectivityTizenPluginRegisterWithRegistrar(

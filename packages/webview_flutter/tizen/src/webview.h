@@ -20,12 +20,14 @@ class WebContainer;
 }
 
 class TextInputChannel;
+class BufferPool;
+class BufferUnit;
 
 class WebView : public PlatformView {
  public:
   WebView(flutter::PluginRegistrar* registrar, int viewId,
           flutter::TextureRegistrar* textureRegistrar, double width,
-          double height, flutter::EncodableMap& params);
+          double height, flutter::EncodableMap& params, void* platform_window);
   ~WebView();
   virtual void Dispose() override;
   virtual void Resize(double width, double height) override;
@@ -37,11 +39,10 @@ class WebView : public PlatformView {
   // Key input event
   virtual void DispatchKeyDownEvent(Ecore_Event_Key* key) override;
   virtual void DispatchKeyUpEvent(Ecore_Event_Key* key) override;
-  virtual void DispatchCompositionUpdateEvent(const char* str,
-                                              int size) override;
-  virtual void DispatchCompositionEndEvent(const char* str, int size) override;
 
-  virtual void SetSoftwareKeyboardContext(Ecore_IMF_Context* context) override;
+  void DispatchCompositionUpdateEvent(const char* str, int size);
+  void DispatchCompositionEndEvent(const char* str, int size);
+  void SetSoftwareKeyboardContext(Ecore_IMF_Context* context);
 
   LWE::WebContainer* GetWebViewInstance() { return webview_instance_; }
 
@@ -68,8 +69,8 @@ class WebView : public PlatformView {
   LWE::WebContainer* webview_instance_;
   double width_;
   double height_;
-  tbm_surface_h candidate_surface_;
-  tbm_surface_h rendered_surface_;
+  BufferUnit* candidate_surface_;
+  BufferUnit* rendered_surface_;
   bool is_mouse_lbutton_down_;
   bool has_navigation_delegate_;
   bool has_progress_tracking_;
@@ -78,6 +79,7 @@ class WebView : public PlatformView {
   flutter::TextureVariant* texture_variant_;
   FlutterDesktopGpuBuffer* gpu_buffer_;
   std::mutex mutex_;
+  std::unique_ptr<BufferPool> tbm_pool_;
 };
 
 #endif  // FLUTTER_PLUGIN_WEBVIEW_FLUTTER_TIZEN_WEVIEW_H_

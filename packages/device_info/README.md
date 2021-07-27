@@ -6,7 +6,7 @@ The Tizen implementation of [`device_info`](https://github.com/flutter/plugins/t
 
 ```yaml
 dependencies:
-  device_info_tizen: ^2.0.0
+  device_info_tizen: ^2.0.1
 ```
 
 You can import `device_info_tizen` in your Dart code:
@@ -18,9 +18,3 @@ DeviceInfoPluginTizen deviceInfo = DeviceInfoPluginTizen();
 TizenDeviceInfo tizenInfo = await deviceInfo.tizenInfo;
 print('Running on ${tizenInfo.modelName}');  // e.g. "SM-R800"
 ```
-
-## Supported devices
-
-This plugin is supported on these types of devices:
-
-- Galaxy Watch (running Tizen 4.0 or later)
