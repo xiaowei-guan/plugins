@@ -484,7 +484,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.setVolume(_textureId, value.volume);
   }
 
-  Future<void> setDisplayRoi(int texureId, int x, int y, int w, int h) async {
+  Future<void> _setDisplayRoi(int texureId, int x, int y, int w, int h) async {
     await setDisplayGeometry(texureId, x, y, w, h);
   }
 
@@ -656,7 +656,7 @@ class VideoPlayer extends StatefulWidget {
   _VideoPlayerState createState() => _VideoPlayerState();
 }
 
-class Geometry {
+class _Geometry {
   int x = 0;
   int y = 0;
   int w = 0;
@@ -678,7 +678,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
   late VoidCallback _listener;
 
   late int _textureId;
-  late Geometry _geometry = Geometry();
+  late _Geometry _geometry = _Geometry();
   late GlobalKey videoBoxKey = GlobalKey();
 
   @override
@@ -694,7 +694,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
   void _afterFrameLayout(_) {
     if (checkPositionChange() && widget.controller.value.isInitialized) {
       updateGeometry();
-      widget.controller.setDisplayRoi(
+      widget.controller._setDisplayRoi(
           _textureId, _geometry.x, _geometry.y, _geometry.w, _geometry.h);
     }
     WidgetsBinding.instance!.addPostFrameCallback(_afterFrameLayout);
