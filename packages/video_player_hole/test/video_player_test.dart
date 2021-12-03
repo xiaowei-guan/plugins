@@ -71,11 +71,6 @@ class FakeController extends ValueNotifier<VideoPlayerValue>
 
   @override
   VideoPlayerOptions? get videoPlayerOptions => null;
-
-  @override
-  Future<void> setDisplayRoi(int texureId, int x, int y, int w, int h) {
-    throw UnimplementedError();
-  }
 }
 
 Future<ClosedCaptionFile> _loadClosedCaption() async =>
