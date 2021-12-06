@@ -93,6 +93,7 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
     LOG_ERROR("[VideoPlayer] player_create failed: %s", get_error_message(ret));
     throw VideoPlayerError("player_create failed", get_error_message(ret));
   }
+
   int width = 0;
   int height = 0;
   if (system_info_get_platform_int("http://tizen.org/feature/screen.width",
@@ -105,7 +106,7 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
     ret = player_set_display(player_, PLAYER_DISPLAY_TYPE_OVERLAY,
                              FlutterDesktopGetWindow(registrar_ref));
   } else {
-    ret = PLAYER_ERROR_NOT_AVAILABLE;
+    ret = -1;
     void *libHandle = dlopen("libcapi-media-player.so.0", RTLD_LAZY);
     int (*player_set_ecore_wl_display)(
         player_h player, player_display_type_e type, void *ecore_wl_window,
