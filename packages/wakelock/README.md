@@ -1,5 +1,7 @@
 # wakelock_tizen
 
+[![pub package](https://img.shields.io/pub/v/wakelock_tizen.svg)](https://pub.dev/packages/wakelock_tizen)
+
 The Tizen implementation of [`wakelock`](https://github.com/creativecreatorormaybenot/wakelock).
 
 ## Usage
@@ -26,7 +28,6 @@ To use the wakelock plugin in a Tizen application, the display privilege must be
 
 ```xml
 <privileges>
-    <privilege>http://tizen.org/privilege/display</privilege>
+  <privilege>http://tizen.org/privilege/display</privilege>
 </privileges>
 ```
-
