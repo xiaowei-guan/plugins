@@ -1,6 +1,4 @@
-# video_player_tizen
-
-The Tizen implementation of [`video_player`](https://github.com/flutter/plugins/tree/master/packages/video_player).
+# video_player_hole
 
 ## Required privileges
 
@@ -26,14 +24,13 @@ This package is not an _endorsed_ implementation of `video_player`. Therefore, y
 
 ```yaml
 dependencies:
-  video_player: ^2.2.3
-  video_player_tizen: ^2.2.2
+  video_player_hole: ^1.1.0
 ```
 
-Then you can import `video_player` in your Dart code:
+Then you can import `video_player_hole` in your Dart code:
 
 ```dart
-import 'package:video_player/video_player.dart';
+import 'package:video_player_hole/video_player.dart';
 ```
 
 For how to use the plugin, see https://github.com/flutter/plugins/tree/master/packages/video_player/video_player#usage.

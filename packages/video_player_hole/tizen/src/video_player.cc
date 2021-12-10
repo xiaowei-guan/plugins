@@ -85,7 +85,6 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
   is_interrupted_ = false;
 
   LOG_INFO("[VideoPlayer] register texture");
-  // texture_id_ = texture_registrar->RegisterTexture(texture_variant_.get());
   texture_id_ = gPlayerIndex++;
   LOG_DEBUG("[VideoPlayer] call player_create to create player");
   int ret = player_create(&player_);
@@ -94,18 +93,19 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
     throw VideoPlayerError("player_create failed", get_error_message(ret));
   }
 
-  int width = 0;
-  int height = 0;
-  if (system_info_get_platform_int("http://tizen.org/feature/screen.width",
-                                   &width) != SYSTEM_INFO_ERROR_NONE &&
-      system_info_get_platform_int("http://tizen.org/feature/screen.height",
-                                   &height) != SYSTEM_INFO_ERROR_NONE) {
-    LOG_ERROR("Could not obtain the screen size.");
-  }
   if (GetDeviceProfile() == kWearable) {
     ret = player_set_display(player_, PLAYER_DISPLAY_TYPE_OVERLAY,
                              FlutterDesktopGetWindow(registrar_ref));
   } else {
+    int w = 0;
+    int h = 0;
+    if (system_info_get_platform_int("http://tizen.org/feature/screen.width",
+                                     &w) != SYSTEM_INFO_ERROR_NONE ||
+        system_info_get_platform_int("http://tizen.org/feature/screen.height",
+                                     &h) != SYSTEM_INFO_ERROR_NONE) {
+      LOG_ERROR("Could not obtain the screen size.");
+    }
+
     ret = -1;
     void *libHandle = dlopen("libcapi-media-player.so.0", RTLD_LAZY);
     int (*player_set_ecore_wl_display)(
@@ -117,7 +117,7 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
       if (player_set_ecore_wl_display) {
         ret = player_set_ecore_wl_display(
             player_, PLAYER_DISPLAY_TYPE_OVERLAY,
-            FlutterDesktopGetWindow(registrar_ref), 0, 0, width, height);
+            FlutterDesktopGetWindow(registrar_ref), 0, 0, w, h);
       } else {
         LOG_ERROR("[VideoPlayer] Symbol not found %s: ", dlerror());
       }
