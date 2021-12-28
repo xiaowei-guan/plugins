@@ -1,5 +1,6 @@
 #include "video_player.h"
 
+#include <app_manager.h>
 #include <dlfcn.h>
 #include <flutter/event_stream_handler_functions.h>
 #include <flutter/standard_method_codec.h>
@@ -10,72 +11,94 @@
 
 #include "log.h"
 #include "video_player_error.h"
+//#define EFL_BETA_API_SUPPORT
+#include <Ecore_Wl2.h>
 
 static int gPlayerIndex = 1;
 
-static std::string RotationToString(player_display_rotation_e rotation) {
+static std::string ErrorToString(plusplayer::ErrorType code) {
   std::string ret;
-  switch (rotation) {
-    case PLAYER_DISPLAY_ROTATION_NONE:
-      ret = "PLAYER_DISPLAY_ROTATION_NONE";
+  switch (code) {
+    case plusplayer::ErrorType::kNone:
+      ret = "kNone";
       break;
-    case PLAYER_DISPLAY_ROTATION_90:
-      ret = "PLAYER_DISPLAY_ROTATION_90";
+    case plusplayer::ErrorType::kOutOfMemory:
+      ret = "kOutOfMemory";
       break;
-    case PLAYER_DISPLAY_ROTATION_180:
-      ret = "PLAYER_DISPLAY_ROTATION_180";
+    case plusplayer::ErrorType::kInvalidParameter:
+      ret = "kInvalidParameter";
       break;
-    case PLAYER_DISPLAY_ROTATION_270:
-      ret = "PLAYER_DISPLAY_ROTATION_270";
+    case plusplayer::ErrorType::kNoSuchFile:
+      ret = "kNoSuchFile";
+      break;
+    case plusplayer::ErrorType::kInvalidOperation:
+      ret = "kInvalidOperation";
+      break;
+    case plusplayer::ErrorType::kFileNoSpaceOnDevice:
+      ret = "kFileNoSpaceOnDevice";
+      break;
+    case plusplayer::ErrorType::kFeatureNotSupportedOnDevice:
+      ret = "kFeatureNotSupportedOnDevice";
+      break;
+    case plusplayer::ErrorType::kSeekFailed:
+      ret = "kSeekFailed";
+      break;
+    case plusplayer::ErrorType::kInvalidState:
+      ret = "kInvalidState";
+      break;
+    case plusplayer::ErrorType::kNotSupportedFile:
+      ret = "kNotSupportedFile";
+      break;
+    case plusplayer::ErrorType::kInvalidUri:
+      ret = "kInvalidUri";
+      break;
+    case plusplayer::ErrorType::kSoundPolicy:
+      ret = "kSoundPolicy";
+      break;
+    case plusplayer::ErrorType::kConnectionFailed:
+      ret = "kConnectionFailed";
+      break;
+    case plusplayer::ErrorType::kVideoCaptureFailed:
+      ret = "kVideoCaptureFailed";
+      break;
+    case plusplayer::ErrorType::kDrmExpired:
+      ret = "kDrmExpired";
+      break;
+    case plusplayer::ErrorType::kDrmNoLicense:
+      ret = "kDrmNoLicense";
+      break;
+    case plusplayer::ErrorType::kDrmFutureUse:
+      ret = "kDrmFutureUse";
+      break;
+    case plusplayer::ErrorType::kDrmNotPermitted:
+      ret = "kDrmNotPermitted";
+      break;
+    case plusplayer::ErrorType::kResourceLimit:
+      ret = "kResourceLimit";
+      break;
+    case plusplayer::ErrorType::kPermissionDenied:
+      ret = "kPermissionDenied";
+      break;
+    case plusplayer::ErrorType::kServiceDisconnected:
+      ret = "kServiceDisconnected";
+      break;
+    case plusplayer::ErrorType::kBufferSpace:
+      ret = "kBufferSpace";
+      break;
+    case plusplayer::ErrorType::kNotSupportedAudioCodec:
+      ret = "kNotSupportedAudioCodec";
+      break;
+    case plusplayer::ErrorType::kNotSupportedVideoCodec:
+      ret = "kNotSupportedVideoCodec";
+      break;
+    case plusplayer::ErrorType::kNotSupportedSubtitle:
+      ret = "kNotSupportedSubtitle";
+      break;
+    default:
+      ret = "kUnknown";
       break;
   }
   return ret;
-}
-
-static std::string StateToString(player_state_e state) {
-  std::string ret;
-  switch (state) {
-    case PLAYER_STATE_NONE:
-      ret = "PLAYER_STATE_NONE";
-      break;
-    case PLAYER_STATE_IDLE:
-      ret = "PLAYER_STATE_IDLE";
-      break;
-    case PLAYER_STATE_READY:
-      ret = "PLAYER_STATE_READY";
-      break;
-    case PLAYER_STATE_PLAYING:
-      ret = "PLAYER_STATE_PLAYING";
-      break;
-    case PLAYER_STATE_PAUSED:
-      ret = "PLAYER_STATE_PAUSED";
-      break;
-  }
-  return ret;
-}
-
-enum DeviceProfile { kUnknown, kMobile, kWearable, kTV, kCommon };
-
-static DeviceProfile GetDeviceProfile() {
-  char *feature_profile = nullptr;
-  system_info_get_platform_string("http://tizen.org/feature/profile",
-                                  &feature_profile);
-  if (feature_profile == nullptr) {
-    return DeviceProfile::kUnknown;
-  }
-  std::string profile(feature_profile);
-  free(feature_profile);
-
-  if (profile == "mobile") {
-    return DeviceProfile::kMobile;
-  } else if (profile == "wearable") {
-    return DeviceProfile::kWearable;
-  } else if (profile == "tv") {
-    return DeviceProfile::kTV;
-  } else if (profile == "common") {
-    return DeviceProfile::kCommon;
-  }
-  return DeviceProfile::kUnknown;
 }
 
 VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
@@ -83,20 +106,29 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
                          const std::string &uri, VideoPlayerOptions &options) {
   is_initialized_ = false;
   is_interrupted_ = false;
-
-  LOG_INFO("[VideoPlayer] register texture");
-  texture_id_ = gPlayerIndex++;
+  listener_ = std::make_unique<PlusPlayerEventListener>(this);
   LOG_DEBUG("[VideoPlayer] call player_create to create player");
-  int ret = player_create(&player_);
-  if (ret != PLAYER_ERROR_NONE) {
-    LOG_ERROR("[VideoPlayer] player_create failed: %s", get_error_message(ret));
-    throw VideoPlayerError("player_create failed", get_error_message(ret));
-  }
-
-  if (GetDeviceProfile() == kWearable) {
-    ret = player_set_display(player_, PLAYER_DISPLAY_TYPE_OVERLAY,
-                             FlutterDesktopGetWindow(registrar_ref));
-  } else {
+  auto player = plusplayer::PlusPlayer::Create();
+  if (player != nullptr) {
+    LOG_DEBUG("call Open to set uri (%s)", uri.c_str());
+    if (!player->Open(uri)) {
+      LOG_ERROR("Open uri(%s) failed", uri.c_str());
+      throw VideoPlayerError("PlusPlayer - Open operation failed");
+    }
+    LOG_DEBUG("call SetAppId");
+    char *appId = nullptr;
+    long pid = getpid();
+    int ret = app_manager_get_app_id(pid, &appId);
+    if (ret == APP_MANAGER_ERROR_NONE) {
+      LOG_DEBUG("set app id: %s", appId);
+      std::string appIdStr(appId);
+      player->SetAppId(appIdStr);
+    }
+    if (appId) {
+      free(appId);
+    }
+    LOG_DEBUG("call RegisterListener");
+    player->RegisterListener(listener_.get());
     int w = 0;
     int h = 0;
     if (system_info_get_platform_int("http://tizen.org/feature/screen.width",
@@ -104,125 +136,50 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
         system_info_get_platform_int("http://tizen.org/feature/screen.height",
                                      &h) != SYSTEM_INFO_ERROR_NONE) {
       LOG_ERROR("Could not obtain the screen size.");
+      throw VideoPlayerError("PlusPlayer - Could not obtain the screen size");
+    }
+    Ecore_Wl2_Window *window_handle =
+        (Ecore_Wl2_Window *)FlutterDesktopGetWindow(registrar_ref);
+    if (!player->SetDisplay(plusplayer::DisplayType::kOverlay,
+                            ecore_wl2_window_surface_id_get(window_handle), 0,
+                            0, w, h)) {
+      LOG_ERROR("set display failed");
+      throw VideoPlayerError("PlusPlayer - set display failed");
     }
 
-    ret = -1;
-    void *libHandle = dlopen("libcapi-media-player.so.0", RTLD_LAZY);
-    int (*player_set_ecore_wl_display)(
-        player_h player, player_display_type_e type, void *ecore_wl_window,
-        int x, int y, int width, int height);
-    if (libHandle) {
-      *(void **)(&player_set_ecore_wl_display) =
-          dlsym(libHandle, "player_set_ecore_wl_display");
-      if (player_set_ecore_wl_display) {
-        ret = player_set_ecore_wl_display(
-            player_, PLAYER_DISPLAY_TYPE_OVERLAY,
-            FlutterDesktopGetWindow(registrar_ref), 0, 0, w, h);
-      } else {
-        LOG_ERROR("[VideoPlayer] Symbol not found %s: ", dlerror());
-      }
-      dlclose(libHandle);
-    } else {
-      LOG_DEBUG("[VideoPlayer] dlopen failed %s: ", dlerror());
+    if (!player->SetDisplayMode(plusplayer::DisplayMode::kDstRoi)) {
+      LOG_ERROR("set display mode failed");
+      throw VideoPlayerError("PlusPlayer - set display mode failed");
     }
-  }
 
-  if (ret != PLAYER_ERROR_NONE) {
-    player_destroy(player_);
-    LOG_ERROR("[VideoPlayer] player_set_ecore_wl_display failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_set_ecore_wl_display failed",
-                           get_error_message(ret));
+    if (!player->PrepareAsync()) {
+      LOG_ERROR("parepare async failed");
+      throw VideoPlayerError("PlusPlayer - prepare async failed");
+    }
+  } else {
+    LOG_ERROR("Create operation failed");
+    throw VideoPlayerError("PlusPlayer - Create operation failed");
   }
-
-  ret = player_set_display_mode(player_, PLAYER_DISPLAY_MODE_DST_ROI);
-  if (ret != PLAYER_ERROR_NONE) {
-    player_destroy(player_);
-    LOG_ERROR("[VideoPlayer] player_get_display_mode failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_get_display_mode failed",
-                           get_error_message(ret));
-  }
-
-  LOG_DEBUG("[VideoPlayer] call player_set_uri to set video path (%s)",
-            uri.c_str());
-  ret = player_set_uri(player_, uri.c_str());
-  if (ret != PLAYER_ERROR_NONE) {
-    player_destroy(player_);
-    LOG_ERROR("[VideoPlayer] player_set_uri failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_set_uri failed", get_error_message(ret));
-  }
-
-  LOG_DEBUG("[VideoPlayer] call player_set_buffering_cb");
-  ret = player_set_buffering_cb(player_, onBuffering, (void *)this);
-  if (ret != PLAYER_ERROR_NONE) {
-    player_destroy(player_);
-    LOG_ERROR("[VideoPlayer] player_set_buffering_cb failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_set_buffering_cb failed",
-                           get_error_message(ret));
-  }
-
-  LOG_DEBUG("[VideoPlayer] call player_set_completed_cb");
-  ret = player_set_completed_cb(player_, onPlayCompleted, (void *)this);
-  if (ret != PLAYER_ERROR_NONE) {
-    player_destroy(player_);
-    LOG_ERROR("[VideoPlayer] player_set_completed_cb failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_set_completed_cb failed",
-                           get_error_message(ret));
-  }
-
-  LOG_DEBUG("[VideoPlayer] call player_set_interrupted_cb");
-  ret = player_set_interrupted_cb(player_, onInterrupted, (void *)this);
-  if (ret != PLAYER_ERROR_NONE) {
-    player_destroy(player_);
-    LOG_ERROR("[VideoPlayer] player_set_interrupted_cb failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_set_interrupted_cb failed",
-                           get_error_message(ret));
-  }
-
-  LOG_DEBUG("[VideoPlayer] call player_set_display_visible");
-  ret = player_set_display_visible(player_, true);
-  if (ret != PLAYER_ERROR_NONE) {
-    player_destroy(player_);
-    LOG_ERROR("[VideoPlayer] player_set_display_visible failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_set_display_visible failed",
-                           get_error_message(ret));
-  }
-
-  LOG_DEBUG("[VideoPlayer] call player_set_error_cb");
-  ret = player_set_error_cb(player_, onErrorOccurred, (void *)this);
-  if (ret != PLAYER_ERROR_NONE) {
-    player_destroy(player_);
-    LOG_ERROR("[VideoPlayer] player_set_error_cb failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_set_error_cb failed",
-                           get_error_message(ret));
-  }
-
-  LOG_DEBUG("[VideoPlayer] call player_prepare_async");
-  ret = player_prepare_async(player_, onPrepared, (void *)this);
-  if (ret != PLAYER_ERROR_NONE) {
-    player_destroy(player_);
-    LOG_ERROR("[VideoPlayer] player_prepare_async failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_prepare_async failed",
-                           get_error_message(ret));
-  }
+  texture_id_ = gPlayerIndex++;
+  player_ = std::move(player);
   setupEventChannel(plugin_registrar->messenger());
 }
 
 void VideoPlayer::setDisplayRoi(int x, int y, int w, int h) {
+  LOG_DEBUG("setDisplayRoi PlusPlayer x == %d, y == %d, w == %d, h == %d", x, y,
+            w, h);
   if (player_ == nullptr) {
-    LOG_ERROR("VideoPlayer isn't created");
+    LOG_ERROR("Plusplayer isn't created");
+    throw VideoPlayerError("PlusPlayer - Not created");
   }
-  int ret = player_set_display_roi_area(player_, x, y, w, h);
+  plusplayer::Geometry roi;
+  roi.x = x;
+  roi.y = y;
+  roi.w = w;
+  roi.h = 1080 - y;
+  bool ret = player_->SetDisplayRoi(roi);
 
-  if (ret != PLAYER_ERROR_NONE) {
+  if (!ret) {
     LOG_ERROR("Plusplayer SetDisplayRoi failed");
   }
 }
@@ -235,102 +192,109 @@ VideoPlayer::~VideoPlayer() {
 long VideoPlayer::getTextureId() { return texture_id_; }
 
 void VideoPlayer::play() {
-  LOG_DEBUG("[VideoPlayer.play] start player");
-  player_state_e state;
-  int ret = player_get_state(player_, &state);
-  if (ret == PLAYER_ERROR_NONE) {
-    LOG_INFO("[VideoPlayer.play] player state: %s",
-             StateToString(state).c_str());
-    if (state != PLAYER_STATE_PAUSED && state != PLAYER_STATE_READY) {
-      return;
-    }
+  LOG_DEBUG("start PlusPlayer");
+  if (player_ == nullptr) {
+    LOG_ERROR("Plusplayer isn't created");
+    throw VideoPlayerError("PlusPlayer - Not created");
   }
 
-  ret = player_start(player_);
-  if (ret != PLAYER_ERROR_NONE) {
-    LOG_ERROR("[VideoPlayer.play] player_start failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_start failed", get_error_message(ret));
+  if (player_->GetState() < plusplayer::State::kReady) {
+    LOG_ERROR("Invalid state for play operation");
+    throw VideoPlayerError("PlusPlayer - Invalid state for play operation");
+  }
+
+  if (player_->GetState() == plusplayer::State::kReady) {
+    if (!player_->Start()) {
+      LOG_ERROR("Start operation failed");
+      throw VideoPlayerError("PlusPlayer - Start operation failed");
+    }
+  } else if (player_->GetState() == plusplayer::State::kPaused) {
+    if (!player_->Resume()) {
+      LOG_ERROR("Resume operation failed");
+      throw VideoPlayerError("PlusPlayer - Resume operation failed");
+    }
   }
 }
 
 void VideoPlayer::pause() {
-  LOG_DEBUG("[VideoPlayer.pause] pause player");
-  player_state_e state;
-  int ret = player_get_state(player_, &state);
-  if (ret == PLAYER_ERROR_NONE) {
-    LOG_INFO("[VideoPlayer.pause] player state: %s",
-             StateToString(state).c_str());
-    if (state != PLAYER_STATE_PLAYING) {
-      return;
-    }
+  LOG_DEBUG("pause PlusPlayer");
+  if (player_ == nullptr) {
+    LOG_ERROR("Plusplayer isn't created");
+    throw VideoPlayerError("PlusPlayer - Not created");
   }
 
-  ret = player_pause(player_);
-  if (ret != PLAYER_ERROR_NONE) {
-    LOG_ERROR("[VideoPlayer.pause] player_pause failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_pause failed", get_error_message(ret));
+  if (player_->GetState() < plusplayer::State::kReady) {
+    LOG_ERROR("Invalid state for pause operation");
+    throw VideoPlayerError("PlusPlayer - Invalid state for pause operation");
+  }
+
+  if (player_->GetState() == plusplayer::State::kPlaying) {
+    if (!player_->Pause()) {
+      LOG_ERROR("Pause operation failed");
+      throw VideoPlayerError("PlusPlayer - Pause operation failed");
+    }
   }
 }
 
 void VideoPlayer::setLooping(bool is_looping) {
-  LOG_DEBUG("[VideoPlayer.setLooping] isLooping: %d", is_looping);
-  int ret = player_set_looping(player_, is_looping);
-  if (ret != PLAYER_ERROR_NONE) {
-    LOG_ERROR("[VideoPlayer.setLooping] player_set_looping failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_set_looping failed", get_error_message(ret));
-  }
+  LOG_DEBUG("set looping: %d", is_looping);
+  isLooping_ = is_looping;
+  // throw VideoPlayerError("PlusPlayer - Not support looping");
 }
 
 void VideoPlayer::setVolume(double volume) {
-  LOG_DEBUG("[VideoPlayer.setVolume] volume: %f", volume);
-  int ret = player_set_volume(player_, volume, volume);
-  if (ret != PLAYER_ERROR_NONE) {
-    LOG_ERROR("[VideoPlayer.setVolume] player_set_volume failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_set_volume failed", get_error_message(ret));
-  }
+  LOG_ERROR("PlusPlayer doesn't support to set volume");
+  // throw VideoPlayerError("PlusPlayer - Not support to set volume");
 }
 
 void VideoPlayer::setPlaybackSpeed(double speed) {
-  LOG_DEBUG("[VideoPlayer.setPlaybackSpeed] speed: %f", speed);
-  int ret = player_set_playback_rate(player_, speed);
-  if (ret != PLAYER_ERROR_NONE) {
-    LOG_ERROR(
-        "[VideoPlayer.setPlaybackSpeed] player_set_playback_rate failed: %s",
-        get_error_message(ret));
-    throw VideoPlayerError("player_set_playback_rate failed",
-                           get_error_message(ret));
+  LOG_DEBUG("set playback speed: %f", speed);
+  if (player_ == nullptr) {
+    LOG_ERROR("Plusplayer isn't created");
+    throw VideoPlayerError("PlusPlayer - Not created");
+  }
+
+  plusplayer::ErrorType error = plusplayer::ErrorType::kNone;
+  if (!player_->SetPlaybackRate(speed, &error)) {
+    LOG_ERROR("SetPlaybackRate failed: %s", ErrorToString(error).c_str());
+    throw VideoPlayerError("PlusPlayer - SetPlaybackRate operation failed",
+                           ErrorToString(error));
   }
 }
 
 void VideoPlayer::seekTo(int position,
                          const SeekCompletedCb &seek_completed_cb) {
-  LOG_DEBUG("[VideoPlayer.seekTo] position: %d", position);
-  on_seek_completed_ = seek_completed_cb;
-  int ret =
-      player_set_play_position(player_, position, true, onSeekCompleted, this);
-  if (ret != PLAYER_ERROR_NONE) {
-    on_seek_completed_ = nullptr;
-    LOG_ERROR("[VideoPlayer.seekTo] player_set_play_position failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_set_play_position failed",
-                           get_error_message(ret));
+  LOG_DEBUG("seekTo position: %d", position);
+  if (player_ == nullptr) {
+    LOG_ERROR("Plusplayer isn't created");
+    throw VideoPlayerError("PlusPlayer - Not created");
+  }
+
+  if (!player_->Seek((unsigned long long)position)) {
+    LOG_ERROR("Seek to position %d failed", position);
+    throw VideoPlayerError("PlusPlayer - Seek operation failed");
   }
 }
 
 int VideoPlayer::getPosition() {
-  int position;
-  int ret = player_get_play_position(player_, &position);
-  if (ret != PLAYER_ERROR_NONE) {
-    LOG_ERROR("[VideoPlayer.getPosition] player_get_play_position failed: %s",
-              get_error_message(ret));
-    throw VideoPlayerError("player_get_play_position failed",
-                           get_error_message(ret));
+  LOG_DEBUG("get video player position");
+  if (player_ == nullptr) {
+    LOG_ERROR("Plusplayer isn't created");
+    throw VideoPlayerError("PlusPlayer - Not created");
   }
-  return position;
+
+  plusplayer::State state = player_->GetState();
+  if (state == plusplayer::State::kPlaying ||
+      state == plusplayer::State::kPaused) {
+    uint64_t position;
+    player_->GetPlayingTime(&position);
+    LOG_DEBUG("playing time: %lld", position);
+    return (int)position;
+  } else {
+    LOG_ERROR("Invalid state for GetPlayingTime operation");
+    throw VideoPlayerError(
+        "PlusPlayer - Invalid state for GetPlayingTime operation");
+  }
 }
 
 void VideoPlayer::dispose() {
@@ -339,15 +303,50 @@ void VideoPlayer::dispose() {
   event_sink_ = nullptr;
   event_channel_->SetStreamHandler(nullptr);
 
+  LOG_DEBUG("dispose PlusPlayer");
+
   if (player_) {
-    player_unprepare(player_);
-    player_unset_media_packet_video_frame_decoded_cb(player_);
-    player_unset_buffering_cb(player_);
-    player_unset_completed_cb(player_);
-    player_unset_interrupted_cb(player_);
-    player_unset_error_cb(player_);
-    player_destroy(player_);
-    player_ = 0;
+    player_->Stop();
+    player_->Close();
+    player_ = nullptr;
+  }
+}
+
+void VideoPlayer::sendBufferingStart() {
+  if (event_sink_) {
+    flutter::EncodableMap encodables = {
+        {flutter::EncodableValue("event"),
+         flutter::EncodableValue("bufferingStart")}};
+    flutter::EncodableValue eventValue(encodables);
+    LOG_INFO("[VideoPlayer.onBuffering] send bufferingStart event");
+    event_sink_->Success(eventValue);
+  }
+}
+
+void VideoPlayer::sendBufferingEnd() {
+  if (event_sink_) {
+    flutter::EncodableMap encodables = {
+        {flutter::EncodableValue("event"),
+         flutter::EncodableValue("bufferingEnd")}};
+    flutter::EncodableValue eventValue(encodables);
+    LOG_INFO("[VideoPlayer.onBuffering] send bufferingEnd event");
+    event_sink_->Success(eventValue);
+  }
+}
+
+void VideoPlayer::sendBufferingUpdate(int position) {
+  if (event_sink_) {
+    flutter::EncodableList range = {flutter::EncodableValue(0),
+                                    flutter::EncodableValue(position)};
+    flutter::EncodableList rangeList = {flutter::EncodableValue(range)};
+    flutter::EncodableMap encodables = {
+        {flutter::EncodableValue("event"),
+         flutter::EncodableValue("bufferingUpdate")},
+        {flutter::EncodableValue("values"),
+         flutter::EncodableValue(rangeList)}};
+    flutter::EncodableValue eventValue(encodables);
+    LOG_INFO("[VideoPlayer.onBuffering] send bufferingUpdate event");
+    event_sink_->Success(eventValue);
   }
 }
 
@@ -385,57 +384,76 @@ void VideoPlayer::setupEventChannel(flutter::BinaryMessenger *messenger) {
 }
 
 void VideoPlayer::initialize() {
-  player_state_e state;
-  int ret = player_get_state(player_, &state);
-  if (ret == PLAYER_ERROR_NONE) {
-    LOG_INFO("[VideoPlayer.initialize] player state: %s",
-             StateToString(state).c_str());
-    if (state == PLAYER_STATE_READY && !is_initialized_) {
-      sendInitialized();
+  if (player_ == nullptr) {
+    LOG_ERROR("Plusplayer isn't created");
+    throw VideoPlayerError("PlusPlayer - Not created");
+  }
+
+  if (player_->GetState() == plusplayer::State::kReady) {
+    int64_t duration;
+    if (!player_->GetDuration(&duration)) {
+      LOG_ERROR("PlusPlayer - GetDuration operation failed");
+      // sendError("", "PlusPlayer - GetDuration operation failed");
+      return;
     }
+    LOG_DEBUG("video duration: %lld", duration);
+
+    int width = 0, height = 0;
+    std::vector<plusplayer::Track> tracks = player_->GetActiveTrackInfo();
+    for (auto track : tracks) {
+      if (track.type == plusplayer::TrackType::kTrackTypeVideo) {
+        width = track.width;
+        height = track.height;
+      }
+    }
+    LOG_DEBUG("video widht: %d, video height: %d", width, height);
+
+    plusplayer::DisplayRotation rotate;
+    if (!player_->GetDisplayRotate(&rotate)) {
+      LOG_ERROR("PlusPlayer - GetDisplayRotate operation failed");
+      // sendError("", "PlusPlayer - GetDisplayRotate operation failed");
+    } else {
+      if (rotate == plusplayer::DisplayRotation::kRotate90 ||
+          rotate == plusplayer::DisplayRotation::kRotate270) {
+        int tmp = width;
+        width = height;
+        height = tmp;
+      }
+    }
+
+    sendInitialized();
   } else {
-    LOG_ERROR("[VideoPlayer.initialize] player_get_state failed: %s",
-              get_error_message(ret));
+    LOG_DEBUG("PlusPlayer isn't prepared, wait for ready");
   }
 }
 
 void VideoPlayer::sendInitialized() {
   if (!is_initialized_ && !is_interrupted_ && event_sink_ != nullptr) {
-    int duration;
-    int ret = player_get_duration(player_, &duration);
-    if (ret != PLAYER_ERROR_NONE) {
-      LOG_ERROR("[VideoPlayer.sendInitialized] player_get_duration failed: %s",
-                get_error_message(ret));
-      event_sink_->Error("player_get_duration failed", get_error_message(ret));
+    int64_t duration;
+    if (!player_->GetDuration(&duration)) {
+      LOG_ERROR("PlusPlayer - GetDuration operation failed");
+      event_sink_->Error("PlusPlayer", "GetDuration operation failed");
       return;
     }
-    LOG_DEBUG("[VideoPlayer.sendInitialized] video duration: %d", duration);
+    LOG_DEBUG("[VideoPlayer.sendInitialized] video duration: %lld", duration);
 
     int width, height;
-    ret = player_get_video_size(player_, &width, &height);
-    if (ret != PLAYER_ERROR_NONE) {
-      LOG_ERROR(
-          "[VideoPlayer.sendInitialized] player_get_video_size failed: %s",
-          get_error_message(ret));
-      event_sink_->Error("player_get_video_size failed",
-                         get_error_message(ret));
-      return;
+    std::vector<plusplayer::Track> tracks = player_->GetActiveTrackInfo();
+    for (auto track : tracks) {
+      if (track.type == plusplayer::TrackType::kTrackTypeVideo) {
+        width = track.width;
+        height = track.height;
+      }
     }
-    LOG_DEBUG("[VideoPlayer.sendInitialized] video width: %d, height: %d",
-              width, height);
+    LOG_DEBUG("video widht: %d, video height: %d", width, height);
 
-    player_display_rotation_e rotation;
-    ret = player_get_display_rotation(player_, &rotation);
-    if (ret != PLAYER_ERROR_NONE) {
-      LOG_ERROR(
-          "[VideoPlayer.sendInitialized] player_get_display_rotation "
-          "failed: %s",
-          get_error_message(ret));
+    plusplayer::DisplayRotation rotate;
+    if (!player_->GetDisplayRotate(&rotate)) {
+      LOG_ERROR("PlusPlayer - GetDisplayRotate operation failed");
+      event_sink_->Error("", "PlusPlayer - GetDisplayRotate operation failed");
     } else {
-      LOG_DEBUG("[VideoPlayer.sendInitialized] rotation: %s",
-                RotationToString(rotation).c_str());
-      if (rotation == PLAYER_DISPLAY_ROTATION_90 ||
-          rotation == PLAYER_DISPLAY_ROTATION_270) {
+      if (rotate == plusplayer::DisplayRotation::kRotate90 ||
+          rotate == plusplayer::DisplayRotation::kRotate270) {
         int tmp = width;
         width = height;
         height = tmp;
@@ -456,104 +474,84 @@ void VideoPlayer::sendInitialized() {
   }
 }
 
-void VideoPlayer::sendBufferingStart() {
-  if (event_sink_) {
-    flutter::EncodableMap encodables = {
-        {flutter::EncodableValue("event"),
-         flutter::EncodableValue("bufferingStart")}};
-    flutter::EncodableValue eventValue(encodables);
-    LOG_INFO("[VideoPlayer.onBuffering] send bufferingStart event");
-    event_sink_->Success(eventValue);
+void VideoPlayer::PlusPlayerEventListener::OnErrorMsg(
+    const plusplayer::ErrorType &error_code, const char *error_msg,
+    UserData userdata) {
+  LOG_DEBUG("Error occurred: %s", error_msg);
+  if (handler_ != nullptr) {
+    handler_->event_sink_->Error(ErrorToString(error_code), error_msg);
   }
 }
 
-void VideoPlayer::sendBufferingUpdate(int position) {
-  if (event_sink_) {
-    flutter::EncodableList range = {flutter::EncodableValue(0),
-                                    flutter::EncodableValue(position)};
-    flutter::EncodableList rangeList = {flutter::EncodableValue(range)};
-    flutter::EncodableMap encodables = {
-        {flutter::EncodableValue("event"),
-         flutter::EncodableValue("bufferingUpdate")},
-        {flutter::EncodableValue("values"),
-         flutter::EncodableValue(rangeList)}};
-    flutter::EncodableValue eventValue(encodables);
-    LOG_INFO("[VideoPlayer.onBuffering] send bufferingUpdate event");
-    event_sink_->Success(eventValue);
+void VideoPlayer::PlusPlayerEventListener::OnResourceConflicted(
+    UserData userdata) {
+  LOG_DEBUG("Resource conflicted");
+}
+
+void VideoPlayer::PlusPlayerEventListener::OnPrepareDone(bool ret,
+                                                         UserData userdata) {
+  if (!ret) {
+    LOG_ERROR("Failed to prepare");
+    if (handler_ != nullptr) {
+      handler_->event_sink_->Error("PlusPlayerEventListener",
+                                   "Failed to prepare");
+    }
+    return;
+  }
+
+  LOG_DEBUG("PlusPlayer is prepared");
+  if (handler_ != nullptr) {
+    handler_->initialize();
   }
 }
 
-void VideoPlayer::sendBufferingEnd() {
-  if (event_sink_) {
-    flutter::EncodableMap encodables = {
-        {flutter::EncodableValue("event"),
-         flutter::EncodableValue("bufferingEnd")}};
-    flutter::EncodableValue eventValue(encodables);
-    LOG_INFO("[VideoPlayer.onBuffering] send bufferingEnd event");
-    event_sink_->Success(eventValue);
+void VideoPlayer::PlusPlayerEventListener::OnError(
+    const plusplayer::ErrorType &error_code, UserData userdata) {}
+
+void VideoPlayer::PlusPlayerEventListener::OnBufferStatus(const int percent,
+                                                          UserData userdata) {
+  LOG_DEBUG("OnBufferStatus percent == %d", percent);
+  if (handler_ != nullptr) {
+    handler_->sendBufferingUpdate(percent);
   }
 }
 
-void VideoPlayer::onPrepared(void *data) {
-  VideoPlayer *player = (VideoPlayer *)data;
-  LOG_DEBUG("[VideoPlayer.onPrepared] video player is prepared");
-
-  if (!player->is_initialized_) {
-    player->sendInitialized();
-  }
+void VideoPlayer::PlusPlayerEventListener::OnEos(UserData userdata) {
+  LOG_DEBUG("OnEos");
 }
 
-void VideoPlayer::onBuffering(int percent, void *data) {
-  // percent isn't used for video size, it's the used storage of buffer
-  LOG_DEBUG("[VideoPlayer.onBuffering] percent: %d", percent);
+void VideoPlayer::PlusPlayerEventListener::OnClosedCaptionData(
+    std::unique_ptr<char[]> data, const int size, UserData userdata) {}
+
+void VideoPlayer::PlusPlayerEventListener::OnAdaptiveStreamingControlEvent(
+    const plusplayer::StreamingMessageType &type,
+    const plusplayer::MessageParam &msg, UserData userdata) {}
+
+void VideoPlayer::PlusPlayerEventListener::OnCueEvent(const char *msgType,
+                                                      const uint64_t timestamp,
+                                                      unsigned int duration,
+                                                      UserData userdata) {}
+void VideoPlayer::PlusPlayerEventListener::OnDateRangeEvent(
+    const char *DateRangeData, UserData userdata) {}
+
+void VideoPlayer::PlusPlayerEventListener::OnStopReachEvent(bool StopReach,
+                                                            UserData userdata) {
+  LOG_DEBUG("OnStopReachEvent");
 }
 
-void VideoPlayer::onSeekCompleted(void *data) {
-  VideoPlayer *player = (VideoPlayer *)data;
-  LOG_DEBUG("[VideoPlayer.onSeekCompleted] completed to seek");
+void VideoPlayer::PlusPlayerEventListener::OnCueOutContEvent(
+    const char *CueOutContData, UserData userdata) {}
 
-  if (player->on_seek_completed_) {
-    player->on_seek_completed_();
-    player->on_seek_completed_ = nullptr;
-  }
+void VideoPlayer::PlusPlayerEventListener::OnSeekDone(UserData userdata) {
+  LOG_DEBUG("OnSeekDone");
 }
 
-void VideoPlayer::onPlayCompleted(void *data) {
-  VideoPlayer *player = (VideoPlayer *)data;
-  LOG_DEBUG("[VideoPlayer.onPlayCompleted] completed to play video");
-
-  if (player->event_sink_) {
-    flutter::EncodableMap encodables = {{flutter::EncodableValue("event"),
-                                         flutter::EncodableValue("completed")}};
-    flutter::EncodableValue eventValue(encodables);
-    LOG_INFO("[VideoPlayer.onPlayCompleted] send completed event");
-    player->event_sink_->Success(eventValue);
-
-    LOG_DEBUG("[VideoPlayer.onPlayCompleted] change player state to pause");
-    player->pause();
-  }
+void VideoPlayer::PlusPlayerEventListener::OnChangeSourceDone(
+    bool ret, UserData userdata) {
+  LOG_DEBUG("OnChangeSourceDone");
 }
 
-void VideoPlayer::onInterrupted(player_interrupted_code_e code, void *data) {
-  VideoPlayer *player = (VideoPlayer *)data;
-  LOG_DEBUG("[VideoPlayer.onInterrupted] interrupted code: %d", code);
-
-  player->is_interrupted_ = true;
-  if (player->event_sink_) {
-    LOG_INFO("[VideoPlayer.onInterrupted] send error event");
-    player->event_sink_->Error("Video player had error",
-                               "Video player is interrupted");
-  }
-}
-
-void VideoPlayer::onErrorOccurred(int code, void *data) {
-  VideoPlayer *player = (VideoPlayer *)data;
-  LOG_DEBUG("[VideoPlayer.onErrorOccurred] error code: %s",
-            get_error_message(code));
-
-  if (player->event_sink_) {
-    LOG_INFO("[VideoPlayer.onErrorOccurred] send error event");
-    player->event_sink_->Error("Video player had error",
-                               get_error_message(code));
-  }
+void VideoPlayer::PlusPlayerEventListener::OnStateChangedToPlaying(
+    UserData userdata) {
+  LOG_DEBUG("OnStateChangedToPlaying");
 }

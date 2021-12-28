@@ -5,7 +5,7 @@
 #include <flutter/event_channel.h>
 #include <flutter/plugin_registrar.h>
 #include <flutter_tizen.h>
-#include <player.h>
+#include <plusplayer/plusplayer.h>
 
 #include <mutex>
 #include <string>
@@ -34,29 +34,53 @@ class VideoPlayer {
   void setDisplayRoi(int x, int y, int w, int h);
 
  private:
+  class PlusPlayerEventListener : public plusplayer::EventListener {
+   public:
+    PlusPlayerEventListener(VideoPlayer *handler) : handler_(handler) {}
+    void OnErrorMsg(const plusplayer::ErrorType &error_code,
+                    const char *error_msg, UserData userdata) override;
+    void OnResourceConflicted(UserData userdata) override;
+    void OnPrepareDone(bool ret, UserData userdata) override;
+    void OnError(const plusplayer::ErrorType &error_code,
+                 UserData userdata) override;
+    void OnBufferStatus(const int percent, UserData userdata) override;
+    void OnEos(UserData userdata) override;
+    void OnClosedCaptionData(std::unique_ptr<char[]> data, const int size,
+                             UserData userdata) override;
+    void OnAdaptiveStreamingControlEvent(
+        const plusplayer::StreamingMessageType &type,
+        const plusplayer::MessageParam &msg, UserData userdata) override;
+    void OnCueEvent(const char *msgType, const uint64_t timestamp,
+                    unsigned int duration, UserData userdata) override;
+    void OnDateRangeEvent(const char *DateRangeData,
+                          UserData userdata) override;
+    void OnStopReachEvent(bool StopReach, UserData userdata) override;
+    void OnCueOutContEvent(const char *CueOutContData,
+                           UserData userdata) override;
+    void OnSeekDone(UserData userdata) override;
+    void OnChangeSourceDone(bool ret, UserData userdata) override;
+    void OnStateChangedToPlaying(UserData userdata) override;
+
+   private:
+    VideoPlayer *handler_ = nullptr;
+  };
   void initialize();
   void setupEventChannel(flutter::BinaryMessenger *messenger);
   void sendInitialized();
   void sendBufferingStart();
   void sendBufferingUpdate(int position);  // milliseconds
   void sendBufferingEnd();
-  void sendSeeking(bool seeking);
-
-  static void onPrepared(void *data);
-  static void onBuffering(int percent, void *data);
-  static void onSeekCompleted(void *data);
-  static void onPlayCompleted(void *data);
-  static void onInterrupted(player_interrupted_code_e code, void *data);
-  static void onErrorOccurred(int code, void *data);
 
   bool is_initialized_;
-  player_h player_;
+  std::unique_ptr<plusplayer::PlusPlayer> player_;
+  std::unique_ptr<PlusPlayerEventListener> listener_;
   std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>
       event_channel_;
   std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink_;
   long texture_id_;
   SeekCompletedCb on_seek_completed_;
   bool is_interrupted_;
+  bool isLooping_;
 };
 
 #endif  // VIDEO_PLAYER_H_
