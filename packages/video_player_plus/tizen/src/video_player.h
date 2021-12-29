@@ -79,7 +79,6 @@ class VideoPlayer {
   std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink_;
   long texture_id_;
   SeekCompletedCb on_seek_completed_;
-  bool is_interrupted_;
   bool isLooping_;
 };
 
