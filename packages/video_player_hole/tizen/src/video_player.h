@@ -11,6 +11,7 @@
 #include <string>
 
 #include "video_player_options.h"
+#include "plus_player_wrapper_proxy.h"
 
 using SeekCompletedCb = std::function<void()>;
 
