@@ -10,8 +10,8 @@
 #include <mutex>
 #include <string>
 
-#include "video_player_options.h"
 #include "plus_player_wrapper_proxy.h"
+#include "video_player_options.h"
 
 using SeekCompletedCb = std::function<void()>;
 
@@ -43,21 +43,19 @@ class VideoPlayer {
   void sendBufferingEnd();
   void sendSeeking(bool seeking);
 
-  static void onPrepared(void *data);
+  static void onPrepared(bool ret, void *data);
   static void onBuffering(int percent, void *data);
   static void onSeekCompleted(void *data);
   static void onPlayCompleted(void *data);
-  static void onInterrupted(player_interrupted_code_e code, void *data);
-  static void onErrorOccurred(int code, void *data);
+  static void onPlaying(void *data);
 
   bool is_initialized_;
-  player_h player_;
   std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>
       event_channel_;
   std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink_;
   long texture_id_;
+  PlusPlayerRef plusplayer_{nullptr};
   SeekCompletedCb on_seek_completed_;
-  bool is_interrupted_;
 };
 
 #endif  // VIDEO_PLAYER_H_

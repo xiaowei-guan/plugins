@@ -422,6 +422,52 @@ bool PlusPlayerWrapperProxy::Restore(PlusPlayerRef player, State state) {
   }
 }
 
+bool PlusPlayerWrapperProxy::GetVideoSize(PlusPlayerRef player, int* width, int* height){
+  if (plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return false;
+  }
+  bool (*GetVideoSize)(PlusPlayerRef player, int* width, int* height);
+  *(void**)(&GetVideoSize) = dlsym(plus_player_hander_, "Restore");
+  if (GetVideoSize) {
+    return GetVideoSize(player, width, height);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+    return false;
+  }
+}
+
+
+int PlusPlayerWrapperProxy::GetSurfaceId(PlusPlayerRef player, void* window){
+    if (plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return -1;
+  }
+  int (*GetSurfaceId)(PlusPlayerRef player, void* window);
+  *(void**)(&GetSurfaceId) = dlsym(plus_player_hander_, "GetSurfaceId");
+  if (GetSurfaceId) {
+    return GetSurfaceId(player, window);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+    return -1;
+  }
+}
+
+bool PlusPlayerWrapperProxy::Close(PlusPlayerRef player){
+  if (plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return false;
+  }
+  bool (*Close)(PlusPlayerRef player);
+  *(void**)(&Close) = dlsym(plus_player_hander_, "Close");
+  if (Close) {
+    return Close(player);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+    return false;
+  }
+}
+
 void PlusPlayerWrapperProxy::DestoryPlayer(PlusPlayerRef player) {
   if (plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");

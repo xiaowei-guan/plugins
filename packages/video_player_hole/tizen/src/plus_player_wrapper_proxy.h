@@ -53,9 +53,15 @@ class PlusPlayerWrapperProxy {
     return instance;
   }
 
+  ~PlusPlayerWrapperProxy();
+  PlusPlayerWrapperProxy(const PlusPlayerWrapperProxy&) = delete;
+  PlusPlayerWrapperProxy& operator=(const PlusPlayerWrapperProxy&) = delete;
+
   PlusPlayerRef CreatePlayer();
 
   bool Open(PlusPlayerRef player, const char* uri);
+  
+  bool Close(PlusPlayerRef player);
 
   void SetAppId(PlusPlayerRef player, const char* app_id);
 
@@ -104,6 +110,8 @@ class PlusPlayerWrapperProxy {
 
   bool Restore(PlusPlayerRef player, State state);
 
+  bool GetVideoSize(PlusPlayerRef player, int* width, int* height);
+
   void DestoryPlayer(PlusPlayerRef player);
 
   void SetCompletedCallback(PlusPlayerRef player,
@@ -132,9 +140,10 @@ class PlusPlayerWrapperProxy {
 
   void UnsetPlayingCallback(PlusPlayerRef player);
 
+  int GetSurfaceId(PlusPlayerRef player, void* window);
+
  private:
   PlusPlayerWrapperProxy();
-  ~PlusPlayerWrapperProxy();
   void* plus_player_hander_{nullptr};
 };
 #endif
