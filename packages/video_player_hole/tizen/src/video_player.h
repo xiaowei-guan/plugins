@@ -48,6 +48,9 @@ class VideoPlayer {
   static void onSeekCompleted(void *data);
   static void onPlayCompleted(void *data);
   static void onPlaying(void *data);
+  static void onError(const ErrorType& error_code, void* user_data);
+  static void onErrorMessage(const ErrorType& error_code,
+                                     const char* error_msg, void* user_data);
 
   bool is_initialized_;
   std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>

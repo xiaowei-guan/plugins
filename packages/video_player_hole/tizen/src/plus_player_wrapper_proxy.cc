@@ -422,7 +422,8 @@ bool PlusPlayerWrapperProxy::Restore(PlusPlayerRef player, State state) {
   }
 }
 
-bool PlusPlayerWrapperProxy::GetVideoSize(PlusPlayerRef player, int* width, int* height){
+bool PlusPlayerWrapperProxy::GetVideoSize(PlusPlayerRef player, int* width,
+                                          int* height) {
   if (plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
@@ -437,9 +438,8 @@ bool PlusPlayerWrapperProxy::GetVideoSize(PlusPlayerRef player, int* width, int*
   }
 }
 
-
-int PlusPlayerWrapperProxy::GetSurfaceId(PlusPlayerRef player, void* window){
-    if (plus_player_hander_) {
+int PlusPlayerWrapperProxy::GetSurfaceId(PlusPlayerRef player, void* window) {
+  if (plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return -1;
   }
@@ -453,7 +453,7 @@ int PlusPlayerWrapperProxy::GetSurfaceId(PlusPlayerRef player, void* window){
   }
 }
 
-bool PlusPlayerWrapperProxy::Close(PlusPlayerRef player){
+bool PlusPlayerWrapperProxy::Close(PlusPlayerRef player) {
   if (plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
@@ -482,14 +482,15 @@ void PlusPlayerWrapperProxy::DestoryPlayer(PlusPlayerRef player) {
   }
 }
 
-void PlusPlayerWrapperProxy::SetCompletedCallback(
-    PlusPlayerRef player, plusplayer_completed_cb callback, void* user_data) {
+void PlusPlayerWrapperProxy::SetCompletedCallback(PlusPlayerRef player,
+                                                  OnPlayerCompleted callback,
+                                                  void* user_data) {
   if (plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
-  void (*SetCompletedCallback)(
-      PlusPlayerRef player, plusplayer_completed_cb callback, void* user_data);
+  void (*SetCompletedCallback)(PlusPlayerRef player, OnPlayerCompleted callback,
+                               void* user_data);
   *(void**)(&SetCompletedCallback) =
       dlsym(plus_player_hander_, "SetCompletedCallback");
   if (SetCompletedCallback) {
@@ -514,14 +515,15 @@ void PlusPlayerWrapperProxy::UnsetCompletedCallback(PlusPlayerRef player) {
   }
 }
 
-void PlusPlayerWrapperProxy::SetBufferingCallback(
-    PlusPlayerRef player, plusplayer_buffering_cb callback, void* user_data) {
+void PlusPlayerWrapperProxy::SetBufferingCallback(PlusPlayerRef player,
+                                                  OnPlayerBuffering callback,
+                                                  void* user_data) {
   if (plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
-  void (*SetBufferingCallback)(
-      PlusPlayerRef player, plusplayer_buffering_cb callback, void* user_data);
+  void (*SetBufferingCallback)(PlusPlayerRef player, OnPlayerBuffering callback,
+                               void* user_data);
   *(void**)(&SetBufferingCallback) =
       dlsym(plus_player_hander_, "SetBufferingCallback");
   if (SetBufferingCallback) {
@@ -546,14 +548,15 @@ void PlusPlayerWrapperProxy::UnsetBufferingCallback(PlusPlayerRef player) {
   }
 }
 
-void PlusPlayerWrapperProxy::SetPreparedCallback(
-    PlusPlayerRef player, plusplayer_prepared_cb callback, void* user_data) {
+void PlusPlayerWrapperProxy::SetPreparedCallback(PlusPlayerRef player,
+                                                 OnPlayerPrepared callback,
+                                                 void* user_data) {
   if (plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
-  void (*SetPreparedCallback)(PlusPlayerRef player,
-                              plusplayer_prepared_cb callback, void* user_data);
+  void (*SetPreparedCallback)(PlusPlayerRef player, OnPlayerPrepared callback,
+                              void* user_data);
   *(void**)(&SetPreparedCallback) =
       dlsym(plus_player_hander_, "SetPreparedCallback");
   if (SetPreparedCallback) {
@@ -579,15 +582,15 @@ void PlusPlayerWrapperProxy::UnsetPreparedCallback(PlusPlayerRef player) {
 }
 
 void PlusPlayerWrapperProxy::SetResourceConflictedCallback(
-    PlusPlayerRef player, plusplayer_resource_conflicted_cb callback,
+    PlusPlayerRef player, OnPlayerResourceConflicted callback,
     void* user_data) {
   if (plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
-  void (*SetResourceConflictedCallback)(
-      PlusPlayerRef player, plusplayer_resource_conflicted_cb callback,
-      void* user_data);
+  void (*SetResourceConflictedCallback)(PlusPlayerRef player,
+                                        OnPlayerResourceConflicted callback,
+                                        void* user_data);
   *(void**)(&SetResourceConflictedCallback) =
       dlsym(plus_player_hander_, "SetResourceConflictedCallback");
   if (SetResourceConflictedCallback) {
@@ -614,14 +617,14 @@ void PlusPlayerWrapperProxy::UnsetResourceConflictedCallback(
 }
 
 void PlusPlayerWrapperProxy::SetPlayingCallback(PlusPlayerRef player,
-                                                plusplayer_playing_cb callback,
+                                                OnPlayerPlaying callback,
                                                 void* user_data) {
   if (plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
-  void (*SetPlayingCallback)(PlusPlayerRef player,
-                             plusplayer_playing_cb callback, void* user_data);
+  void (*SetPlayingCallback)(PlusPlayerRef player, OnPlayerPlaying callback,
+                             void* user_data);
   *(void**)(&SetPlayingCallback) =
       dlsym(plus_player_hander_, "plusplayer_playing_cb");
   if (SetPlayingCallback) {
@@ -641,6 +644,100 @@ void PlusPlayerWrapperProxy::UnsetPlayingCallback(PlusPlayerRef player) {
       dlsym(plus_player_hander_, "UnsetPlayingCallback");
   if (UnsetPlayingCallback) {
     UnsetPlayingCallback(player);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+
+void PlusPlayerWrapperProxy::SetErrorCallback(PlusPlayerRef player,
+                                              OnPlayerError callback,
+                                              void* user_data) {
+  if (plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  void (*SetErrorCallback)(PlusPlayerRef player, OnPlayerError callback,
+                           void* user_data);
+  *(void**)(&SetErrorCallback) = dlsym(plus_player_hander_, "SetErrorCallback");
+  if (SetErrorCallback) {
+    SetErrorCallback(player, callback, user_data);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+
+void PlusPlayerWrapperProxy::UnsetErrorCallback(PlusPlayerRef player) {
+  if (plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  bool (*UnsetErrorCallback)(PlusPlayerRef player);
+  *(void**)(&UnsetErrorCallback) =
+      dlsym(plus_player_hander_, "UnsetErrorCallback");
+  if (UnsetErrorCallback) {
+    UnsetErrorCallback(player);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+
+void PlusPlayerWrapperProxy::SetErrorMessageCallback(
+    PlusPlayerRef player, OnPlayerErrorMessage callback, void* user_data) {
+  if (plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  bool (*SetErrorMessageCallback)(PlusPlayerRef player);
+  *(void**)(&SetErrorMessageCallback) =
+      dlsym(plus_player_hander_, "SetErrorMessageCallback");
+  if (SetErrorMessageCallback) {
+    SetErrorMessageCallback(player);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+
+void PlusPlayerWrapperProxy::UnsetErrorMessageCallback(PlusPlayerRef player) {
+  if (plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  bool (*UnsetErrorMessageCallback)(PlusPlayerRef player);
+  *(void**)(&UnsetErrorMessageCallback) =
+      dlsym(plus_player_hander_, "UnsetErrorMessageCallback");
+  if (UnsetErrorMessageCallback) {
+    UnsetErrorMessageCallback(player);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+
+void PlusPlayerWrapperProxy::SetSeekCompletedCallback(
+    PlusPlayerRef player, OnPlayerSeekCompleted callback, void* user_data) {
+  if (plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  bool (*SetSeekCompletedCallback)(
+      PlusPlayerRef player, OnPlayerSeekCompleted callback, void* user_data);
+  *(void**)(&SetSeekCompletedCallback) =
+      dlsym(plus_player_hander_, "SetSeekCompletedCallback");
+  if (SetSeekCompletedCallback) {
+    SetSeekCompletedCallback(player, callback, user_data);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+void PlusPlayerWrapperProxy::UnsetSeekCompletedCallback(PlusPlayerRef player) {
+  if (plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  bool (*UnsetSeekCompletedCallback)(PlusPlayerRef player);
+  *(void**)(&UnsetSeekCompletedCallback) =
+      dlsym(plus_player_hander_, "UnsetSeekCompletedCallback");
+  if (UnsetSeekCompletedCallback) {
+    UnsetSeekCompletedCallback(player);
   } else {
     LOG_ERROR("Symbol not found %s: ", dlerror());
   }

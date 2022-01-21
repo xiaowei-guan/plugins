@@ -25,6 +25,12 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
   plusplayer_ = instance.CreatePlayer();
   if (plusplayer_ != nullptr) {
     LOG_DEBUG("[PlusPlayer]call Open to set uri (%s)", uri.c_str());
+    instance.SetBufferingCallback(plusplayer_, onBuffering, this);
+    instance.SetCompletedCallback(plusplayer_, onPlayCompleted, this);
+    instance.SetPreparedCallback(plusplayer_, onPrepared, this);
+    instance.SetSeekCompletedCallback(plusplayer_, onSeekCompleted, this);
+    instance.SetErrorCallback(plusplayer_, onError, this);
+    instance.SetErrorMessageCallback(plusplayer_, onErrorMessage, this);
     if (instance.Open(plusplayer_, uri.c_str())) {
       LOG_ERROR("Open uri(%s) failed", uri.c_str());
       throw VideoPlayerError("PlusPlayer", "Open failed");
@@ -216,6 +222,12 @@ void VideoPlayer::dispose() {
 
   if (plusplayer_) {
     PlusPlayerWrapperProxy &instance = PlusPlayerWrapperProxy::GetInstance();
+    instance.UnsetBufferingCallback(plusplayer_);
+    instance.UnsetCompletedCallback(plusplayer_);
+    instance.UnsetPreparedCallback(plusplayer_);
+    instance.UnsetSeekCompletedCallback(plusplayer_);
+    instance.UnsetErrorCallback(plusplayer_);
+    instance.UnsetErrorMessageCallback(plusplayer_);
     instance.Stop(plusplayer_);
     instance.Close(plusplayer_);
     instance.DestoryPlayer(plusplayer_);
@@ -388,3 +400,8 @@ void VideoPlayer::onPlayCompleted(void *data) {
     player->pause();
   }
 }
+
+void VideoPlayer::onPlaying(void *data) {}
+void VideoPlayer::onError(const ErrorType &error_code, void *user_data) {}
+void VideoPlayer::onErrorMessage(const ErrorType &error_code,
+                                 const char *error_msg, void *user_data) {}

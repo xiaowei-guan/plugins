@@ -3,6 +3,12 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <tizen_error.h>
+
+#define PLUSPLAYER_ERROR_CLASS TIZEN_ERROR_PLAYER | 0x20
+
+/* This is for custom defined player error. */
+#define PLUSPLAYER_CUSTOM_ERROR_CLASS TIZEN_ERROR_PLAYER | 0x1000
 
 enum DisplayType { kDisplayNone, kOverlay, kEvas, kMixer, kOverlaySyncUI };
 
@@ -36,15 +42,75 @@ struct Geometry {
   int h = 1080;
 };
 
+enum class ErrorType {
+  kNone = TIZEN_ERROR_NONE,                          /**< Successful */
+  kOutOfMemory = TIZEN_ERROR_OUT_OF_MEMORY,          /**< Out of memory */
+  kInvalidParameter = TIZEN_ERROR_INVALID_PARAMETER, /**< Invalid parameter */
+  kNoSuchFile = TIZEN_ERROR_NO_SUCH_FILE, /**< No such file or directory */
+  kInvalidOperation = TIZEN_ERROR_INVALID_OPERATION, /**< Invalid operation */
+  kFileNoSpaceOnDevice =
+      TIZEN_ERROR_FILE_NO_SPACE_ON_DEVICE, /**< No space left on the device */
+  kFeatureNotSupportedOnDevice =
+      TIZEN_ERROR_NOT_SUPPORTED,                 /**< Not supported */
+  kSeekFailed = PLUSPLAYER_ERROR_CLASS | 0x01,   /**< Seek operation failure */
+  kInvalidState = PLUSPLAYER_ERROR_CLASS | 0x02, /**< Invalid state */
+  kNotSupportedFile =
+      PLUSPLAYER_ERROR_CLASS | 0x03,           /**< File format not supported */
+  kInvalidUri = PLUSPLAYER_ERROR_CLASS | 0x04, /**< Invalid URI */
+  kSoundPolicy = PLUSPLAYER_ERROR_CLASS | 0x05, /**< Sound policy error */
+  kConnectionFailed =
+      PLUSPLAYER_ERROR_CLASS | 0x06, /**< Streaming connection failed */
+  kVideoCaptureFailed =
+      PLUSPLAYER_ERROR_CLASS | 0x07,             /**< Video capture failed */
+  kDrmExpired = PLUSPLAYER_ERROR_CLASS | 0x08,   /**< Expired license */
+  kDrmNoLicense = PLUSPLAYER_ERROR_CLASS | 0x09, /**< No license */
+  kDrmFutureUse = PLUSPLAYER_ERROR_CLASS | 0x0a, /**< License for future use */
+  kDrmNotPermitted = PLUSPLAYER_ERROR_CLASS | 0x0b, /**< Format not permitted */
+  kResourceLimit = PLUSPLAYER_ERROR_CLASS | 0x0c,   /**< Resource limit */
+  kPermissionDenied = TIZEN_ERROR_PERMISSION_DENIED, /**< Permission denied */
+  kServiceDisconnected =
+      PLUSPLAYER_ERROR_CLASS | 0x0d, /**< Socket connection lost (Since 3.0) */
+  kBufferSpace =
+      TIZEN_ERROR_BUFFER_SPACE, /**< No buffer space available (Since 3.0)*/
+  kNotSupportedAudioCodec =
+      PLUSPLAYER_ERROR_CLASS | 0x0e, /**< Not supported audio codec but video
+                                        can be played (Since 4.0) */
+  kNotSupportedVideoCodec =
+      PLUSPLAYER_ERROR_CLASS | 0x0f, /**< Not supported video codec but audio
+                                        can be played (Since 4.0) */
+  kNotSupportedSubtitle =
+      PLUSPLAYER_ERROR_CLASS |
+      0x10, /**< Not supported subtitle format (Since 4.0) */
+
+  // TODO(euna7.ko) Can be removed. refer to
+  // http://168.219.243.246:8090/pages/viewpage.action?pageId=27269511
+  kDrmInfo =
+      PLUSPLAYER_CUSTOM_ERROR_CLASS | 0x05, /**< playready drm error info */
+  kNotSupportedFormat = PLUSPLAYER_CUSTOM_ERROR_CLASS | 0x08,
+  kStreamingPlayer = PLUSPLAYER_CUSTOM_ERROR_CLASS | 0x09,
+  kDtcpFsk = PLUSPLAYER_CUSTOM_ERROR_CLASS | 0x0a,
+  kPreLoadingTimeOut = PLUSPLAYER_CUSTOM_ERROR_CLASS |
+                       0x0b, /**< can't finish preloading in time*/
+  kNetworkError =
+      PLUSPLAYER_CUSTOM_ERROR_CLASS | 0x0c, /**< for network error */
+  kChannelSurfingFailed =
+      PLUSPLAYER_CUSTOM_ERROR_CLASS | 0x0d, /**< for channel surfing error */
+
+  kUnknown
+};
+
 struct PlusPlayer;
 typedef struct PlusPlayer* PlusPlayerRef;
 
-typedef void (*plusplayer_prepared_cb)(bool ret, void* user_data);
-typedef void (*plusplayer_seek_completed_cb)(void* user_data);
-typedef void (*plusplayer_resource_conflicted_cb)(void* user_data);
-typedef void (*plusplayer_buffering_cb)(int percent, void* user_data);
-typedef void (*plusplayer_completed_cb)(void* user_data);
-typedef void (*plusplayer_playing_cb)(void* user_data);
+typedef void (*OnPlayerPrepared)(bool ret, void* user_data);
+typedef void (*OnPlayerSeekCompleted)(void* user_data);
+typedef void (*OnPlayerResourceConflicted)(void* user_data);
+typedef void (*OnPlayerBuffering)(int percent, void* user_data);
+typedef void (*OnPlayerCompleted)(void* user_data);
+typedef void (*OnPlayerPlaying)(void* user_data);
+typedef void (*OnPlayerError)(const ErrorType& error_code, void* user_data);
+typedef void (*OnPlayerErrorMessage)(const ErrorType& error_code,
+                                     const char* error_msg, void* user_data);
 
 class PlusPlayerWrapperProxy {
  public:
@@ -60,7 +126,7 @@ class PlusPlayerWrapperProxy {
   PlusPlayerRef CreatePlayer();
 
   bool Open(PlusPlayerRef player, const char* uri);
-  
+
   bool Close(PlusPlayerRef player);
 
   void SetAppId(PlusPlayerRef player, const char* app_id);
@@ -114,33 +180,47 @@ class PlusPlayerWrapperProxy {
 
   void DestoryPlayer(PlusPlayerRef player);
 
-  void SetCompletedCallback(PlusPlayerRef player,
-                            plusplayer_completed_cb callback, void* user_data);
+  void SetCompletedCallback(PlusPlayerRef player, OnPlayerCompleted callback,
+                            void* user_data);
 
   void UnsetCompletedCallback(PlusPlayerRef player);
 
-  void SetBufferingCallback(PlusPlayerRef player,
-                            plusplayer_buffering_cb callback, void* user_data);
+  void SetBufferingCallback(PlusPlayerRef player, OnPlayerBuffering callback,
+                            void* user_data);
 
   void UnsetBufferingCallback(PlusPlayerRef player);
 
-  void SetPreparedCallback(PlusPlayerRef player,
-                           plusplayer_prepared_cb callback, void* user_data);
+  void SetPreparedCallback(PlusPlayerRef player, OnPlayerPrepared callback,
+                           void* user_data);
 
   void UnsetPreparedCallback(PlusPlayerRef player);
 
   void SetResourceConflictedCallback(PlusPlayerRef player,
-                                     plusplayer_resource_conflicted_cb callback,
+                                     OnPlayerResourceConflicted callback,
                                      void* user_data);
 
   void UnsetResourceConflictedCallback(PlusPlayerRef player);
 
-  void SetPlayingCallback(PlusPlayerRef player, plusplayer_playing_cb callback,
+  void SetPlayingCallback(PlusPlayerRef player, OnPlayerPlaying callback,
                           void* user_data);
 
   void UnsetPlayingCallback(PlusPlayerRef player);
 
   int GetSurfaceId(PlusPlayerRef player, void* window);
+  void SetErrorCallback(PlusPlayerRef player, OnPlayerError callback,
+                        void* user_data);
+
+  void UnsetErrorCallback(PlusPlayerRef player);
+
+  void SetErrorMessageCallback(PlusPlayerRef player, OnPlayerErrorMessage callback,
+                        void* user_data);
+
+  void UnsetErrorMessageCallback(PlusPlayerRef player);
+
+  void SetSeekCompletedCallback(PlusPlayerRef player, OnPlayerSeekCompleted callback,
+                          void* user_data);
+
+  void UnsetSeekCompletedCallback(PlusPlayerRef player);
 
  private:
   PlusPlayerWrapperProxy();
