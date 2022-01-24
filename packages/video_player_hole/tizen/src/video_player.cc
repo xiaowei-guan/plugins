@@ -24,14 +24,14 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
   PlusPlayerWrapperProxy &instance = PlusPlayerWrapperProxy::GetInstance();
   plusplayer_ = instance.CreatePlayer();
   if (plusplayer_ != nullptr) {
-    LOG_DEBUG("[PlusPlayer]call Open to set uri (%s)", uri.c_str());
     instance.SetBufferingCallback(plusplayer_, onBuffering, this);
     instance.SetCompletedCallback(plusplayer_, onPlayCompleted, this);
     instance.SetPreparedCallback(plusplayer_, onPrepared, this);
     instance.SetSeekCompletedCallback(plusplayer_, onSeekCompleted, this);
     instance.SetErrorCallback(plusplayer_, onError, this);
     instance.SetErrorMessageCallback(plusplayer_, onErrorMessage, this);
-    if (instance.Open(plusplayer_, uri.c_str())) {
+    LOG_DEBUG("[PlusPlayer]call Open to set uri (%s)", uri.c_str());
+    if (!instance.Open(plusplayer_, uri.c_str())) {
       LOG_ERROR("Open uri(%s) failed", uri.c_str());
       throw VideoPlayerError("PlusPlayer", "Open failed");
     }

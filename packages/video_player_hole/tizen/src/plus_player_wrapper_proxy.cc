@@ -18,7 +18,7 @@ PlusPlayerWrapperProxy::~PlusPlayerWrapperProxy() {
 }
 
 PlusPlayerRef PlusPlayerWrapperProxy::CreatePlayer() {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return nullptr;
   }
@@ -33,7 +33,7 @@ PlusPlayerRef PlusPlayerWrapperProxy::CreatePlayer() {
 }
 
 bool PlusPlayerWrapperProxy::Open(PlusPlayerRef player, const char* uri) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -49,7 +49,7 @@ bool PlusPlayerWrapperProxy::Open(PlusPlayerRef player, const char* uri) {
 
 void PlusPlayerWrapperProxy::SetAppId(PlusPlayerRef player,
                                       const char* app_id) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -64,7 +64,7 @@ void PlusPlayerWrapperProxy::SetAppId(PlusPlayerRef player,
 
 void PlusPlayerWrapperProxy::SetPrebufferMode(PlusPlayerRef player,
                                               bool is_prebuffer_mode) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -78,7 +78,7 @@ void PlusPlayerWrapperProxy::SetPrebufferMode(PlusPlayerRef player,
 }
 
 bool PlusPlayerWrapperProxy::StopSource(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -96,7 +96,7 @@ bool PlusPlayerWrapperProxy::SetDisplay(PlusPlayerRef player,
                                         const DisplayType& type,
                                         const uint32_t serface_id, const int x,
                                         const int y, const int w, const int h) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -114,7 +114,7 @@ bool PlusPlayerWrapperProxy::SetDisplay(PlusPlayerRef player,
 
 bool PlusPlayerWrapperProxy::SetDisplayMode(PlusPlayerRef player,
                                             const DisplayMode& mode) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -130,7 +130,7 @@ bool PlusPlayerWrapperProxy::SetDisplayMode(PlusPlayerRef player,
 
 bool PlusPlayerWrapperProxy::SetDisplayRoi(PlusPlayerRef player,
                                            const Geometry& roi) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -146,7 +146,7 @@ bool PlusPlayerWrapperProxy::SetDisplayRoi(PlusPlayerRef player,
 
 bool PlusPlayerWrapperProxy::SetDisplayRotate(PlusPlayerRef player,
                                               const DisplayRotation& rotate) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -162,7 +162,7 @@ bool PlusPlayerWrapperProxy::SetDisplayRotate(PlusPlayerRef player,
 
 bool PlusPlayerWrapperProxy::GetDisplayRotate(PlusPlayerRef player,
                                               DisplayRotation* rotate) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -178,7 +178,7 @@ bool PlusPlayerWrapperProxy::GetDisplayRotate(PlusPlayerRef player,
 
 bool PlusPlayerWrapperProxy::SetDisplayVisible(PlusPlayerRef player,
                                                bool is_visible) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -194,7 +194,7 @@ bool PlusPlayerWrapperProxy::SetDisplayVisible(PlusPlayerRef player,
 }
 
 bool PlusPlayerWrapperProxy::SetAudioMute(PlusPlayerRef player, bool is_mute) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -209,7 +209,7 @@ bool PlusPlayerWrapperProxy::SetAudioMute(PlusPlayerRef player, bool is_mute) {
 }
 
 State PlusPlayerWrapperProxy::GetState(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return State::kNone;
   }
@@ -225,7 +225,7 @@ State PlusPlayerWrapperProxy::GetState(PlusPlayerRef player) {
 
 bool PlusPlayerWrapperProxy::GetDuration(PlusPlayerRef player,
                                          int64_t* duration_in_milliseconds) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -241,7 +241,7 @@ bool PlusPlayerWrapperProxy::GetDuration(PlusPlayerRef player,
 
 bool PlusPlayerWrapperProxy::GetPlayingTime(PlusPlayerRef player,
                                             uint64_t* time_in_milliseconds) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -256,7 +256,7 @@ bool PlusPlayerWrapperProxy::GetPlayingTime(PlusPlayerRef player,
 }
 bool PlusPlayerWrapperProxy::SetPlaybackRate(PlusPlayerRef player,
                                              const double speed) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -271,7 +271,7 @@ bool PlusPlayerWrapperProxy::SetPlaybackRate(PlusPlayerRef player,
 }
 
 bool PlusPlayerWrapperProxy::Prepare(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -286,7 +286,7 @@ bool PlusPlayerWrapperProxy::Prepare(PlusPlayerRef player) {
 }
 
 bool PlusPlayerWrapperProxy::PrepareAsync(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -301,7 +301,7 @@ bool PlusPlayerWrapperProxy::PrepareAsync(PlusPlayerRef player) {
 }
 
 bool PlusPlayerWrapperProxy::Start(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -316,7 +316,7 @@ bool PlusPlayerWrapperProxy::Start(PlusPlayerRef player) {
 }
 
 bool PlusPlayerWrapperProxy::Stop(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -331,7 +331,7 @@ bool PlusPlayerWrapperProxy::Stop(PlusPlayerRef player) {
 }
 
 bool PlusPlayerWrapperProxy::Pause(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -346,7 +346,7 @@ bool PlusPlayerWrapperProxy::Pause(PlusPlayerRef player) {
 }
 
 bool PlusPlayerWrapperProxy::Resume(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -362,7 +362,7 @@ bool PlusPlayerWrapperProxy::Resume(PlusPlayerRef player) {
 
 bool PlusPlayerWrapperProxy::Seek(PlusPlayerRef player,
                                   const uint64_t time_millisecond) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -378,7 +378,7 @@ bool PlusPlayerWrapperProxy::Seek(PlusPlayerRef player,
 
 void PlusPlayerWrapperProxy::SetStopPosition(PlusPlayerRef player,
                                              const uint64_t time_millisecond) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -393,7 +393,7 @@ void PlusPlayerWrapperProxy::SetStopPosition(PlusPlayerRef player,
 }
 
 bool PlusPlayerWrapperProxy::Suspend(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -408,7 +408,7 @@ bool PlusPlayerWrapperProxy::Suspend(PlusPlayerRef player) {
 }
 
 bool PlusPlayerWrapperProxy::Restore(PlusPlayerRef player, State state) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -424,7 +424,7 @@ bool PlusPlayerWrapperProxy::Restore(PlusPlayerRef player, State state) {
 
 bool PlusPlayerWrapperProxy::GetVideoSize(PlusPlayerRef player, int* width,
                                           int* height) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -439,7 +439,7 @@ bool PlusPlayerWrapperProxy::GetVideoSize(PlusPlayerRef player, int* width,
 }
 
 int PlusPlayerWrapperProxy::GetSurfaceId(PlusPlayerRef player, void* window) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return -1;
   }
@@ -454,7 +454,7 @@ int PlusPlayerWrapperProxy::GetSurfaceId(PlusPlayerRef player, void* window) {
 }
 
 bool PlusPlayerWrapperProxy::Close(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
@@ -469,7 +469,7 @@ bool PlusPlayerWrapperProxy::Close(PlusPlayerRef player) {
 }
 
 void PlusPlayerWrapperProxy::DestoryPlayer(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -485,7 +485,7 @@ void PlusPlayerWrapperProxy::DestoryPlayer(PlusPlayerRef player) {
 void PlusPlayerWrapperProxy::SetCompletedCallback(PlusPlayerRef player,
                                                   OnPlayerCompleted callback,
                                                   void* user_data) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -501,7 +501,7 @@ void PlusPlayerWrapperProxy::SetCompletedCallback(PlusPlayerRef player,
 }
 
 void PlusPlayerWrapperProxy::UnsetCompletedCallback(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -518,7 +518,7 @@ void PlusPlayerWrapperProxy::UnsetCompletedCallback(PlusPlayerRef player) {
 void PlusPlayerWrapperProxy::SetBufferingCallback(PlusPlayerRef player,
                                                   OnPlayerBuffering callback,
                                                   void* user_data) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -534,7 +534,7 @@ void PlusPlayerWrapperProxy::SetBufferingCallback(PlusPlayerRef player,
 }
 
 void PlusPlayerWrapperProxy::UnsetBufferingCallback(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -551,7 +551,7 @@ void PlusPlayerWrapperProxy::UnsetBufferingCallback(PlusPlayerRef player) {
 void PlusPlayerWrapperProxy::SetPreparedCallback(PlusPlayerRef player,
                                                  OnPlayerPrepared callback,
                                                  void* user_data) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -567,7 +567,7 @@ void PlusPlayerWrapperProxy::SetPreparedCallback(PlusPlayerRef player,
 }
 
 void PlusPlayerWrapperProxy::UnsetPreparedCallback(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -584,7 +584,7 @@ void PlusPlayerWrapperProxy::UnsetPreparedCallback(PlusPlayerRef player) {
 void PlusPlayerWrapperProxy::SetResourceConflictedCallback(
     PlusPlayerRef player, OnPlayerResourceConflicted callback,
     void* user_data) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -602,7 +602,7 @@ void PlusPlayerWrapperProxy::SetResourceConflictedCallback(
 
 void PlusPlayerWrapperProxy::UnsetResourceConflictedCallback(
     PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -619,7 +619,7 @@ void PlusPlayerWrapperProxy::UnsetResourceConflictedCallback(
 void PlusPlayerWrapperProxy::SetPlayingCallback(PlusPlayerRef player,
                                                 OnPlayerPlaying callback,
                                                 void* user_data) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -635,7 +635,7 @@ void PlusPlayerWrapperProxy::SetPlayingCallback(PlusPlayerRef player,
 }
 
 void PlusPlayerWrapperProxy::UnsetPlayingCallback(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -652,7 +652,7 @@ void PlusPlayerWrapperProxy::UnsetPlayingCallback(PlusPlayerRef player) {
 void PlusPlayerWrapperProxy::SetErrorCallback(PlusPlayerRef player,
                                               OnPlayerError callback,
                                               void* user_data) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -667,7 +667,7 @@ void PlusPlayerWrapperProxy::SetErrorCallback(PlusPlayerRef player,
 }
 
 void PlusPlayerWrapperProxy::UnsetErrorCallback(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -683,7 +683,7 @@ void PlusPlayerWrapperProxy::UnsetErrorCallback(PlusPlayerRef player) {
 
 void PlusPlayerWrapperProxy::SetErrorMessageCallback(
     PlusPlayerRef player, OnPlayerErrorMessage callback, void* user_data) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -698,7 +698,7 @@ void PlusPlayerWrapperProxy::SetErrorMessageCallback(
 }
 
 void PlusPlayerWrapperProxy::UnsetErrorMessageCallback(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -714,7 +714,7 @@ void PlusPlayerWrapperProxy::UnsetErrorMessageCallback(PlusPlayerRef player) {
 
 void PlusPlayerWrapperProxy::SetSeekCompletedCallback(
     PlusPlayerRef player, OnPlayerSeekCompleted callback, void* user_data) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
@@ -729,7 +729,7 @@ void PlusPlayerWrapperProxy::SetSeekCompletedCallback(
   }
 }
 void PlusPlayerWrapperProxy::UnsetSeekCompletedCallback(PlusPlayerRef player) {
-  if (plus_player_hander_) {
+  if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
