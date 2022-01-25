@@ -59,7 +59,7 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
     }
     LOG_DEBUG("[PlusPlayer]call SetDisplay");
     if (!instance.SetDisplay(
-            plusplayer_, DisplayType::kOverlay,
+            plusplayer_, plusplayer::DisplayType::kOverlay,
             instance.GetSurfaceId(plusplayer_,
                                   FlutterDesktopGetWindow(registrar_ref)),
             0, 0, w, h)) {
@@ -87,7 +87,7 @@ void VideoPlayer::setDisplayRoi(int x, int y, int w, int h) {
     LOG_ERROR("Plusplayer isn't created");
     throw VideoPlayerError("PlusPlayer", "Not created");
   }
-  Geometry roi;
+  plusplayer::Geometry roi;
   roi.x = x;
   roi.y = y;
   roi.w = w;
@@ -115,17 +115,17 @@ void VideoPlayer::play() {
     throw VideoPlayerError("PlusPlayer", "Not created");
   }
   PlusPlayerWrapperProxy &instance = PlusPlayerWrapperProxy::GetInstance();
-  if (instance.GetState(plusplayer_) < State::kReady) {
+  if (instance.GetState(plusplayer_) < plusplayer::State::kReady) {
     LOG_ERROR("Invalid state for play operation");
     throw VideoPlayerError("PlusPlayer", "Invalid state for play operation");
   }
 
-  if (instance.GetState(plusplayer_) == State::kReady) {
+  if (instance.GetState(plusplayer_) == plusplayer::State::kReady) {
     if (!instance.Start(plusplayer_)) {
       LOG_ERROR("Start operation failed");
       throw VideoPlayerError("PlusPlayer", "Start operation failed");
     }
-  } else if (instance.GetState(plusplayer_) == State::kPaused) {
+  } else if (instance.GetState(plusplayer_) == plusplayer::State::kPaused) {
     if (!instance.Resume(plusplayer_)) {
       LOG_ERROR("Resume operation failed");
       throw VideoPlayerError("PlusPlayer", "Resume operation failed");
@@ -141,12 +141,12 @@ void VideoPlayer::pause() {
   }
 
   PlusPlayerWrapperProxy &instance = PlusPlayerWrapperProxy::GetInstance();
-  if (instance.GetState(plusplayer_) < State::kReady) {
+  if (instance.GetState(plusplayer_) < plusplayer::State::kReady) {
     LOG_ERROR("Invalid state for pause operation");
     throw VideoPlayerError("PlusPlayer", "Invalid state for pause operation");
   }
 
-  if (instance.GetState(plusplayer_) == State::kPlaying) {
+  if (instance.GetState(plusplayer_) == plusplayer::State::kPlaying) {
     if (!instance.Pause(plusplayer_)) {
       LOG_ERROR("Pause operation failed");
       throw VideoPlayerError("PlusPlayer", "Pause operation failed");
@@ -199,8 +199,9 @@ int VideoPlayer::getPosition() {
   }
 
   PlusPlayerWrapperProxy &instance = PlusPlayerWrapperProxy::GetInstance();
-  State state = instance.GetState(plusplayer_);
-  if (state == State::kPlaying || state == State::kPaused) {
+  plusplayer::State state = instance.GetState(plusplayer_);
+  if (state == plusplayer::State::kPlaying ||
+      state == plusplayer::State::kPaused) {
     uint64_t position;
     instance.GetPlayingTime(plusplayer_, &position);
     LOG_DEBUG("playing time: %lld", position);
@@ -231,7 +232,7 @@ void VideoPlayer::dispose() {
     instance.DestroyPlayer(plusplayer_);
     plusplayer_ = nullptr;
   }
-   LOG_DEBUG("[VideoPlayer.dispose] dispose video player end");
+  LOG_DEBUG("[VideoPlayer.dispose] dispose video player end");
 }
 
 void VideoPlayer::setupEventChannel(flutter::BinaryMessenger *messenger) {
@@ -269,9 +270,9 @@ void VideoPlayer::setupEventChannel(flutter::BinaryMessenger *messenger) {
 
 void VideoPlayer::initialize() {
   PlusPlayerWrapperProxy &instance = PlusPlayerWrapperProxy::GetInstance();
-  State state = instance.GetState(plusplayer_);
+  plusplayer::State state = instance.GetState(plusplayer_);
   LOG_INFO("[VideoPlayer.initialize] player state: %d", state);
-  if (state == State::kReady && !is_initialized_) {
+  if (state == plusplayer::State::kReady && !is_initialized_) {
     sendInitialized();
   }
 }
@@ -295,13 +296,13 @@ void VideoPlayer::sendInitialized() {
     }
     LOG_DEBUG("video widht: %d, video height: %d", width, height);
 
-    DisplayRotation rotate;
+    plusplayer::DisplayRotation rotate;
     if (!instance.GetDisplayRotate(plusplayer_, &rotate)) {
       LOG_ERROR("PlusPlayer - GetDisplayRotate operation failed");
       event_sink_->Error("", "PlusPlayer - GetDisplayRotate operation failed");
     } else {
-      if (rotate == DisplayRotation::kRotate90 ||
-          rotate == DisplayRotation::kRotate270) {
+      if (rotate == plusplayer::DisplayRotation::kRotate90 ||
+          rotate == plusplayer::DisplayRotation::kRotate270) {
         int tmp = width;
         width = height;
         height = tmp;
@@ -401,6 +402,7 @@ void VideoPlayer::onPlayCompleted(void *data) {
 }
 
 void VideoPlayer::onPlaying(void *data) {}
-void VideoPlayer::onError(const ErrorType &error_code, void *user_data) {}
-void VideoPlayer::onErrorMessage(const ErrorType &error_code,
+void VideoPlayer::onError(const plusplayer::ErrorType &error_code,
+                          void *user_data) {}
+void VideoPlayer::onErrorMessage(const plusplayer::ErrorType &error_code,
                                  const char *error_msg, void *user_data) {}

@@ -94,14 +94,14 @@ bool PlusPlayerWrapperProxy::StopSource(PlusPlayerRef player) {
 }
 
 bool PlusPlayerWrapperProxy::SetDisplay(PlusPlayerRef player,
-                                        const DisplayType& type,
+                                        const plusplayer::DisplayType& type,
                                         const uint32_t serface_id, const int x,
                                         const int y, const int w, const int h) {
   if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
-  bool (*SetDisplay)(PlusPlayerRef player, const DisplayType& type,
+  bool (*SetDisplay)(PlusPlayerRef player, const plusplayer::DisplayType& type,
                      const uint32_t serface_id, const int x, const int y,
                      const int w, const int h);
   *(void**)(&SetDisplay) = dlsym(plus_player_hander_, "SetDisplay");
@@ -113,13 +113,14 @@ bool PlusPlayerWrapperProxy::SetDisplay(PlusPlayerRef player,
   }
 }
 
-bool PlusPlayerWrapperProxy::SetDisplayMode(PlusPlayerRef player,
-                                            const DisplayMode& mode) {
+bool PlusPlayerWrapperProxy::SetDisplayMode(
+    PlusPlayerRef player, const plusplayer::DisplayMode& mode) {
   if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
-  bool (*SetDisplayMode)(PlusPlayerRef player, const DisplayMode& mode);
+  bool (*SetDisplayMode)(PlusPlayerRef player,
+                         const plusplayer::DisplayMode& mode);
   *(void**)(&SetDisplayMode) = dlsym(plus_player_hander_, "SetDisplayMode");
   if (SetDisplayMode) {
     return SetDisplayMode(player, mode);
@@ -130,12 +131,12 @@ bool PlusPlayerWrapperProxy::SetDisplayMode(PlusPlayerRef player,
 }
 
 bool PlusPlayerWrapperProxy::SetDisplayRoi(PlusPlayerRef player,
-                                           const Geometry& roi) {
+                                           const plusplayer::Geometry& roi) {
   if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
-  bool (*SetDisplayRoi)(PlusPlayerRef player, const Geometry& roi);
+  bool (*SetDisplayRoi)(PlusPlayerRef player, const plusplayer::Geometry& roi);
   *(void**)(&SetDisplayRoi) = dlsym(plus_player_hander_, "SetDisplayRoi");
   if (SetDisplayRoi) {
     return SetDisplayRoi(player, roi);
@@ -145,13 +146,14 @@ bool PlusPlayerWrapperProxy::SetDisplayRoi(PlusPlayerRef player,
   }
 }
 
-bool PlusPlayerWrapperProxy::SetDisplayRotate(PlusPlayerRef player,
-                                              const DisplayRotation& rotate) {
+bool PlusPlayerWrapperProxy::SetDisplayRotate(
+    PlusPlayerRef player, const plusplayer::DisplayRotation& rotate) {
   if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
-  bool (*SetDisplayRotate)(PlusPlayerRef player, const DisplayRotation& rotate);
+  bool (*SetDisplayRotate)(PlusPlayerRef player,
+                           const plusplayer::DisplayRotation& rotate);
   *(void**)(&SetDisplayRotate) = dlsym(plus_player_hander_, "SetDisplayRotate");
   if (SetDisplayRotate) {
     return SetDisplayRotate(player, rotate);
@@ -161,13 +163,14 @@ bool PlusPlayerWrapperProxy::SetDisplayRotate(PlusPlayerRef player,
   }
 }
 
-bool PlusPlayerWrapperProxy::GetDisplayRotate(PlusPlayerRef player,
-                                              DisplayRotation* rotate) {
+bool PlusPlayerWrapperProxy::GetDisplayRotate(
+    PlusPlayerRef player, plusplayer::DisplayRotation* rotate) {
   if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
-  bool (*GetDisplayRotate)(PlusPlayerRef player, DisplayRotation * rotate);
+  bool (*GetDisplayRotate)(PlusPlayerRef player,
+                           plusplayer::DisplayRotation * rotate);
   *(void**)(&GetDisplayRotate) = dlsym(plus_player_hander_, "GetDisplayRotate");
   if (GetDisplayRotate) {
     return GetDisplayRotate(player, rotate);
@@ -209,18 +212,18 @@ bool PlusPlayerWrapperProxy::SetAudioMute(PlusPlayerRef player, bool is_mute) {
   }
 }
 
-State PlusPlayerWrapperProxy::GetState(PlusPlayerRef player) {
+plusplayer::State PlusPlayerWrapperProxy::GetState(PlusPlayerRef player) {
   if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
-    return State::kNone;
+    return plusplayer::State::kNone;
   }
-  State (*GetState)(PlusPlayerRef player);
+  plusplayer::State (*GetState)(PlusPlayerRef player);
   *(void**)(&GetState) = dlsym(plus_player_hander_, "GetState");
   if (GetState) {
     return GetState(player);
   } else {
     LOG_ERROR("Symbol not found %s: ", dlerror());
-    return State::kNone;
+    return plusplayer::State::kNone;
   }
 }
 
@@ -409,12 +412,13 @@ bool PlusPlayerWrapperProxy::Suspend(PlusPlayerRef player) {
   }
 }
 
-bool PlusPlayerWrapperProxy::Restore(PlusPlayerRef player, State state) {
+bool PlusPlayerWrapperProxy::Restore(PlusPlayerRef player,
+                                     plusplayer::State state) {
   if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
-  bool (*Restore)(PlusPlayerRef player, State state);
+  bool (*Restore)(PlusPlayerRef player, plusplayer::State state);
   *(void**)(&Restore) = dlsym(plus_player_hander_, "Restore");
   if (Restore) {
     return Restore(player, state);

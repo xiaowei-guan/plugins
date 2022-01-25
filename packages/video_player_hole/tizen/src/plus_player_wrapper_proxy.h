@@ -10,9 +10,11 @@
 /* This is for custom defined player error. */
 #define PLUSPLAYER_CUSTOM_ERROR_CLASS TIZEN_ERROR_PLAYER | 0x1000
 
-enum DisplayType { kDisplayNone, kOverlay, kEvas, kMixer, kOverlaySyncUI };
+namespace plusplayer {
 
-enum DisplayMode {
+enum class DisplayType { kNone, kOverlay, kEvas, kMixer };
+
+enum class DisplayMode {
   kLetterBox,
   kOriginSize,
   kFullScreen,
@@ -23,9 +25,9 @@ enum DisplayMode {
   kMax
 };
 
-enum DisplayRotation { kRotateNone, kRotate90, kRotate180, kRotate270 };
+enum class DisplayRotation { kNone, kRotate90, kRotate180, kRotate270 };
 
-enum State {
+enum class State {
   kNone, /**< Player is created, but not opened */
   kIdle, /**< Player is opened, but not prepared or player is stopped */
   kTypeFinderReady,  /**< TypeFinder prepared */
@@ -36,10 +38,8 @@ enum State {
 };
 
 struct Geometry {
-  int x = 0;
-  int y = 0;
-  int w = 1920;
-  int h = 1080;
+  int x = 0, y = 0;
+  int w = 1920, h = 1080;
 };
 
 enum class ErrorType {
@@ -99,6 +99,8 @@ enum class ErrorType {
   kUnknown
 };
 
+}  // namespace plusplayer
+
 struct PlusPlayer;
 typedef struct PlusPlayer* PlusPlayerRef;
 
@@ -108,8 +110,9 @@ typedef void (*OnPlayerResourceConflicted)(void* user_data);
 typedef void (*OnPlayerBuffering)(int percent, void* user_data);
 typedef void (*OnPlayerCompleted)(void* user_data);
 typedef void (*OnPlayerPlaying)(void* user_data);
-typedef void (*OnPlayerError)(const ErrorType& error_code, void* user_data);
-typedef void (*OnPlayerErrorMessage)(const ErrorType& error_code,
+typedef void (*OnPlayerError)(const plusplayer::ErrorType& error_code,
+                              void* user_data);
+typedef void (*OnPlayerErrorMessage)(const plusplayer::ErrorType& error_code,
                                      const char* error_msg, void* user_data);
 
 class PlusPlayerWrapperProxy {
@@ -135,22 +138,25 @@ class PlusPlayerWrapperProxy {
 
   bool StopSource(PlusPlayerRef player);
 
-  bool SetDisplay(PlusPlayerRef player, const DisplayType& type,
+  bool SetDisplay(PlusPlayerRef player, const plusplayer::DisplayType& type,
                   const uint32_t serface_id, const int x, const int y,
                   const int w, const int h);
 
-  bool SetDisplayMode(PlusPlayerRef player, const DisplayMode& mode);
-  bool SetDisplayRoi(PlusPlayerRef player, const Geometry& roi);
+  bool SetDisplayMode(PlusPlayerRef player,
+                      const plusplayer::DisplayMode& mode);
+  bool SetDisplayRoi(PlusPlayerRef player, const plusplayer::Geometry& roi);
 
-  bool SetDisplayRotate(PlusPlayerRef player, const DisplayRotation& rotate);
+  bool SetDisplayRotate(PlusPlayerRef player,
+                        const plusplayer::DisplayRotation& rotate);
 
-  bool GetDisplayRotate(PlusPlayerRef player, DisplayRotation* rotate);
+  bool GetDisplayRotate(PlusPlayerRef player,
+                        plusplayer::DisplayRotation* rotate);
 
   bool SetDisplayVisible(PlusPlayerRef player, bool is_visible);
 
   bool SetAudioMute(PlusPlayerRef player, bool is_mute);
 
-  State GetState(PlusPlayerRef player);
+  plusplayer::State GetState(PlusPlayerRef player);
 
   bool GetDuration(PlusPlayerRef player, int64_t* duration_in_milliseconds);
 
@@ -174,7 +180,7 @@ class PlusPlayerWrapperProxy {
 
   bool Suspend(PlusPlayerRef player);
 
-  bool Restore(PlusPlayerRef player, State state);
+  bool Restore(PlusPlayerRef player, plusplayer::State state);
 
   bool GetVideoSize(PlusPlayerRef player, int* width, int* height);
 
@@ -212,13 +218,14 @@ class PlusPlayerWrapperProxy {
 
   void UnsetErrorCallback(PlusPlayerRef player);
 
-  void SetErrorMessageCallback(PlusPlayerRef player, OnPlayerErrorMessage callback,
-                        void* user_data);
+  void SetErrorMessageCallback(PlusPlayerRef player,
+                               OnPlayerErrorMessage callback, void* user_data);
 
   void UnsetErrorMessageCallback(PlusPlayerRef player);
 
-  void SetSeekCompletedCallback(PlusPlayerRef player, OnPlayerSeekCompleted callback,
-                          void* user_data);
+  void SetSeekCompletedCallback(PlusPlayerRef player,
+                                OnPlayerSeekCompleted callback,
+                                void* user_data);
 
   void UnsetSeekCompletedCallback(PlusPlayerRef player);
 
