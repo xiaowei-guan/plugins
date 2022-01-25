@@ -178,7 +178,7 @@ class PlusPlayerWrapperProxy {
 
   bool GetVideoSize(PlusPlayerRef player, int* width, int* height);
 
-  void DestoryPlayer(PlusPlayerRef player);
+  void DestroyPlayer(PlusPlayerRef player);
 
   void SetCompletedCallback(PlusPlayerRef player, OnPlayerCompleted callback,
                             void* user_data);

@@ -11,6 +11,7 @@ PlusPlayerWrapperProxy::PlusPlayerWrapperProxy() {
   }
 }
 PlusPlayerWrapperProxy::~PlusPlayerWrapperProxy() {
+  LOG_ERROR("~PlusPlayerWrapperProxy");
   if (plus_player_hander_) {
     dlclose(plus_player_hander_);
     plus_player_hander_ = nullptr;
@@ -254,6 +255,7 @@ bool PlusPlayerWrapperProxy::GetPlayingTime(PlusPlayerRef player,
     return false;
   }
 }
+
 bool PlusPlayerWrapperProxy::SetPlaybackRate(PlusPlayerRef player,
                                              const double speed) {
   if (!plus_player_hander_) {
@@ -397,10 +399,10 @@ bool PlusPlayerWrapperProxy::Suspend(PlusPlayerRef player) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return false;
   }
-  bool (*Resume)(PlusPlayerRef player);
-  *(void**)(&Resume) = dlsym(plus_player_hander_, "Resume");
-  if (Resume) {
-    return Resume(player);
+  bool (*Suspend)(PlusPlayerRef player);
+  *(void**)(&Suspend) = dlsym(plus_player_hander_, "Suspend");
+  if (Suspend) {
+    return Suspend(player);
   } else {
     LOG_ERROR("Symbol not found %s: ", dlerror());
     return false;
@@ -429,7 +431,7 @@ bool PlusPlayerWrapperProxy::GetVideoSize(PlusPlayerRef player, int* width,
     return false;
   }
   bool (*GetVideoSize)(PlusPlayerRef player, int* width, int* height);
-  *(void**)(&GetVideoSize) = dlsym(plus_player_hander_, "Restore");
+  *(void**)(&GetVideoSize) = dlsym(plus_player_hander_, "GetVideoSize");
   if (GetVideoSize) {
     return GetVideoSize(player, width, height);
   } else {
@@ -468,15 +470,15 @@ bool PlusPlayerWrapperProxy::Close(PlusPlayerRef player) {
   }
 }
 
-void PlusPlayerWrapperProxy::DestoryPlayer(PlusPlayerRef player) {
+void PlusPlayerWrapperProxy::DestroyPlayer(PlusPlayerRef player) {
   if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
-  bool (*DestoryPlayer)(PlusPlayerRef player);
-  *(void**)(&DestoryPlayer) = dlsym(plus_player_hander_, "DestoryPlayer");
-  if (DestoryPlayer) {
-    DestoryPlayer(player);
+  void (*DestroyPlayer)(PlusPlayerRef player);
+  *(void**)(&DestroyPlayer) = dlsym(plus_player_hander_, "DestroyPlayer");
+  if (DestroyPlayer) {
+    DestroyPlayer(player);
   } else {
     LOG_ERROR("Symbol not found %s: ", dlerror());
   }

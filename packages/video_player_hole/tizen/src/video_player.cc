@@ -213,12 +213,10 @@ int VideoPlayer::getPosition() {
 }
 
 void VideoPlayer::dispose() {
-  LOG_DEBUG("[VideoPlayer.dispose] dispose video player");
+  LOG_DEBUG("[VideoPlayer.dispose] dispose video player start");
   is_initialized_ = false;
   event_sink_ = nullptr;
   event_channel_->SetStreamHandler(nullptr);
-
-  LOG_DEBUG("dispose PlusPlayer");
 
   if (plusplayer_) {
     PlusPlayerWrapperProxy &instance = PlusPlayerWrapperProxy::GetInstance();
@@ -230,9 +228,10 @@ void VideoPlayer::dispose() {
     instance.UnsetErrorMessageCallback(plusplayer_);
     instance.Stop(plusplayer_);
     instance.Close(plusplayer_);
-    instance.DestoryPlayer(plusplayer_);
+    instance.DestroyPlayer(plusplayer_);
     plusplayer_ = nullptr;
   }
+   LOG_DEBUG("[VideoPlayer.dispose] dispose video player end");
 }
 
 void VideoPlayer::setupEventChannel(flutter::BinaryMessenger *messenger) {
