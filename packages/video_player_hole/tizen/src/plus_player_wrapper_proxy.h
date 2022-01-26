@@ -27,6 +27,13 @@ enum class DisplayMode {
   kMax
 };
 
+enum TrackType {
+  kTrackTypeAudio = 0,
+  kTrackTypeVideo,
+  kTrackTypeSubtitle,
+  kTrackTypeMax
+};
+
 enum class DisplayRotation { kNone, kRotate90, kRotate180, kRotate270 };
 
 enum class State {
@@ -301,6 +308,7 @@ class PlusPlayerWrapperProxy {
   void UnsetAdaptiveStreamingControlCallback(PlusPlayerRef player);
 
   void SetDrm(PlusPlayerRef player, const plusplayer::drm::Property& property);
+  void DrmLicenseAcquiredDone(PlusPlayerRef player, plusplayer::TrackType type);
 
  private:
   PlusPlayerWrapperProxy();

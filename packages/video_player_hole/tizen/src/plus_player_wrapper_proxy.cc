@@ -791,11 +791,28 @@ void PlusPlayerWrapperProxy::SetDrm(PlusPlayerRef player,
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
     return;
   }
-  bool (*SetDrm)(PlusPlayerRef player,
+  void (*SetDrm)(PlusPlayerRef player,
                  const plusplayer::drm::Property& property);
   *(void**)(&SetDrm) = dlsym(plus_player_hander_, "SetDrm");
   if (SetDrm) {
     SetDrm(player, property);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+
+void PlusPlayerWrapperProxy::DrmLicenseAcquiredDone(
+    PlusPlayerRef player, plusplayer::TrackType type) {
+  if (!plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  void (*DrmLicenseAcquiredDone)(PlusPlayerRef player,
+                                 plusplayer::TrackType type);
+  *(void**)(&DrmLicenseAcquiredDone) =
+      dlsym(plus_player_hander_, "DrmLicenseAcquiredDone");
+  if (DrmLicenseAcquiredDone) {
+    DrmLicenseAcquiredDone(player, type);
   } else {
     LOG_ERROR("Symbol not found %s: ", dlerror());
   }
