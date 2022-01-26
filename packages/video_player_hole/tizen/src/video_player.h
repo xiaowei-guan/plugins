@@ -55,6 +55,10 @@ class VideoPlayer {
       const plusplayer::StreamingMessageType &type,
       const plusplayer::MessageParam &msg, void *user_data);
 
+  static void onDrmInitData(int *drmhandle, unsigned int len,
+                            unsigned char *psshdata, plusplayer::TrackType type,
+                            void *user_data);
+
   bool is_initialized_;
   std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>
       event_channel_;

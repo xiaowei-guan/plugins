@@ -817,3 +817,35 @@ void PlusPlayerWrapperProxy::DrmLicenseAcquiredDone(
     LOG_ERROR("Symbol not found %s: ", dlerror());
   }
 }
+
+void PlusPlayerWrapperProxy::SetDrmInitDataCallback(
+    PlusPlayerRef player, OnPlayerDrmInitData callback, void* user_data) {
+  if (!plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  void (*SetDrmInitDataCallback)(PlusPlayerRef player,
+                                 OnPlayerDrmInitData callback, void* user_data);
+  *(void**)(&SetDrmInitDataCallback) =
+      dlsym(plus_player_hander_, "SetDrmInitDataCallback");
+  if (SetDrmInitDataCallback) {
+    SetDrmInitDataCallback(player, callback, user_data);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+
+void PlusPlayerWrapperProxy::UnsetDrmInitDataCallback(PlusPlayerRef player) {
+  if (!plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  void (*UnsetDrmInitDataCallback)(PlusPlayerRef player);
+  *(void**)(&UnsetDrmInitDataCallback) =
+      dlsym(plus_player_hander_, "UnsetDrmInitDataCallback");
+  if (UnsetDrmInitDataCallback) {
+    UnsetDrmInitDataCallback(player);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}

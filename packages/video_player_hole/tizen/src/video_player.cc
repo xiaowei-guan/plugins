@@ -30,6 +30,9 @@ VideoPlayer::VideoPlayer(FlutterDesktopPluginRegistrarRef registrar_ref,
     instance.SetSeekCompletedCallback(plusplayer_, onSeekCompleted, this);
     instance.SetErrorCallback(plusplayer_, onError, this);
     instance.SetErrorMessageCallback(plusplayer_, onErrorMessage, this);
+    instance.SetAdaptiveStreamingControlCallback(
+        plusplayer_, onPlayerAdaptiveStreamingControl, this);
+    instance.SetDrmInitDataCallback(plusplayer_, onDrmInitData, this);
     LOG_DEBUG("[PlusPlayer]call Open to set uri (%s)", uri.c_str());
     if (!instance.Open(plusplayer_, uri.c_str())) {
       LOG_ERROR("Open uri(%s) failed", uri.c_str());
@@ -227,6 +230,8 @@ void VideoPlayer::dispose() {
     instance.UnsetSeekCompletedCallback(plusplayer_);
     instance.UnsetErrorCallback(plusplayer_);
     instance.UnsetErrorMessageCallback(plusplayer_);
+    instance.UnsetAdaptiveStreamingControlCallback(plusplayer_);
+    instance.UnsetDrmInitDataCallback(plusplayer_);
     instance.Stop(plusplayer_);
     instance.Close(plusplayer_);
     instance.DestroyPlayer(plusplayer_);
@@ -410,3 +415,7 @@ void VideoPlayer::onErrorMessage(const plusplayer::ErrorType &error_code,
 void VideoPlayer::onPlayerAdaptiveStreamingControl(
     const plusplayer::StreamingMessageType &type,
     const plusplayer::MessageParam &msg, void *user_data) {}
+
+void VideoPlayer::onDrmInitData(int *drmhandle, unsigned int len,
+                                unsigned char *psshdata,
+                                plusplayer::TrackType type, void *user_data) {}
