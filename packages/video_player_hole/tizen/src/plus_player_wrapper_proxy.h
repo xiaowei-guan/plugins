@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <tizen_error.h>
 
+#include <string>
+
 #define PLUSPLAYER_ERROR_CLASS TIZEN_ERROR_PLAYER | 0x20
 
 /* This is for custom defined player error. */
@@ -99,6 +101,66 @@ enum class ErrorType {
   kUnknown
 };
 
+enum class StreamingMessageType {
+  kNone = 0,
+  // kResolutionChanged,
+  // kAdEnd,
+  // kAdStart,
+  // kRenderDone,
+  kBitrateChange,
+  // kFragmentInfo,
+  kSparseTrackDetect,
+  // kStreamingEvent,
+  // kDrmChallengeData,
+  kDrmInitData,
+  // kHttpErrorCode,
+  // kDrmRenewSessionData,
+  kStreamEventType,
+  kStreamEventData,
+  kStreamSyncFlush,
+  kStreamMrsUrlChanged,
+  kDrmKeyRotation,
+  kFragmentDownloadInfo,
+  kDvrLiveLag,
+  kSparseTrackData,
+  kConnectionRetry,
+  kConfigLowLatency,
+  kCurlErrorDebugInfo
+};
+
+struct MessageParam {
+  std::string data;
+  int size = 0;
+  int code = 0;  // Error or warning code
+};
+
+namespace drm {
+using LicenseAcquiredCb = void*;
+using UserData = void*;
+using DrmHandle = int;
+
+enum class Type {
+  kNone = 0,
+  kPlayready,
+  kMarlin,
+  kVerimatrix,
+  kWidevineClassic,
+  kSecuremedia,
+  kSdrm,
+  kWidevineCdm = 8,
+  kMax
+};
+struct Property {
+  Type type = Type::kNone;           // Drm type
+  DrmHandle handle = 0;              // Drm handle
+  bool external_decryption = false;  // External Decryption Mode
+  LicenseAcquiredCb license_acquired_cb =
+      nullptr;  // The cb will be invoked when license was acquired.
+  UserData license_acquired_userdata =
+      nullptr;  // The userdata will be sent by license_acquired_cb
+};
+}  // namespace drm
+
 }  // namespace plusplayer
 
 struct PlusPlayer;
@@ -114,6 +176,9 @@ typedef void (*OnPlayerError)(const plusplayer::ErrorType& error_code,
                               void* user_data);
 typedef void (*OnPlayerErrorMessage)(const plusplayer::ErrorType& error_code,
                                      const char* error_msg, void* user_data);
+typedef void (*OnPlayerAdaptiveStreamingControl)(
+    const plusplayer::StreamingMessageType& type,
+    const plusplayer::MessageParam& msg, void* user_data);
 
 class PlusPlayerWrapperProxy {
  public:
@@ -228,6 +293,14 @@ class PlusPlayerWrapperProxy {
                                 void* user_data);
 
   void UnsetSeekCompletedCallback(PlusPlayerRef player);
+
+  void SetAdaptiveStreamingControlCallback(
+      PlusPlayerRef player, OnPlayerAdaptiveStreamingControl callback,
+      void* user_data);
+
+  void UnsetAdaptiveStreamingControlCallback(PlusPlayerRef player);
+
+  void SetDrm(PlusPlayerRef player, const plusplayer::drm::Property& property);
 
  private:
   PlusPlayerWrapperProxy();

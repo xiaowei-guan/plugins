@@ -51,6 +51,9 @@ class VideoPlayer {
   static void onError(const plusplayer::ErrorType &error_code, void *user_data);
   static void onErrorMessage(const plusplayer::ErrorType &error_code,
                              const char *error_msg, void *user_data);
+  static void onPlayerAdaptiveStreamingControl(
+      const plusplayer::StreamingMessageType &type,
+      const plusplayer::MessageParam &msg, void *user_data);
 
   bool is_initialized_;
   std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>

@@ -406,3 +406,7 @@ void VideoPlayer::onError(const plusplayer::ErrorType &error_code,
                           void *user_data) {}
 void VideoPlayer::onErrorMessage(const plusplayer::ErrorType &error_code,
                                  const char *error_msg, void *user_data) {}
+
+void VideoPlayer::onPlayerAdaptiveStreamingControl(
+    const plusplayer::StreamingMessageType &type,
+    const plusplayer::MessageParam &msg, void *user_data) {}

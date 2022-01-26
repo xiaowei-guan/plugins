@@ -734,6 +734,7 @@ void PlusPlayerWrapperProxy::SetSeekCompletedCallback(
     LOG_ERROR("Symbol not found %s: ", dlerror());
   }
 }
+
 void PlusPlayerWrapperProxy::UnsetSeekCompletedCallback(PlusPlayerRef player) {
   if (!plus_player_hander_) {
     LOG_ERROR("dlopen failed plus_player_hander_ is null");
@@ -744,6 +745,57 @@ void PlusPlayerWrapperProxy::UnsetSeekCompletedCallback(PlusPlayerRef player) {
       dlsym(plus_player_hander_, "UnsetSeekCompletedCallback");
   if (UnsetSeekCompletedCallback) {
     UnsetSeekCompletedCallback(player);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+
+void PlusPlayerWrapperProxy::SetAdaptiveStreamingControlCallback(
+    PlusPlayerRef player, OnPlayerAdaptiveStreamingControl callback,
+    void* user_data) {
+  if (!plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  bool (*SetAdaptiveStreamingControlCallback)(
+      PlusPlayerRef player, OnPlayerAdaptiveStreamingControl callback,
+      void* user_data);
+  *(void**)(&SetAdaptiveStreamingControlCallback) =
+      dlsym(plus_player_hander_, "SetAdaptiveStreamingControlCallback");
+  if (SetAdaptiveStreamingControlCallback) {
+    SetAdaptiveStreamingControlCallback(player, callback, user_data);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+
+void PlusPlayerWrapperProxy::UnsetAdaptiveStreamingControlCallback(
+    PlusPlayerRef player) {
+  if (!plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  bool (*UnsetAdaptiveStreamingControlCallback)(PlusPlayerRef player);
+  *(void**)(&UnsetAdaptiveStreamingControlCallback) =
+      dlsym(plus_player_hander_, "UnsetAdaptiveStreamingControlCallback");
+  if (UnsetAdaptiveStreamingControlCallback) {
+    UnsetAdaptiveStreamingControlCallback(player);
+  } else {
+    LOG_ERROR("Symbol not found %s: ", dlerror());
+  }
+}
+
+void PlusPlayerWrapperProxy::SetDrm(PlusPlayerRef player,
+                                    const plusplayer::drm::Property& property) {
+  if (!plus_player_hander_) {
+    LOG_ERROR("dlopen failed plus_player_hander_ is null");
+    return;
+  }
+  bool (*SetDrm)(PlusPlayerRef player,
+                 const plusplayer::drm::Property& property);
+  *(void**)(&SetDrm) = dlsym(plus_player_hander_, "SetDrm");
+  if (SetDrm) {
+    SetDrm(player, property);
   } else {
     LOG_ERROR("Symbol not found %s: ", dlerror());
   }
