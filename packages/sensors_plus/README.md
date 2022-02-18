@@ -1,5 +1,7 @@
 # sensors_plus_tizen
 
+[![pub package](https://img.shields.io/pub/v/sensors_plus_tizen.svg)](https://pub.dev/packages/sensors_plus_tizen)
+
 The Tizen implementation of [`sensors_plus`](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/sensors_plus).
 
 ## Usage
@@ -8,8 +10,8 @@ This package is not an _endorsed_ implementation of 'sensors_plus'. Therefore, y
 
 ```yaml
 dependencies:
-  sensors_plus: ^1.0.0
-  sensors_plus_tizen: ^1.0.1
+  sensors_plus: ^1.2.1
+  sensors_plus_tizen: ^1.1.0
 ```
 
 Then you can import `sensors_plus` in your Dart code:
@@ -18,10 +20,25 @@ Then you can import `sensors_plus` in your Dart code:
 import 'package:sensors_plus/sensors_plus.dart';
 ```
 
-For detailed usage, see https://github.com/fluttercommunity/plus_plugins/tree/main/packages/sensors_plus/sensors_plus#usage.
+For detailed usage, see https://pub.dev/packages/sensors_plus#usage.
 
 ## Supported devices
 
-This plugin is supported on these types of devices:
+- Galaxy Watch series (running Tizen 4.0 or later)
 
-- Galaxy Watch (running Tizen 4.0 or later)
+## Supported APIs
+
+- [x] `accelerometerEvents` (maps to [`SENSOR_ACCELEROMETER`](https://docs.tizen.org/application/native/guides/location-sensors/device-sensors/#accelerometer))
+- [x] `gyroscopeEvents` (maps to [`SENSOR_GYROSCOPE`](https://docs.tizen.org/application/native/guides/location-sensors/device-sensors/#gyroscope))
+- [x] `userAccelerometerEvents` (maps to [`SENSOR_LINEAR_ACCELERATION`](https://docs.tizen.org/application/native/guides/location-sensors/device-sensors/#linear-acceleration-sensor))
+- [ ] `magnetometerEvents` (no supported devices)
+
+## Notes
+
+You need to declare one or more of the following features in your `tizen-manifest.xml` if you plan to release your app on the app store (to enable [feature-based filtering](https://docs.tizen.org/application/native/tutorials/details/app-filtering)).
+
+```xml
+<feature name="http://tizen.org/feature/sensor.accelerometer"/>
+<feature name="http://tizen.org/feature/sensor.gyroscope"/>
+<feature name="http://tizen.org/feature/sensor.linear_acceleration"/>
+```

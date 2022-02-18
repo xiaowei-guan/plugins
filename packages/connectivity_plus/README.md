@@ -1,5 +1,7 @@
 # connectivity_plus_tizen
 
+[![pub package](https://img.shields.io/pub/v/connectivity_plus_tizen.svg)](https://pub.dev/packages/connectivity_plus_tizen)
+
 The Tizen implementation of [`connectivity_plus`](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/connectivity_plus).
 
 ## Usage
@@ -8,8 +10,8 @@ This package is not an _endorsed_ implementation of `connectivity_plus`. Therefo
 
 ```yaml
 dependencies:
-  connectivity_plus: ^1.0.1
-  connectivity_plus_tizen: ^1.0.0
+  connectivity_plus: ^2.1.0
+  connectivity_plus_tizen: ^1.1.0
 ```
 
 Then you can import `connectivity_plus` in your Dart code:
@@ -18,7 +20,7 @@ Then you can import `connectivity_plus` in your Dart code:
 import 'package:connectivity_plus/connectivity_plus.dart';
 ```
 
-For detailed usage, see https://github.com/fluttercommunity/plus_plugins/tree/main/packages/connectivity_plus/connectivity_plus#usage.
+For detailed usage, see https://pub.dev/packages/connectivity_plus#usage.
 
 ## Required privileges
 

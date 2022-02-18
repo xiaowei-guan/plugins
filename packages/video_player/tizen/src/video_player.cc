@@ -129,6 +129,16 @@ VideoPlayer::VideoPlayer(flutter::PluginRegistrar *plugin_registrar,
     throw VideoPlayerError("player_set_uri failed", get_error_message(ret));
   }
 
+  LOG_DEBUG("[VideoPlayer] call player_set_display_visible");
+  ret = player_set_display_visible(player_, true);
+  if (ret != PLAYER_ERROR_NONE) {
+    player_destroy(player_);
+    LOG_ERROR("[VideoPlayer] player_set_display_visible failed: %s",
+              get_error_message(ret));
+    throw VideoPlayerError("player_set_display_visible failed",
+                           get_error_message(ret));
+  }
+
   LOG_DEBUG(
       "[VideoPlayer] call player_set_media_packet_video_frame_decoded_cb");
   ret = player_set_media_packet_video_frame_decoded_cb(
@@ -279,15 +289,15 @@ void VideoPlayer::setPlaybackSpeed(double speed) {
 void VideoPlayer::seekTo(int position,
                          const SeekCompletedCb &seek_completed_cb) {
   LOG_DEBUG("[VideoPlayer.seekTo] position: %d", position);
+  on_seek_completed_ = seek_completed_cb;
   int ret =
       player_set_play_position(player_, position, true, onSeekCompleted, this);
   if (ret != PLAYER_ERROR_NONE) {
+    on_seek_completed_ = nullptr;
     LOG_ERROR("[VideoPlayer.seekTo] player_set_play_position failed: %s",
               get_error_message(ret));
     throw VideoPlayerError("player_set_play_position failed",
                            get_error_message(ret));
-  } else {
-    on_seek_completed_ = seek_completed_cb;
   }
 }
 

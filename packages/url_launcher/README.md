@@ -1,5 +1,7 @@
 # url_launcher_tizen
 
+[![pub package](https://img.shields.io/pub/v/url_launcher_tizen.svg)](https://pub.dev/packages/url_launcher_tizen)
+
 The Tizen implementation of [`url_launcher`](https://github.com/flutter/plugins/tree/master/packages/url_launcher).
 
 ## Usage
@@ -8,8 +10,8 @@ This package is not an _endorsed_ implementation of `url_launcher`. Therefore, y
 
 ```yaml
 dependencies:
-  url_launcher: ^6.0.9
-  url_launcher_tizen: ^2.0.1
+  url_launcher: ^6.0.17
+  url_launcher_tizen: ^2.1.0
 ```
 
 Then you can import `url_launcher` in your Dart code:
@@ -18,7 +20,7 @@ Then you can import `url_launcher` in your Dart code:
 import 'package:url_launcher/url_launcher.dart';
 ```
 
-For detailed usage, see https://github.com/flutter/plugins/tree/master/packages/url_launcher/url_launcher#usage.
+For detailed usage, see https://pub.dev/packages/url_launcher#usage.
 
 ## Required privileges
 
@@ -30,7 +32,7 @@ To use this plugin in a Tizen application, the application manager privilege is 
 </privileges>
 ```
 
-For details, see [Security and API Privileges](https://docs.tizen.org/application/dotnet/tutorials/sec-privileges).
+For detailed information on Tizen privileges, see [Tizen Docs: API Privileges](https://docs.tizen.org/application/dotnet/get-started/api-privileges).
 
 ## Notes
 

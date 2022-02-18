@@ -250,6 +250,9 @@ class CameraDevice {
   void LockCaptureOrientation(OrientationType orientation);
   void UnlockCaptureOrientation();
 
+  void PausePreview() { is_preview_paused_ = true; }
+  void ResumePreview() { is_preview_paused_ = false; }
+
  private:
   bool CreateCamera();
   bool ClearCameraAutoFocusArea();
@@ -325,7 +328,9 @@ class CameraDevice {
   flutter::PluginRegistrar *registrar_{nullptr};
   std::unique_ptr<flutter::TextureVariant> texture_variant_;
   std::unique_ptr<FlutterDesktopGpuBuffer> flutter_desktop_gpu_buffer_;
-  media_packet_h packet_{nullptr};
+  media_packet_h current_packet_{nullptr};
+  media_packet_h prepared_packet_{nullptr};
+
   std::mutex mutex_;
 
   std::unique_ptr<CameraMethodChannel> camera_method_channel_;
@@ -355,6 +360,7 @@ class CameraDevice {
   std::vector<std::pair<int, int>> supported_recorder_resolutions_;
 
   bool enable_audio_{true};
+  bool is_preview_paused_{false};
 };
 
 #endif

@@ -1,5 +1,7 @@
 # audioplayers_tizen
 
+[![pub package](https://img.shields.io/pub/v/audioplayers_tizen.svg)](https://pub.dev/packages/audioplayers_tizen)
+
 The Tizen implementation of [`audioplayers`](https://github.com/luanpotter/audioplayers).
 
 ## Usage
@@ -19,7 +21,7 @@ Then you can import `audioplayers` in your Dart code:
 import 'package:audioplayers/audioplayers.dart';
 ```
 
-For detailed usage, see https://github.com/luanpotter/audioplayers#usage.
+For detailed usage, see https://pub.dev/packages/audioplayers#usage.
 
 ## Required privileges
 

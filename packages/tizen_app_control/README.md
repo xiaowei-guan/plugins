@@ -1,5 +1,7 @@
 # tizen_app_control
 
+[![pub package](https://img.shields.io/pub/v/tizen_app_control.svg)](https://pub.dev/packages/tizen_app_control)
+
 Tizen application control APIs. Used for launching and terminating applications on a Tizen device.
 
 ## Usage
@@ -8,7 +10,7 @@ To use this package, add `tizen_app_control` as a dependency in your `pubspec.ya
 
 ```yaml
 dependencies:
-  tizen_app_control: ^0.1.0
+  tizen_app_control: ^0.1.1
 ```
 
 ### Sending a launch request

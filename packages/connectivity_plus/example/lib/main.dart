@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -17,9 +16,9 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   const MyApp({Key? key}) : super(key: key);
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -68,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       result = await _connectivity.checkConnectivity();
     } on PlatformException catch (e) {
-      developer.log(e.toString());
+      developer.log('Couldn\'t check connectivity status', error: e);
       return;
     }
 

@@ -1,5 +1,7 @@
 # image_picker_tizen
 
+[![pub package](https://img.shields.io/pub/v/image_picker_tizen.svg)](https://pub.dev/packages/image_picker_tizen)
+
 The Tizen implementation of [`image_picker`](https://github.com/flutter/plugins/tree/master/packages/image_picker).
 
 ## Usage
@@ -8,29 +10,31 @@ To use this plugin, add `image_picker` and `image_picker_tizen` as [dependencies
 
 ```yaml
 dependencies:
-  image_picker: ^0.7.3
-  image_picker_tizen: ^2.0.0
+  image_picker: ^0.8.4
+  image_picker_tizen: ^2.1.0
 ```
 
-## Example
-
-Import the library.
+Then you can import `image_picker` in your Dart code.
 
 ``` dart
 import 'package:image_picker/image_picker.dart';
+
+final ImagePicker picker = ImagePicker();
+final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 ```
 
-Then invoke the static `image_picker` method anywhere in your Dart code.
+For detailed usage, see https://pub.dev/packages/image_picker#example.
 
-``` dart
-final picker = ImagePicker();
-final pickedFile = await picker.getImage(source: ImageSource.gallery);
-```
+## Supported devices
 
-## Limitations
+- Galaxy Watch series (running Tizen 5.5 or later)
 
-- This plugin is only supported on **Galaxy Watch** devices running Tizen 5.5 or later.
-- The only API you can use is `getImage(source: ImageSource.gallery)`. You can't pick a video file (`getVideo()`) or pick a file from `ImageSource.camera`.
+## Supported APIs
+
+- [x] `ImagePicker.pickImage` (only `ImageSource.gallery` is available as `source`)
+- [x] `ImagePicker.pickMultiImage`
+- [ ] `ImagePicker.pickVideo` (no file manager app available)
+- [ ] `ImagePicker.retrieveLostData` (Android-only)
 
 ## Required privileges
 

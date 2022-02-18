@@ -47,3 +47,9 @@
 
 ## 0.3.8
 * Update webivew_flutter to 2.3.0
+
+## 0.3.9
+* Update LWE binary (6bae13cb915bd41c5aac4aaaae72865f20924c03)
+
+## 0.3.10
+* Apply PlatformView, PlatformViewFactory APIs change

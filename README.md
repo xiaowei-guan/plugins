@@ -32,26 +32,15 @@ The _"non-endorsed"_ status means that the plugin is not endorsed by the origina
 | [**sensors_plus_tizen**](packages/sensors_plus) | [sensors_plus](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/sensors_plus) (1st-party) | [![pub package](https://img.shields.io/pub/v/sensors_plus_tizen.svg)](https://pub.dev/packages/sensors_plus_tizen) | No |
 | [**share_plus_tizen**](packages/share_plus) | [share_plus](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/share_plus) (1st-party) | [![pub package](https://img.shields.io/pub/v/share_plus_tizen.svg)](https://pub.dev/packages/share_plus_tizen) | No |
 | [**shared_preferences_tizen**](packages/shared_preferences) | [shared_preferences](https://github.com/flutter/plugins/tree/master/packages/shared_preferences) (1st-party) | [![pub package](https://img.shields.io/pub/v/shared_preferences_tizen.svg)](https://pub.dev/packages/shared_preferences_tizen) | No |
+| [**sqflite_tizen**](packages/sqflite) | [sqflite](https://github.com/tekartik/sqflite) (3rd-party) | [![pub package](https://img.shields.io/pub/v/sqflite_tizen.svg)](https://pub.dev/packages/sqflite_tizen) | No |
 | [**tizen_app_control**](packages/tizen_app_control) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/tizen_app_control.svg)](https://pub.dev/packages/tizen_app_control) | N/A |
+| [**tizen_audio_manager**](packages/tizen_audio_manager) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/tizen_audio_manager.svg)](https://pub.dev/packages/tizen_audio_manager) | N/A |
+| [**tizen_notification**](packages/tizen_notification) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/tizen_notification.svg)](https://pub.dev/packages/tizen_notification) | N/A |
 | [**url_launcher_tizen**](packages/url_launcher) | [url_launcher](https://github.com/flutter/plugins/tree/master/packages/url_launcher) (1st-party) | [![pub package](https://img.shields.io/pub/v/url_launcher_tizen.svg)](https://pub.dev/packages/url_launcher_tizen) | No |
 | [**video_player_tizen**](packages/video_player) | [video_player](https://github.com/flutter/plugins/tree/master/packages/video_player) (1st-party) | [![pub package](https://img.shields.io/pub/v/video_player_tizen.svg)](https://pub.dev/packages/video_player_tizen) | No |
 | [**wakelock_tizen**](packages/wakelock) | [wakelock](https://github.com/creativecreatorormaybenot/wakelock) (3rd-party) | [![pub package](https://img.shields.io/pub/v/wakelock_tizen.svg)](https://pub.dev/packages/wakelock_tizen) | No |
 | [**wearable_rotary**](packages/wearable_rotary) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/wearable_rotary.svg)](https://pub.dev/packages/wearable_rotary) | N/A |
 | [**webview_flutter_tizen**](packages/webview_flutter) | [webview_flutter](https://github.com/flutter/plugins/tree/master/packages/webview_flutter) (1st-party) | [![pub package](https://img.shields.io/pub/v/webview_flutter_tizen.svg)](https://pub.dev/packages/webview_flutter_tizen) | No |
-
-### Deprecated
-
-The following packages are deprecated.
-
-| Tizen package | Pub | Replacement | Pub |
-|-|:-:|-|:-:|
-| [**battery_tizen**](packages/battery) | [![pub package](https://img.shields.io/pub/v/battery_tizen.svg)](https://pub.dev/packages/battery_tizen) | [**battery_plus_tizen**](packages/battery_plus) | [![pub package](https://img.shields.io/pub/v/battery_plus_tizen.svg)](https://pub.dev/packages/battery_plus_tizen) |
-| [**connectivity_tizen**](packages/connectivity) | [![pub package](https://img.shields.io/pub/v/connectivity_tizen.svg)](https://pub.dev/packages/connectivity_tizen) | [**connectivity_plus_tizen**](packages/connectivity_plus) | [![pub package](https://img.shields.io/pub/v/connectivity_plus_tizen.svg)](https://pub.dev/packages/connectivity_plus_tizen) |
-| [**device_info_tizen**](packages/device_info) | [![pub package](https://img.shields.io/pub/v/device_info_tizen.svg)](https://pub.dev/packages/device_info_tizen) | [**device_info_plus_tizen**](packages/device_info_plus) | [![pub package](https://img.shields.io/pub/v/device_info_plus_tizen.svg)](https://pub.dev/packages/device_info_plus_tizen) |
-| [**package_info_tizen**](packages/package_info) | [![pub package](https://img.shields.io/pub/v/package_info_tizen.svg)](https://pub.dev/packages/package_info_tizen) | [**package_info_plus_tizen**](packages/package_info_plus) | [![pub package](https://img.shields.io/pub/v/package_info_plus_tizen.svg)](https://pub.dev/packages/package_info_plus_tizen) |
-| [**sensors_tizen**](packages/sensors) | [![pub package](https://img.shields.io/pub/v/sensors_tizen.svg)](https://pub.dev/packages/sensors_tizen) | [**sensors_plus_tizen**](packages/sensors_plus) | [![pub package](https://img.shields.io/pub/v/sensors_plus_tizen.svg)](https://pub.dev/packages/sensors_plus_tizen) |
-| [**share_tizen**](packages/share) | [![pub package](https://img.shields.io/pub/v/share_tizen.svg)](https://pub.dev/packages/share_tizen) | [**share_plus_tizen**](packages/share_plus) | [![pub package](https://img.shields.io/pub/v/share_plus_tizen.svg)](https://pub.dev/packages/share_plus_tizen) |
-| [**wifi_info_flutter_tizen**](packages/wifi_info_flutter) | [![pub package](https://img.shields.io/pub/v/wifi_info_flutter_tizen.svg)](https://pub.dev/packages/wifi_info_flutter_tizen) | [**network_info_plus_tizen**](packages/network_info_plus) | [![pub package](https://img.shields.io/pub/v/network_info_plus_tizen.svg)](https://pub.dev/packages/network_info_plus_tizen) |
 
 ## Device limitations
 
@@ -75,7 +64,10 @@ The following packages are deprecated.
 | [**sensors_plus_tizen**](packages/sensors_plus) | ✔️ | ✔️ | ❌ | ❌ | No sensor hardware |
 | [**share_plus_tizen**](packages/share_plus) | ⚠️ | ⚠️ | ❌ | ❌ | No SMS or e-mail app |
 | [**shared_preferences_tizen**](packages/shared_preferences) | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**sqflite_tizen**](packages/sqflite) | ✔️ | ✔️ | ✔️ | ✔️ |
 | [**tizen_app_control**](packages/tizen_app_control) | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**tizen_audio_manager**](packages/tizen_audio_manager) | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**tizen_notification**](packages/tizen_notification) | ❌ | ✔️ | ✔️ | ✔️ | API not supported |
 | [**url_launcher_tizen**](packages/url_launcher) | ✔️ | ❌ | ✔️ | ❌ | No browser app |
 | [**video_player_tizen**](packages/video_player) | ✔️ | ✔️ | ⚠️ | ❌ | Functional limitations (see README)<br>TV emulator issue |
 | [**wakelock_tizen**](packages/wakelock) | ✔️ | ✔️ | ❌ | ❌ | Cannot override system display setting |

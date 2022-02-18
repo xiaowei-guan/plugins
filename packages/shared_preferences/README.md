@@ -1,5 +1,7 @@
 # shared_preferences_tizen
 
+[![pub package](https://img.shields.io/pub/v/shared_preferences_tizen.svg)](https://pub.dev/packages/shared_preferences_tizen)
+
 The Tizen implementation of [`shared_preferences`](https://github.com/flutter/plugins/tree/master/packages/shared_preferences).
 
 ## Usage
@@ -8,8 +10,8 @@ This package is not an _endorsed_ implementation of `shared_preferences`. Theref
 
 ```yaml
 dependencies:
-  shared_preferences: ^2.0.5
-  shared_preferences_tizen: ^2.0.1
+  shared_preferences: ^2.0.9
+  shared_preferences_tizen: ^2.0.2
 ```
 
 Then you can import `shared_preferences` in your Dart code:
@@ -18,4 +20,4 @@ Then you can import `shared_preferences` in your Dart code:
 import 'package:shared_preferences/shared_preferences.dart';
 ```
 
-For detailed usage, see https://github.com/flutter/plugins/tree/master/packages/shared_preferences/shared_preferences#usage.
+For detailed usage, see https://pub.dev/packages/shared_preferences#usage.
