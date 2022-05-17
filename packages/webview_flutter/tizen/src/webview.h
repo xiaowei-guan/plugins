@@ -5,15 +5,18 @@
 #ifndef FLUTTER_PLUGIN_WEBVIEW_FLUTTER_TIZEN_WEVIEW_H_
 #define FLUTTER_PLUGIN_WEBVIEW_FLUTTER_TIZEN_WEVIEW_H_
 
+#include <Ecore_IMF.h>
+#include <flutter/encodable_value.h>
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar.h>
 #include <flutter/standard_message_codec.h>
-#include <flutter/standard_method_codec.h>
+#include <flutter/texture_registrar.h>
 #include <flutter_platform_view.h>
-#include <tbm_surface.h>
 
+#include <cstddef>
+#include <memory>
 #include <mutex>
-#include <stack>
+#include <string>
 
 namespace LWE {
 class WebContainer;
@@ -21,13 +24,14 @@ class WebContainer;
 
 class TextInputChannel;
 class BufferPool;
+class SingleBufferPool;
 class BufferUnit;
 
 class WebView : public PlatformView {
  public:
   WebView(flutter::PluginRegistrar* registrar, int viewId,
           flutter::TextureRegistrar* textureRegistrar, double width,
-          double height, flutter::EncodableMap& params, void* platform_window);
+          double height, flutter::EncodableMap& params);
   ~WebView();
   virtual void Dispose() override;
   virtual void Resize(double width, double height) override;
@@ -50,7 +54,6 @@ class WebView : public PlatformView {
   void ShowPanel();
 
   FlutterDesktopGpuBuffer* ObtainGpuBuffer(size_t width, size_t height);
-  void DestructBuffer(void* buffer);
 
  private:
   void HandleMethodCall(
@@ -80,7 +83,7 @@ class WebView : public PlatformView {
   flutter::TextureVariant* texture_variant_;
   std::mutex mutex_;
   std::unique_ptr<BufferPool> tbm_pool_;
-  void* platform_window_;
+  bool use_sw_backend_;
 };
 
 #endif  // FLUTTER_PLUGIN_WEBVIEW_FLUTTER_TIZEN_WEVIEW_H_

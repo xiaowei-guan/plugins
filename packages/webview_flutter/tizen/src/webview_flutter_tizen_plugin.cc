@@ -4,9 +4,11 @@
 
 #include "webview_flutter_tizen_plugin.h"
 
+#include <flutter/plugin_registrar.h>
+#include <flutter_tizen.h>
+
 #include <memory>
 
-#include "flutter_tizen.h"
 #include "webview_factory.h"
 
 static constexpr char kViewType[] = "plugins.flutter.io/webview";
@@ -27,8 +29,7 @@ void WebviewFlutterTizenPluginRegisterWithRegistrar(
       flutter::PluginRegistrarManager::GetInstance()
           ->GetRegistrar<flutter::PluginRegistrar>(registrar);
   auto factory = std::make_unique<WebViewFactory>(
-      core_registrar, core_registrar->texture_registrar(),
-      FlutterDesktopGetWindow(registrar));
+      core_registrar, core_registrar->texture_registrar());
   FlutterDesktopRegisterViewFactory(registrar, kViewType, std::move(factory));
   WebviewFlutterTizenPlugin::RegisterWithRegistrar(core_registrar);
 }

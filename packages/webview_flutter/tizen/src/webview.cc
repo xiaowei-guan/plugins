@@ -4,16 +4,14 @@
 
 #include "webview.h"
 
-#include <Ecore_IMF_Evas.h>
-#include <Ecore_Input_Evas.h>
-#include <flutter/texture_registrar.h>
-#include <flutter_platform_view.h>
+#include <app_common.h>
+#include <flutter/standard_method_codec.h>
 #include <flutter_texture_registrar.h>
+#include <system_info.h>
+#include <tbm_surface.h>
 
-#include <map>
-#include <memory>
-#include <sstream>
-#include <string>
+#include <stdexcept>
+#include <variant>
 
 #include "buffer_pool.h"
 #include "log.h"
@@ -21,7 +19,8 @@
 #include "lwe/PlatformIntegrationData.h"
 #include "webview_factory.h"
 
-#define LWE_EXPORT
+#define BUFFER_POOL_SIZE 5
+
 extern "C" size_t LWE_EXPORT createWebViewInstance(
     unsigned x, unsigned y, unsigned width, unsigned height,
     float devicePixelRatio, const char* defaultFontName, const char* locale,
@@ -141,11 +140,24 @@ bool GetValueFromEncodableMap(const flutter::EncodableValue& arguments,
   return false;
 }
 
+bool NeedsSwBackend(void) {
+  bool result = false;
+  char* value = nullptr;
+  int ret = system_info_get_platform_string(
+      "http://tizen.org/system/model_name", &value);
+  if ((SYSTEM_INFO_ERROR_NONE == ret) && (0 == strcmp(value, "Emulator"))) {
+    result = true;
+  }
+  if (value) {
+    free(value);
+  }
+  return result;
+}
+
 WebView::WebView(flutter::PluginRegistrar* registrar, int viewId,
                  flutter::TextureRegistrar* texture_registrar, double width,
-                 double height, flutter::EncodableMap& params,
-                 void* platform_window)
-    : PlatformView(registrar, viewId, platform_window),
+                 double height, flutter::EncodableMap& params)
+    : PlatformView(registrar, viewId, nullptr),
       texture_registrar_(texture_registrar),
       webview_instance_(nullptr),
       width_(width),
@@ -157,14 +169,18 @@ WebView::WebView(flutter::PluginRegistrar* registrar, int viewId,
       has_navigation_delegate_(false),
       has_progress_tracking_(false),
       context_(nullptr),
-      texture_variant_(nullptr),
-      platform_window_(platform_window) {
-  tbm_pool_ = std::make_unique<BufferPool>(width, height);
+      texture_variant_(nullptr) {
+  use_sw_backend_ = NeedsSwBackend();
+  if (use_sw_backend_) {
+    tbm_pool_ = std::make_unique<SingleBufferPool>(width, height);
+  } else {
+    tbm_pool_ = std::make_unique<BufferPool>(width, height, BUFFER_POOL_SIZE);
+  }
+
   texture_variant_ = new flutter::TextureVariant(flutter::GpuBufferTexture(
       [this](size_t width, size_t height) -> const FlutterDesktopGpuBuffer* {
         return this->ObtainGpuBuffer(width, height);
-      },
-      [this](void* buffer) -> void { this->DestructBuffer(buffer); }));
+      }));
   SetTextureId(texture_registrar_->RegisterTexture(texture_variant_));
   InitWebView();
 
@@ -192,6 +208,15 @@ WebView::WebView(flutter::PluginRegistrar* registrar, int viewId,
     url = std::get<std::string>(initial_url);
   } else {
     url = "about:blank";
+  }
+
+  auto backgroundColor = params[flutter::EncodableValue("backgroundColor")];
+  if (std::holds_alternative<int>(backgroundColor)) {
+    auto color = std::get<int>(backgroundColor);
+    auto settings = webview_instance_->GetSettings();
+    settings.SetBaseBackgroundColor(color >> 16 & 0xff, color >> 8 & 0xff,
+                                    color & 0xff, color >> 24 & 0xff);
+    webview_instance_->SetSettings(settings);
   }
 
   auto settings = params[flutter::EncodableValue("settings")];
@@ -785,14 +810,14 @@ void WebView::InitWebView() {
           if (candidate_surface_) {
             tbm_pool_->Release(candidate_surface_);
             candidate_surface_ = nullptr;
-          } else {
-            texture_registrar_->MarkTextureFrameAvailable(GetTextureId());
           }
           candidate_surface_ = working_surface_;
           working_surface_ = nullptr;
+          texture_registrar_->MarkTextureFrameAvailable(GetTextureId());
         }
       },
-      false);
+      use_sw_backend_);
+
 #ifndef TV_PROFILE
   auto settings = webview_instance_->GetSettings();
   settings.SetUserAgentString(
@@ -804,7 +829,7 @@ void WebView::InitWebView() {
 void WebView::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue>& method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  if (!webview_instance_) {
+  if (!webview_instance_ || !method_call.arguments()) {
     return;
   }
   const auto method_name = method_call.method_name();
@@ -920,6 +945,47 @@ void WebView::HandleMethodCall(
     result->Success(flutter::EncodableValue(webview_instance_->GetScrollX()));
   } else if (method_name.compare("getScrollY") == 0) {
     result->Success(flutter::EncodableValue(webview_instance_->GetScrollY()));
+  } else if (method_name.compare("loadFlutterAsset") == 0) {
+    if (std::holds_alternative<std::string>(arguments)) {
+      std::string key = std::get<std::string>(arguments);
+      std::string path;
+      char* resPath = app_get_resource_path();
+      if (resPath) {
+        path = std::string("file://") + resPath + "flutter_assets/" + key;
+        free(resPath);
+        webview_instance_->LoadURL(path);
+        result->Success();
+        return;
+      }
+    }
+    result->Error("InvalidArguments", "Please set 'key' properly");
+  } else if (method_name.compare("loadHtmlString") == 0) {
+    std::string html;
+    std::string baseUrl;
+    if (!GetValueFromEncodableMap(arguments, "html", &html)) {
+      result->Error("InvalidArguments", "Please set 'html' properly");
+      return;
+    }
+    if (GetValueFromEncodableMap(arguments, "baseUrl", &baseUrl)) {
+      LOG_DEBUG(
+          "loadHtmlString : baseUrl is not yet supported. It will be "
+          "ignored.\n ");
+    }
+    webview_instance_->LoadData(html);
+    result->Success();
+  } else if (method_name.compare("loadFile") == 0) {
+    if (std::holds_alternative<std::string>(arguments)) {
+      std::string absoluteFilePath =
+          std::string("file://") + std::get<std::string>(arguments);
+      webview_instance_->LoadURL(absoluteFilePath);
+      result->Success();
+      return;
+    }
+    result->Error("InvalidArguments", "Please set 'absoluteFilePath' properly");
+  } else if (method_name.compare("loadRequest") == 0) {
+    result->NotImplemented();
+  } else if (method_name.compare("setCookie") == 0) {
+    result->NotImplemented();
   } else {
     result->NotImplemented();
   }
@@ -960,14 +1026,4 @@ FlutterDesktopGpuBuffer* WebView::ObtainGpuBuffer(size_t width, size_t height) {
   rendered_surface_ = candidate_surface_;
   candidate_surface_ = nullptr;
   return rendered_surface_->GpuBuffer();
-}
-
-void WebView::DestructBuffer(void* buffer) {
-  if (buffer) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    BufferUnit* unit = tbm_pool_->Find((tbm_surface_h)buffer);
-    if (unit && unit != rendered_surface_) {
-      tbm_pool_->Release(unit);
-    }
-  }
 }

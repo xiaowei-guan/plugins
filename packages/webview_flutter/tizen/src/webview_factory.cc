@@ -5,27 +5,17 @@
 #include "webview_factory.h"
 
 #include <app_common.h>
-#include <flutter/method_channel.h>
-#include <flutter/plugin_registrar.h>
-#include <flutter/standard_message_codec.h>
-#include <flutter/standard_method_codec.h>
-#include <flutter_platform_view.h>
+#include <flutter/encodable_value.h>
 
-#include <map>
-#include <memory>
-#include <sstream>
 #include <string>
+#include <variant>
 
 #include "log.h"
 #include "lwe/LWEWebView.h"
-#include "webview_flutter_tizen_plugin.h"
 
 WebViewFactory::WebViewFactory(flutter::PluginRegistrar* registrar,
-                               flutter::TextureRegistrar* texture_registrar,
-                               void* platform_window)
-    : PlatformViewFactory(registrar),
-      texture_registrar_(texture_registrar),
-      platform_window_(platform_window) {
+                               flutter::TextureRegistrar* texture_registrar)
+    : PlatformViewFactory(registrar), texture_registrar_(texture_registrar) {
   char* path = app_get_data_path();
   std::string path_string;
   if (!path || strlen(path) == 0) {
@@ -56,7 +46,7 @@ PlatformView* WebViewFactory::Create(
 
   try {
     return new WebView(GetPluginRegistrar(), view_id, texture_registrar_, width,
-                       height, params, platform_window_);
+                       height, params);
   } catch (const std::invalid_argument& ex) {
     LOG_ERROR("[Exception] %s\n", ex.what());
     return nullptr;
