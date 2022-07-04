@@ -9,8 +9,8 @@ import 'dart:async';
 import 'package:device_info_plus_tizen/device_info_plus_tizen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:tizen_app_control/app_control.dart';
-import 'package:tizen_app_manager/app_manager.dart';
+import 'package:tizen_app_control/tizen_app_control.dart';
+import 'package:tizen_app_manager/tizen_app_manager.dart';
 
 /// The settings app ID.
 const String settingAppId = 'org.tizen.setting';
@@ -173,11 +173,10 @@ class _CurrentAppScreenState extends State<_CurrentAppScreen> {
           _infoTile('Application type', _appInfo.appType),
           _infoTile('Execuatable path', _appInfo.executablePath),
           _infoTile('Shared res path', _appInfo.sharedResourcePath),
-          _infoTile('App meta data', _appInfo.metadata.toString()),
-          _infoTile(
-              'App is terminated', _currentAppContext.isTerminated.toString()),
-          _infoTile('process id', _currentAppContext.processId.toString()),
-          _infoTile('state', _currentAppContext.appState.toString()),
+          _infoTile('Metadata', _appInfo.metadata.toString()),
+          _infoTile('Terminated', _currentAppContext.isTerminated.toString()),
+          _infoTile('Process ID', _currentAppContext.processId.toString()),
+          _infoTile('State', _currentAppContext.appState.toString()),
         ],
       ),
     );
@@ -279,7 +278,6 @@ class _AppsEventScreenState extends State<_AppsEventScreen> {
           appId: event.appId,
           processId: event.processId,
         ));
-        event.dispose();
       });
     }));
     _subscriptions
@@ -290,7 +288,6 @@ class _AppsEventScreenState extends State<_AppsEventScreen> {
           appId: event.appId,
           processId: event.processId,
         ));
-        event.dispose();
       });
     }));
   }

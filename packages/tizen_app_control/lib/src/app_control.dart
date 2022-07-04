@@ -2,15 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-library tizen_app_control;
-
 import 'dart:async';
 
 import 'package:flutter/services.dart';
 
-import 'app_manager.dart';
-import 'src/ffi.dart';
-import 'src/utils.dart';
+import 'ffi.dart';
+import 'utils.dart';
 
 /// Enumeration for the application control launch mode.
 ///
@@ -197,10 +194,10 @@ class AppControl {
 
   /// Sends a terminate request to a running application.
   ///
-  /// This API can be only used to terminate sub applications launched by the
+  /// This API can be only used to terminate sub-applications launched by the
   /// caller application as a group. To terminate background applications not
-  /// launched as a group, use [AppManager.terminateBackgroundApplication]
-  /// instead.
+  /// launched as a group, use [AppRunningContext.terminate] of the
+  /// `tizen_app_manager` package instead.
   ///
   /// Applications that were launched by the callee application as a group will
   /// be terminated by this API as well.
