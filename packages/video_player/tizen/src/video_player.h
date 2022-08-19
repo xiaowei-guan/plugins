@@ -13,6 +13,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <queue>
 #include <string>
 
 #include "video_player_options.h"
@@ -40,6 +41,9 @@ class VideoPlayer {
 
  private:
   void Initialize();
+  void ClearMediaPacketQueue();
+  bool IsMediaPacketQueueEmpty();
+  void PushMediaPacket(media_packet_h packet);
   void SetUpEventChannel(flutter::BinaryMessenger *messenger);
   void SendInitialized();
   FlutterDesktopGpuBuffer *ObtainGpuBuffer(size_t width, size_t height);
@@ -54,6 +58,7 @@ class VideoPlayer {
   static void OnVideoFrameDecoded(media_packet_h packet, void *data);
 
   bool is_initialized_;
+  bool is_rendering_;
   player_h player_;
   std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>
       event_channel_;
@@ -64,7 +69,7 @@ class VideoPlayer {
   std::unique_ptr<FlutterDesktopGpuBuffer> flutter_desktop_gpu_buffer_;
   std::mutex mutex_;
   SeekCompletedCallback on_seek_completed_;
-  media_packet_h current_media_packet_ = nullptr;
+  std::queue<media_packet_h> media_packets_;
 };
 
 #endif  // FLUTTER_PLUGIN_VIDEO_PLAYER_H_

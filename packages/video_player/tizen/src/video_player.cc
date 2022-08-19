@@ -46,25 +46,30 @@ void VideoPlayer::ReleaseMediaPacket(void *data) {
   auto *player = reinterpret_cast<VideoPlayer *>(data);
 
   std::lock_guard<std::mutex> lock(player->mutex_);
-  if (player->current_media_packet_) {
-    media_packet_destroy(player->current_media_packet_);
-    player->current_media_packet_ = nullptr;
-  }
+  player->is_rendering_ = false;
 }
 
 FlutterDesktopGpuBuffer *VideoPlayer::ObtainGpuBuffer(size_t width,
                                                       size_t height) {
   std::lock_guard<std::mutex> lock(mutex_);
-  if (!current_media_packet_) {
-    LOG_ERROR("[VideoPlayer] No valid media packet.");
+
+  if (!is_rendering_) {
+    LOG_ERROR("[VideoPlayer] No start rendering");
     return nullptr;
   }
+
+  if (IsMediaPacketQueueEmpty()) {
+    LOG_ERROR("[VideoPlayer] No valid media packet.");
+    is_rendering_ = false;
+    return nullptr;
+  }
+
   tbm_surface_h surface;
-  int ret = media_packet_get_tbm_surface(current_media_packet_, &surface);
+  int ret = media_packet_get_tbm_surface(media_packets_.front(), &surface);
   if (ret != MEDIA_PACKET_ERROR_NONE || !surface) {
     LOG_ERROR("[VideoPlayer] Failed to get a TBM surface, error: %d", ret);
-    media_packet_destroy(current_media_packet_);
-    current_media_packet_ = nullptr;
+    is_rendering_ = false;
+    ClearMediaPacketQueue();
     return nullptr;
   }
   flutter_desktop_gpu_buffer_->buffer = surface;
@@ -79,6 +84,7 @@ VideoPlayer::VideoPlayer(flutter::PluginRegistrar *plugin_registrar,
                          flutter::TextureRegistrar *texture_registrar,
                          const std::string &uri, VideoPlayerOptions &options) {
   is_initialized_ = false;
+  is_rendering_ = false;
   texture_registrar_ = texture_registrar;
 
   texture_variant_ =
@@ -265,10 +271,7 @@ void VideoPlayer::Dispose() {
     player_ = 0;
   }
 
-  if (current_media_packet_) {
-    media_packet_destroy(current_media_packet_);
-    current_media_packet_ = nullptr;
-  }
+  ClearMediaPacketQueue();
 
   if (texture_registrar_) {
     texture_registrar_->UnregisterTexture(texture_id_);
@@ -423,13 +426,30 @@ void VideoPlayer::OnError(int code, void *data) {
 
 void VideoPlayer::OnVideoFrameDecoded(media_packet_h packet, void *data) {
   auto *player = reinterpret_cast<VideoPlayer *>(data);
-
   std::lock_guard<std::mutex> lock(player->mutex_);
-  if (player->current_media_packet_) {
-    LOG_INFO("[VideoPlayer] Media packet already pending.");
-    media_packet_destroy(packet);
+  if (player->is_rendering_) {
+    player->PushMediaPacket(packet);
     return;
   }
-  player->current_media_packet_ = packet;
-  player->texture_registrar_->MarkTextureFrameAvailable(player->texture_id_);
+  player->ClearMediaPacketQueue();
+  if (player->texture_registrar_->MarkTextureFrameAvailable(
+          player->texture_id_)) {
+    player->is_rendering_ = true;
+    player->PushMediaPacket(packet);
+  } else {
+    media_packet_destroy(packet);
+  }
+}
+
+void VideoPlayer::ClearMediaPacketQueue() {
+  while (!media_packets_.empty()) {
+    media_packet_destroy(media_packets_.front());
+    media_packets_.pop();
+  }
+}
+
+bool VideoPlayer::IsMediaPacketQueueEmpty() { return media_packets_.empty(); }
+
+void VideoPlayer::PushMediaPacket(media_packet_h packet) {
+  media_packets_.push(packet);
 }
