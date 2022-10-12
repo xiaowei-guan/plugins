@@ -6,7 +6,7 @@ This repo contains Flutter plugins maintained by the flutter-tizen team. We're i
 
 To build Flutter applications with plugins, use the [flutter-tizen](https://github.com/flutter-tizen/flutter-tizen) tool.
 
-For how to extend existing plugins for Tizen, see [Writing custom platform-specific code](https://flutter.dev/docs/development/platform-integration/platform-channels) and [Federated plugins](https://flutter.dev/docs/development/packages-and-plugins/developing-packages#federated-plugins) from the Flutter docs. If the original plugin uses the federated plugins approach, you can implement its platform interface either in Dart (inheriting directly) or C++ (using a fallback method channel).
+Every plugin in this repo is written in either C++, C#, or Dart. For how to write a new plugin or extend existing plugins for Tizen, see [this page](https://github.com/flutter-tizen/flutter-tizen/blob/master/doc/develop-plugin.md).
 
 ## List of packages
 
@@ -31,12 +31,12 @@ The _"non-endorsed"_ status means that the plugin is not endorsed by the origina
 | [**path_provider_tizen**](packages/path_provider) | [path_provider](https://github.com/flutter/plugins/tree/master/packages/path_provider) (1st-party) | [![pub package](https://img.shields.io/pub/v/path_provider_tizen.svg)](https://pub.dev/packages/path_provider_tizen) | No |
 | [**permission_handler_tizen**](packages/permission_handler) | [permission_handler](https://github.com/Baseflow/flutter-permission-handler) (3rd-party) | [![pub package](https://img.shields.io/pub/v/permission_handler_tizen.svg)](https://pub.dev/packages/permission_handler_tizen) | No |
 | [**sensors_plus_tizen**](packages/sensors_plus) | [sensors_plus](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/sensors_plus) (1st-party) | [![pub package](https://img.shields.io/pub/v/sensors_plus_tizen.svg)](https://pub.dev/packages/sensors_plus_tizen) | No |
-| [**share_plus_tizen**](packages/share_plus) | [share_plus](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/share_plus) (1st-party) | [![pub package](https://img.shields.io/pub/v/share_plus_tizen.svg)](https://pub.dev/packages/share_plus_tizen) | No |
 | [**shared_preferences_tizen**](packages/shared_preferences) | [shared_preferences](https://github.com/flutter/plugins/tree/master/packages/shared_preferences) (1st-party) | [![pub package](https://img.shields.io/pub/v/shared_preferences_tizen.svg)](https://pub.dev/packages/shared_preferences_tizen) | No |
 | [**sqflite_tizen**](packages/sqflite) | [sqflite](https://github.com/tekartik/sqflite) (3rd-party) | [![pub package](https://img.shields.io/pub/v/sqflite_tizen.svg)](https://pub.dev/packages/sqflite_tizen) | No |
 | [**tizen_app_control**](packages/tizen_app_control) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/tizen_app_control.svg)](https://pub.dev/packages/tizen_app_control) | N/A |
 | [**tizen_app_manager**](packages/tizen_app_manager) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/tizen_app_manager.svg)](https://pub.dev/packages/tizen_app_manager) | N/A |
 | [**tizen_audio_manager**](packages/tizen_audio_manager) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/tizen_audio_manager.svg)](https://pub.dev/packages/tizen_audio_manager) | N/A |
+| [**tizen_bundle**](packages/tizen_bundle) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/tizen_bundle.svg)](https://pub.dev/packages/tizen_bundle) | N/A |
 | [**tizen_log**](packages/tizen_log) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/tizen_log.svg)](https://pub.dev/packages/tizen_log) | N/A |
 | [**tizen_notification**](packages/tizen_notification) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/tizen_notification.svg)](https://pub.dev/packages/tizen_notification) | N/A |
 | [**tizen_package_manager**](packages/tizen_package_manager) | (Tizen-only) | [![pub package](https://img.shields.io/pub/v/tizen_package_manager.svg)](https://pub.dev/packages/tizen_package_manager) | N/A |
@@ -48,36 +48,36 @@ The _"non-endorsed"_ status means that the plugin is not endorsed by the origina
 
 ## Device limitations
 
-| Package name | Watch | Watch<br>emulator | TV | TV<br>emulator | Remarks |
-|-|:-:|:-:|:-:|:-:|-|
-| [**audioplayers_tizen**](packages/audioplayers) | ✔️ | ✔️ | ⚠️ | ⚠️ | Functional limitations (see README) |
-| [**battery_plus_tizen**](packages/battery_plus) | ✔️ | ✔️ | ❌ | ❌ | No battery |
-| [**camera_tizen**](packages/camera) | ❌ | ❌ | ❌ | ❌ | No camera |
-| [**connectivity_plus_tizen**](packages/connectivity_plus) | ✔️ | ⚠️ | ✔️ | ✔️ | Returns incorrect connection status |
-| [**device_info_plus_tizen**](packages/device_info_plus) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**flutter_tts_tizen**](packages/flutter_tts) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**geolocator_tizen**](packages/geolocator) | ✔️ | ✔️ | ❌ | ❌ | Not applicable for TV |
-| [**google_maps_flutter_tizen**](packages/google_maps_flutter) | ❌ | ❌ | ✔️ | ❌ | Dependent library unavailable |
-| [**google_sign_in_tizen**](packages/google_sign_in) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**image_picker_tizen**](packages/image_picker) | ⚠️ | ❌ | ❌ | ❌ | No camera<br>No file manager app |
-| [**integration_test_tizen**](packages/integration_test) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**messageport_tizen**](packages/messageport) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**network_info_plus_tizen**](packages/network_info_plus) | ✔️ | ❌ | ✔️ | ❌ | API not supported on emulator |
-| [**package_info_plus_tizen**](packages/package_info_plus) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**path_provider_tizen**](packages/path_provider) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**permission_handler_tizen**](packages/permission_handler) | ✔️ | ✔️ | ⚠️ | ⚠️ | Not applicable for TV |
-| [**sensors_plus_tizen**](packages/sensors_plus) | ✔️ | ✔️ | ❌ | ❌ | No sensor hardware |
-| [**share_plus_tizen**](packages/share_plus) | ⚠️ | ⚠️ | ❌ | ❌ | No SMS or e-mail app |
-| [**shared_preferences_tizen**](packages/shared_preferences) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**sqflite_tizen**](packages/sqflite) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**tizen_app_control**](packages/tizen_app_control) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**tizen_app_manager**](packages/tizen_app_manager) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**tizen_audio_manager**](packages/tizen_audio_manager) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**tizen_log**](packages/tizen_log) | ✔️ | ✔️ | ❌ | ❌ | Not applicable for TV |
-| [**tizen_notification**](packages/tizen_notification) | ❌ | ✔️ | ✔️ | ✔️ | API not supported |
-| [**tizen_package_manager**](packages/tizen_package_manager) | ✔️ | ✔️ | ✔️ | ✔️ |
-| [**url_launcher_tizen**](packages/url_launcher) | ✔️ | ❌ | ✔️ | ❌ | No browser app |
-| [**video_player_tizen**](packages/video_player) | ✔️ | ✔️ | ⚠️ | ❌ | Functional limitations (see README)<br>TV emulator issue |
-| [**wakelock_tizen**](packages/wakelock) | ✔️ | ✔️ | ❌ | ❌ | Cannot override system display setting |
-| [**wearable_rotary**](packages/wearable_rotary) | ✔️ | ✔️ | ❌ | ❌ | Not applicable for TV |
-| [**webview_flutter_tizen**](packages/webview_flutter) | ❌ | ❌ | ✔️ | ❌ | Dependent library unavailable |
+| Package name | API level | Watch | Watch<br>emulator | TV | TV<br>emulator | Remarks |
+|-|:-:|:-:|:-:|:-:|:-:|-|
+| [**audioplayers_tizen**](packages/audioplayers) | 4.0 | ✔️ | ✔️ | ⚠️ | ⚠️ | Functional limitations |
+| [**battery_plus_tizen**](packages/battery_plus) | 4.0 | ✔️ | ✔️ | ❌ | ❌ | No battery |
+| [**camera_tizen**](packages/camera) | 4.0 | ❌ | ❌ | ❌ | ❌ | No camera |
+| [**connectivity_plus_tizen**](packages/connectivity_plus) | 4.0 | ✔️ | ⚠️ | ✔️ | ✔️ | Returns incorrect connection status |
+| [**device_info_plus_tizen**](packages/device_info_plus) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**flutter_tts_tizen**](packages/flutter_tts) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**geolocator_tizen**](packages/geolocator) | 4.0 | ✔️ | ✔️ | ❌ | ❌ | Not applicable for TV |
+| [**google_maps_flutter_tizen**](packages/google_maps_flutter) | 5.5 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**google_sign_in_tizen**](packages/google_sign_in) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**image_picker_tizen**](packages/image_picker) | 5.5 | ⚠️ | ❌ | ❌ | ❌ | No camera,<br>No file manager app |
+| [**integration_test_tizen**](packages/integration_test) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**messageport_tizen**](packages/messageport) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**network_info_plus_tizen**](packages/network_info_plus) | 4.0 | ✔️ | ❌ | ✔️ | ❌ | API not supported on emulator |
+| [**package_info_plus_tizen**](packages/package_info_plus) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**path_provider_tizen**](packages/path_provider) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**permission_handler_tizen**](packages/permission_handler) | 4.0 | ✔️ | ✔️ | ⚠️ | ⚠️ | Not applicable for TV |
+| [**sensors_plus_tizen**](packages/sensors_plus) | 4.0 | ✔️ | ✔️ | ❌ | ❌ | No sensor hardware |
+| [**shared_preferences_tizen**](packages/shared_preferences) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**sqflite_tizen**](packages/sqflite) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**tizen_app_control**](packages/tizen_app_control) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**tizen_app_manager**](packages/tizen_app_manager) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**tizen_audio_manager**](packages/tizen_audio_manager) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**tizen_bundle**](packages/tizen_bundle) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**tizen_log**](packages/tizen_log) | 4.0 | ✔️ | ✔️ | ❌ | ❌ | Not applicable for TV |
+| [**tizen_notification**](packages/tizen_notification) | 4.0 | ❌ | ✔️ | ✔️ | ✔️ | API not supported |
+| [**tizen_package_manager**](packages/tizen_package_manager) | 4.0 | ✔️ | ✔️ | ✔️ | ✔️ |
+| [**url_launcher_tizen**](packages/url_launcher) | 4.0 | ✔️ | ❌ | ✔️ | ❌ | No browser app |
+| [**video_player_tizen**](packages/video_player) | 4.0 | ✔️ | ✔️ | ⚠️ | ❌ | Functional limitations,<br>TV emulator issue |
+| [**wakelock_tizen**](packages/wakelock) | 4.0 | ✔️ | ✔️ | ❌ | ❌ | Cannot override system settings |
+| [**wearable_rotary**](packages/wearable_rotary) | 4.0 | ✔️ | ✔️ | ❌ | ❌ | Not applicable for TV |
+| [**webview_flutter_tizen**](packages/webview_flutter) | 5.5 | ✔️ | ✔️ | ✔️ | ✔️ | Not for production use |

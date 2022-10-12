@@ -1,3 +1,13 @@
+## NEXT
+
+* Update README.
+* Remove unused code and clean up.
+
+## 0.2.2
+
+* Improve FFI symbol resolution.
+* Resolve linter warnings.
+
 ## 0.2.1
 
 * Bump ffi dependency.
