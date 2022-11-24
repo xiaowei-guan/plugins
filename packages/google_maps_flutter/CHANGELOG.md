@@ -1,3 +1,8 @@
+## 0.1.4
+
+* Change dependency from webview_flutter_tizen to webview_flutter_lwe.
+* Fix integration test failures
+
 ## 0.1.3
 
 * Resolve linter warnings.

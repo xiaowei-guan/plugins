@@ -3,8 +3,9 @@ plugins:
   battery_plus: ["wearable-5.5"]
   connectivity_plus: ["wearable-5.5", "tv-6.5"]
   device_info_plus: ["wearable-5.5", "tv-6.5"]
+  flutter_app_badger: ["wearable-5.5"]
+  flutter_secure_storage: ["wearable-5.5", "tv-6.5"]
   flutter_tts: ["wearable-5.5", "tv-6.5"]
-  google_sign_in: ["wearable-5.5", "tv-6.5"]
   integration_test: ["wearable-5.5", "tv-6.5"]
   messageport: ["wearable-5.5", "tv-6.5"]
   package_info_plus: ["wearable-5.5", "tv-6.5"]
@@ -16,6 +17,7 @@ plugins:
   tizen_audio_manager: ["wearable-5.5", "tv-6.5"]
   tizen_bundle: ["wearable-5.5", "tv-6.5"]
   tizen_package_manager: ["wearable-5.5", "tv-6.5"]
+  tizen_rpc_port: ["tv-6.5"]
   url_launcher: ["wearable-5.5", "tv-6.5"]
   wakelock: ["wearable-5.5"]
 
@@ -24,8 +26,10 @@ plugins:
   google_maps_flutter: []
   network_info_plus: []
   webview_flutter: []
+  webview_flutter_lwe: []
 
   # No tests.
+  google_sign_in: []
   image_picker: []
   tizen_log: []
   tizen_notification: []
