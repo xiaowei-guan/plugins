@@ -66,12 +66,12 @@ void main() {
       Future<void>.delayed(Duration(seconds: timeoutLimit.inSeconds + 1), () {
         controller.close();
       });
-      final PackageResult result = await device.runIntegrationTest(
+      final String? error = await device.runIntegrationTest(
         fileSystem.systemTempDirectory,
         timeoutLimit,
       );
-      expect(result.state, RunState.failed);
-      expect(result.details.first.contains('Timeout expired'), true);
+      expect(error, isNotNull);
+      expect(error!.contains('Timeout expired'), true);
     });
 
     test('correctly parses log "No tests ran"', () async {
@@ -83,12 +83,12 @@ void main() {
           controller.close();
         },
       );
-      final PackageResult result = await device.runIntegrationTest(
+      final String? error = await device.runIntegrationTest(
         fileSystem.systemTempDirectory,
         timeoutLimit,
       );
-      expect(result.state, RunState.failed);
-      expect(result.details.first.contains('Missing integration tests'), true);
+      expect(error, isNotNull);
+      expect(error!.contains('Missing integration tests'), true);
     });
 
     test('correctly parses log "No devices found"', () async {
@@ -100,49 +100,46 @@ void main() {
           controller.close();
         },
       );
-      final PackageResult result = await device.runIntegrationTest(
+      final String? error = await device.runIntegrationTest(
         fileSystem.systemTempDirectory,
         timeoutLimit,
       );
-      expect(result.state, RunState.failed);
-      expect(
-          result.details.first.contains('Device was disconnected during test'),
-          true);
+      expect(error, isNotNull);
+      expect(error!.contains('Device was disconnected during test'), true);
     });
 
-    test('correctly parses log "All tests passed!"', () async {
+    test('correctly parses log when all tests passed', () async {
       Future<void>.delayed(
         const Duration(seconds: 1),
         () {
-          controller.add('00:00 +0: All tests passed!');
+          controller.add('🎉 10 tests passed');
           completer.complete(0);
           controller.close();
         },
       );
-      final PackageResult result = await device.runIntegrationTest(
+      final String? error = await device.runIntegrationTest(
         fileSystem.systemTempDirectory,
         timeoutLimit,
       );
-      expect(result.state, RunState.succeeded);
+      expect(error, isNull);
     });
 
-    test('correctly parses log "Some tests failed"', () async {
+    test('correctly parses log when tests failed', () async {
       Future<void>.delayed(
         const Duration(seconds: 1),
         () {
-          controller.add('00:00 +0 -1: Some tests failed');
+          controller.add('::error::8 tests passed, 2 failed.');
           completer.complete(0);
           controller.close();
         },
       );
-      final PackageResult result = await device.runIntegrationTest(
+      final String? error = await device.runIntegrationTest(
         fileSystem.systemTempDirectory,
         timeoutLimit,
       );
-      expect(result.state, RunState.failed);
+      expect(error, isNotNull);
       expect(
-        result.details.first
-            .contains('flutter-tizen test integration_test failed'),
+        error!.contains('flutter-tizen test integration_test failed'),
         true,
       );
     });

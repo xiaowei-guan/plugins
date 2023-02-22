@@ -8,14 +8,10 @@ import 'dart:io' as io;
 
 import 'package:file/file.dart';
 import 'package:flutter_plugin_tools/src/common/core.dart';
-import 'package:flutter_plugin_tools/src/common/package_looping_command.dart';
 import 'package:flutter_plugin_tools/src/common/process_runner.dart';
 
 import 'process_runner_apis.dart';
 import 'tizen_sdk.dart';
-
-export 'package:flutter_plugin_tools/src/common/package_looping_command.dart'
-    show PackageResult, RunState;
 
 /// A reference to a Tizen device (either physical or emulator) that can run
 /// Flutter applications.
@@ -99,9 +95,6 @@ class Device {
     return _serial != null;
   }
 
-  static final RegExp _logPattern =
-      RegExp(r'\d\d:\d\d\s+([(\+\d+\s+)|(~\d+\s+)|(\-\d+\s+)]+):\s+(.*)');
-
   String? _findSerial() {
     final List<SdbDeviceInfo> deviceInfos = _tizenSdk.sdbDevices();
     for (final SdbDeviceInfo deviceInfo in deviceInfos) {
@@ -114,24 +107,19 @@ class Device {
 
   /// Runs integration test in [workingDir].
   ///
-  /// [workingDir] must be a valid exisiting flutter directory where
-  /// `flutter pub get` has already been ran succesfully. For an app project,
+  /// [workingDir] must be a valid existing Flutter project directory where
+  /// `flutter pub get` has already been run succesfully. For an app project,
   /// [workingDir] is the app's source root. For a plugin project, [workingDir]
   /// is one of the example directories.
   ///
-  /// If test doesn't finish after [timeout], it's considered a failure and the
-  /// function will return [PackageResult.fail] with time expired log.
-  ///
-  /// Returns [PackageResult.success] when every test passes succesfully,
-  /// otherwise returns [PackageResult.fail]. Never returns [PackageResult.skip]
-  /// nor [PackageResult.exclude].
-  Future<PackageResult> runIntegrationTest(
+  /// Returns null if all tests have passed successfully before [timeout],
+  /// otherwise returns a string with the error details.
+  Future<String?> runIntegrationTest(
     Directory workingDir,
     Duration timeout,
   ) async {
     if (!isConnected) {
-      return PackageResult.fail(
-          <String>['Device $name ($profile) is not connected.']);
+      return 'Device $name ($profile) is not connected.';
     }
 
     final io.Process process = await _processRunner.start(
@@ -166,30 +154,24 @@ class Device {
     // guarantee that all buffered outputs of the process have returned.
     await completer.future;
 
-    final List<String> errors = <String>[];
+    String? error;
     if (timedOut) {
-      errors.add('Timeout expired. The test may need more time to finish. '
+      error = 'Timeout expired. The test may need more time to finish. '
           'If you expect the test to finish before timeout, check if the tests '
           'require device screen to be awake or if they require manually '
-          'clicking the UI button for permissions.');
-    } else if (lastLine.startsWith('No tests ran')) {
-      errors.add(
-          'Missing integration tests (use --exclude if this is intentional).');
-    } else if (lastLine.startsWith('No devices found')) {
-      errors.add('Device was disconnected during test.');
-    } else {
-      final RegExpMatch? match = _logPattern.firstMatch(lastLine);
-      if (match == null || match.group(2) == null) {
-        throw Exception('Log message is not parsed correctly.');
-      } else if (!match.group(2)!.startsWith('All tests passed!')) {
-        errors.add('flutter-tizen test integration_test failed, see the output '
-            'above for details.');
-      }
+          'clicking the UI button for permissions.';
+    } else if (lastLine.contains('No tests ran')) {
+      error =
+          'Missing integration tests (use --exclude if this is intentional).';
+    } else if (lastLine.contains('No devices found')) {
+      error = 'Device was disconnected during test.';
+    } else if (lastLine.contains('failed')) {
+      error = 'flutter-tizen test integration_test failed, see the output '
+          'above for details.';
+    } else if (!lastLine.contains('passed')) {
+      error = 'Could not parse the log output.';
     }
-
-    return errors.isEmpty
-        ? PackageResult.success()
-        : PackageResult.fail(errors);
+    return error;
   }
 }
 
@@ -240,6 +222,7 @@ class EmulatorDevice extends Device {
     final io.ProcessResult result =
         _processRunner.runSync(_tizenSdk.emCli.path, <String>['list-vm']);
     if (result.exitCode != 0) {
+      print('Error: Unable to list available emulators.');
       throw ToolExit(result.exitCode);
     }
 
@@ -272,12 +255,50 @@ class EmulatorDevice extends Device {
     );
   }
 
+  /// Grants all privacy-related permissions to apps by default.
+  ///
+  /// This only applies to apps newly installed to the device after this call.
+  bool _disablePermissionPopups() {
+    if (!isConnected) {
+      return false;
+    }
+    final Map<String, String> capability = _tizenSdk.sdbCapability(serial!);
+    final bool rooted = capability['rootonoff_support'] == 'enabled';
+    if (!rooted) {
+      return false;
+    }
+
+    io.ProcessResult result = _processRunner.runSync(
+      _tizenSdk.sdb.path,
+      <String>['-s', serial!, 'root', 'on'],
+    );
+    if (result.exitCode != 0) {
+      print('Error: running "sdb root on" failed.');
+      return false;
+    }
+
+    result = _processRunner.runSync(
+      _tizenSdk.sdb.path,
+      <String>['-s', serial!, 'shell', 'touch', '/opt/share/askuser_disable'],
+    );
+    final String stdout = result.stdout as String;
+    if (result.exitCode != 0 || stdout.trim().isNotEmpty) {
+      print('Error: running sdb shell command failed: $stdout');
+      return false;
+    }
+
+    _processRunner.runSync(
+      _tizenSdk.sdb.path,
+      <String>['-s', serial!, 'root', 'off'],
+    );
+    return true;
+  }
+
   /// Deletes this emulator.
-  Future<void> delete() async => await _processRunner.runAndStream(
-        _tizenSdk.emCli.path,
-        <String>['delete', '-n', name],
-        exitOnError: true,
-      );
+  Future<void> delete() async {
+    await _processRunner
+        .runAndStream(_tizenSdk.emCli.path, <String>['delete', '-n', name]);
+  }
 
   /// Launches this emualtor.
   Future<void> launch() async {
@@ -339,7 +360,7 @@ class EmulatorDevice extends Device {
   Future<void> _poll(
     FutureOr<bool> Function() function, {
     Duration interval = const Duration(seconds: 1),
-    Duration timeout = const Duration(minutes: 10),
+    Duration timeout = const Duration(minutes: 5),
   }) async {
     final DateTime start = DateTime.now();
     while (DateTime.now().difference(start) <= timeout) {
@@ -352,13 +373,12 @@ class EmulatorDevice extends Device {
   }
 
   @override
-  Future<PackageResult> runIntegrationTest(
+  Future<String?> runIntegrationTest(
     Directory workingDir,
     Duration timeout,
   ) async {
     bool autoLaunched = false;
     bool autoCreated = false;
-    late final PackageResult result;
     try {
       if (!exists) {
         autoCreated = true;
@@ -368,7 +388,8 @@ class EmulatorDevice extends Device {
         autoLaunched = true;
         await launch();
       }
-      result = await super.runIntegrationTest(workingDir, timeout);
+      _disablePermissionPopups();
+      return await super.runIntegrationTest(workingDir, timeout);
     } finally {
       if (autoLaunched) {
         await close();
@@ -377,6 +398,5 @@ class EmulatorDevice extends Device {
         await delete();
       }
     }
-    return result;
   }
 }

@@ -10,6 +10,8 @@
 #include <flutter_texture_registrar.h>
 #include <tbm_surface.h>
 
+#include <ostream>
+
 #include "buffer_pool.h"
 #include "ewk_internal_api_binding.h"
 #include "log.h"
@@ -24,8 +26,7 @@ typedef flutter::MethodChannel<flutter::EncodableValue> FlMethodChannel;
 constexpr size_t kBufferPoolSize = 5;
 constexpr char kEwkInstance[] = "ewk_instance";
 
-class NavigationRequestResult
-    : public flutter::MethodResult<flutter::EncodableValue> {
+class NavigationRequestResult : public FlMethodResult {
  public:
   NavigationRequestResult(WebView* webview) : webview_(webview) {}
 
@@ -42,13 +43,13 @@ class NavigationRequestResult
   void ErrorInternal(const std::string& error_code,
                      const std::string& error_message,
                      const flutter::EncodableValue* error_details) override {
-    webview_->Stop();
     LOG_ERROR("The request unexpectedly completed with an error.");
+    webview_->Stop();
   }
 
   void NotImplementedInternal() override {
-    webview_->Stop();
     LOG_ERROR("The target method was unexpectedly unimplemented.");
+    webview_->Stop();
   }
 
  private:
@@ -61,12 +62,16 @@ std::string ErrorCodeToString(int error_code) {
       return "authentication";
     case EWK_ERROR_CODE_BAD_URL:
       return "badUrl";
+    case EWK_ERROR_CODE_CANT_CONNECT:
+      return "connect";
     case EWK_ERROR_CODE_FAILED_TLS_HANDSHAKE:
       return "failedSslHandshake";
     case EWK_ERROR_CODE_FAILED_FILE_IO:
       return "file";
     case EWK_ERROR_CODE_CANT_LOOKUP_HOST:
       return "hostLookup";
+    case EWK_ERROR_CODE_TOO_MANY_REDIRECTS:
+      return "redirectLoop";
     case EWK_ERROR_CODE_REQUEST_TIMEOUT:
       return "timeout";
     case EWK_ERROR_CODE_TOO_MANY_REQUESTS:
@@ -77,7 +82,7 @@ std::string ErrorCodeToString(int error_code) {
       return "unsupportedScheme";
     default:
       LOG_ERROR("Unknown error type: %d", error_code);
-      return std::to_string(error_code);
+      return "unknown";
   }
 }
 
@@ -101,14 +106,14 @@ bool GetValueFromEncodableMap(const flutter::EncodableValue* arguments,
 WebView::WebView(flutter::PluginRegistrar* registrar, int view_id,
                  flutter::TextureRegistrar* texture_registrar, double width,
                  double height, const flutter::EncodableValue& params,
-                 void* win)
+                 void* window)
     : PlatformView(registrar, view_id, nullptr),
       texture_registrar_(texture_registrar),
       width_(width),
       height_(height),
-      win_(win) {
+      window_(window) {
   if (!EwkInternalApiBinding::GetInstance().Initialize()) {
-    LOG_ERROR("Failed to Initialize EWK internal APIs.");
+    LOG_ERROR("Failed to initialize EWK internal APIs.");
     return;
   }
 
@@ -146,7 +151,7 @@ WebView::WebView(flutter::PluginRegistrar* registrar, int view_id,
     url = "about:blank";
   }
 
-  int color;
+  int32_t color;
   if (GetValueFromEncodableMap(&params, "backgroundColor", &color)) {
     EwkInternalApiBinding::GetInstance().view.SetBackgroundColor(
         webview_instance_, color >> 16 & 0xff, color >> 8 & 0xff, color & 0xff,
@@ -173,6 +178,7 @@ WebView::WebView(flutter::PluginRegistrar* registrar, int view_id,
   if (GetValueFromEncodableMap(&params, "userAgent", &user_agent)) {
     ewk_view_user_agent_set(webview_instance_, user_agent.c_str());
   }
+
   ewk_view_url_set(webview_instance_, url.c_str());
 }
 
@@ -181,6 +187,11 @@ void WebView::ApplySettings(const flutter::EncodableMap& settings) {
     if (std::holds_alternative<std::string>(key)) {
       std::string string_key = std::get<std::string>(key);
       if (string_key == "jsMode") {
+        if (std::holds_alternative<int32_t>(value)) {
+          bool enabled = std::get<int32_t>(value) == 1;
+          ewk_settings_javascript_enabled_set(
+              ewk_view_settings_get(webview_instance_), enabled);
+        }
       } else if (string_key == "hasNavigationDelegate") {
         if (std::holds_alternative<bool>(value)) {
           has_navigation_delegate_ = std::get<bool>(value);
@@ -190,14 +201,18 @@ void WebView::ApplySettings(const flutter::EncodableMap& settings) {
           has_progress_tracking_ = std::get<bool>(value);
         }
       } else if (string_key == "debuggingEnabled") {
+        // Not supported on Tizen.
       } else if (string_key == "gestureNavigationEnabled") {
+        // Not implemented.
       } else if (string_key == "allowsInlineMediaPlayback") {
+        // Not applicable for Tizen (always allowed).
       } else if (string_key == "userAgent") {
         if (std::holds_alternative<std::string>(value)) {
           ewk_view_user_agent_set(webview_instance_,
                                   std::get<std::string>(value).c_str());
         }
       } else if (string_key == "zoomEnabled") {
+        // Not supported on Tizen.
       } else {
         LOG_WARN("Unknown settings key: %s", string_key.c_str());
       }
@@ -225,19 +240,25 @@ std::string WebView::GetChannelName() {
 }
 
 void WebView::Dispose() {
-  evas_object_smart_callback_del(webview_instance_, "offscreen,frame,rendered",
-                                 &WebView::OnFrameRendered);
-  evas_object_smart_callback_del(webview_instance_, "load,started",
-                                 &WebView::OnLoadStarted);
-  evas_object_smart_callback_del(webview_instance_, "load,finished",
-                                 &WebView::OnLoadFinished);
-  evas_object_smart_callback_del(webview_instance_, "load,error",
-                                 &WebView::OnLoadError);
-  evas_object_smart_callback_del(webview_instance_, "console,message",
-                                 &WebView::OnConsoleMessage);
-  evas_object_smart_callback_del(webview_instance_, "policy,navigation,decide",
-                                 &WebView::OnNavigationPolicy);
   texture_registrar_->UnregisterTexture(GetTextureId());
+
+  if (webview_instance_) {
+    evas_object_smart_callback_del(webview_instance_,
+                                   "offscreen,frame,rendered",
+                                   &WebView::OnFrameRendered);
+    evas_object_smart_callback_del(webview_instance_, "load,started",
+                                   &WebView::OnLoadStarted);
+    evas_object_smart_callback_del(webview_instance_, "load,finished",
+                                   &WebView::OnLoadFinished);
+    evas_object_smart_callback_del(webview_instance_, "load,error",
+                                   &WebView::OnLoadError);
+    evas_object_smart_callback_del(webview_instance_, "console,message",
+                                   &WebView::OnConsoleMessage);
+    evas_object_smart_callback_del(webview_instance_,
+                                   "policy,navigation,decide",
+                                   &WebView::OnNavigationPolicy);
+    evas_object_del(webview_instance_);
+  }
 }
 
 void WebView::Resize(double width, double height) {
@@ -262,24 +283,24 @@ void WebView::Touch(int type, int button, double x, double y, double dx,
   } else if (type == 1) {  // move event
     mouse_event_type = EWK_TOUCH_MOVE;
     state = EVAS_TOUCH_POINT_MOVE;
-
   } else if (type == 2) {  // up event
     mouse_event_type = EWK_TOUCH_END;
     state = EVAS_TOUCH_POINT_UP;
   } else {
-    // TODO: Not implemented
+    LOG_WARN("Unknown touch event type: %d", type);
   }
-  Eina_List* pointList = 0;
+
+  Eina_List* points = 0;
   Ewk_Touch_Point* point = new Ewk_Touch_Point;
   point->id = 0;
   point->x = x;
   point->y = y;
   point->state = state;
-  pointList = eina_list_append(pointList, point);
+  points = eina_list_append(points, point);
 
   EwkInternalApiBinding::GetInstance().view.FeedTouchEvent(
-      webview_instance_, mouse_event_type, pointList, 0);
-  eina_list_free(pointList);
+      webview_instance_, mouse_event_type, points, 0);
+  eina_list_free(points);
 }
 
 bool WebView::SendKey(const char* key, const char* string, const char* compose,
@@ -288,27 +309,27 @@ bool WebView::SendKey(const char* key, const char* string, const char* compose,
     return false;
   }
 
-  if (is_down) {
-    Evas_Event_Key_Down downEvent;
-    memset(&downEvent, 0, sizeof(Evas_Event_Key_Down));
-    downEvent.key = key;
-    downEvent.string = string;
-    void* evasKeyEvent = static_cast<void*>(&downEvent);
-    EwkInternalApiBinding::GetInstance().view.SendKeyEvent(
-        webview_instance_, evasKeyEvent, is_down);
-    return true;
-  } else {
-    Evas_Event_Key_Up upEvent;
-    memset(&upEvent, 0, sizeof(Evas_Event_Key_Up));
-    upEvent.key = key;
-    upEvent.string = string;
-    void* evasKeyEvent = static_cast<void*>(&upEvent);
-    EwkInternalApiBinding::GetInstance().view.SendKeyEvent(
-        webview_instance_, evasKeyEvent, is_down);
+  if (strcmp(key, "XF86Back") == 0 && !is_down &&
+      ewk_view_back_possible(webview_instance_)) {
+    ewk_view_back(webview_instance_);
     return true;
   }
 
-  return false;
+  if (is_down) {
+    // TODO(swift-kim): Deal with other members of the structure.
+    Evas_Event_Key_Down down_event = {};
+    down_event.key = key;
+    down_event.string = string;
+    EwkInternalApiBinding::GetInstance().view.SendKeyEvent(
+        webview_instance_, &down_event, is_down);
+  } else {
+    Evas_Event_Key_Up up_event = {};
+    up_event.key = key;
+    up_event.string = string;
+    EwkInternalApiBinding::GetInstance().view.SendKeyEvent(webview_instance_,
+                                                           &up_event, is_down);
+  }
+  return true;
 }
 
 void WebView::Resume() { ewk_view_resume(webview_instance_); }
@@ -339,24 +360,20 @@ void WebView::InitWebView() {
   EwkInternalApiBinding::GetInstance().view.OffscreenRenderingEnabledSet(
       webview_instance_, true);
 
-  Ewk_Settings* settings = ewk_view_settings_get(webview_instance_);
-
   Ewk_Context* context = ewk_view_context_get(webview_instance_);
-  Ewk_Cookie_Manager* manager = ewk_context_cookie_manager_get(context);
-  if (manager) {
+  Ewk_Cookie_Manager* cookie_manager = ewk_context_cookie_manager_get(context);
+  if (cookie_manager) {
     ewk_cookie_manager_accept_policy_set(
-        manager, EWK_COOKIE_ACCEPT_POLICY_NO_THIRD_PARTY);
+        cookie_manager, EWK_COOKIE_ACCEPT_POLICY_NO_THIRD_PARTY);
   }
-  ewk_settings_viewport_meta_tag_set(settings, false);
-  EwkInternalApiBinding::GetInstance().settings.ImePanelEnabledSet(settings,
-                                                                   true);
-  ewk_settings_javascript_enabled_set(settings, true);
+  ewk_context_cache_model_set(context, EWK_CACHE_MODEL_PRIMARY_WEBBROWSER);
 
+  EwkInternalApiBinding::GetInstance().settings.ImePanelEnabledSet(
+      ewk_view_settings_get(webview_instance_), true);
   EwkInternalApiBinding::GetInstance().view.ImeWindowSet(webview_instance_,
-                                                         win_);
+                                                         window_);
   EwkInternalApiBinding::GetInstance().view.KeyEventsEnabledSet(
       webview_instance_, true);
-  ewk_context_cache_model_set(context, EWK_CACHE_MODEL_PRIMARY_WEBBROWSER);
 
   evas_object_smart_callback_add(webview_instance_, "offscreen,frame,rendered",
                                  &WebView::OnFrameRendered, this);
@@ -370,6 +387,7 @@ void WebView::InitWebView() {
                                  &WebView::OnConsoleMessage, this);
   evas_object_smart_callback_add(webview_instance_, "policy,navigation,decide",
                                  &WebView::OnNavigationPolicy, this);
+
   Resize(width_, height_);
   evas_object_show(webview_instance_);
 
@@ -402,11 +420,11 @@ void WebView::HandleMethodCall(const FlMethodCall& method_call,
     }
     result->Success();
   } else if (method_name == "canGoBack") {
-    result->Success(
-        flutter::EncodableValue(ewk_view_back_possible(webview_instance_)));
+    result->Success(flutter::EncodableValue(
+        static_cast<bool>(ewk_view_back_possible(webview_instance_))));
   } else if (method_name == "canGoForward") {
-    result->Success(
-        flutter::EncodableValue(ewk_view_forward_possible(webview_instance_)));
+    result->Success(flutter::EncodableValue(
+        static_cast<bool>(ewk_view_forward_possible(webview_instance_))));
   } else if (method_name == "goBack") {
     ewk_view_back(webview_instance_);
     result->Success();
@@ -424,9 +442,8 @@ void WebView::HandleMethodCall(const FlMethodCall& method_call,
              method_name == "runJavascript") {
     const auto* javascript = std::get_if<std::string>(arguments);
     if (javascript) {
-      auto p_result = result.release();
       ewk_view_script_execute(webview_instance_, javascript->c_str(),
-                              &WebView::OnEvaluateJavaScript, p_result);
+                              &WebView::OnEvaluateJavaScript, result.release());
     } else {
       result->Error("Invalid argument", "The argument must be a string.");
     }
@@ -443,12 +460,14 @@ void WebView::HandleMethodCall(const FlMethodCall& method_call,
   } else if (method_name == "removeJavascriptChannels") {
     result->NotImplemented();
   } else if (method_name == "clearCache") {
-    result->NotImplemented();
+    Ewk_Context* context = ewk_view_context_get(webview_instance_);
+    ewk_context_resource_cache_clear(context);
+    result->Success();
   } else if (method_name == "getTitle") {
     result->Success(flutter::EncodableValue(
         std::string(ewk_view_title_get(webview_instance_))));
   } else if (method_name == "scrollTo") {
-    int x = 0, y = 0;
+    int32_t x = 0, y = 0;
     if (GetValueFromEncodableMap(arguments, "x", &x) &&
         GetValueFromEncodableMap(arguments, "y", &y)) {
       ewk_view_scroll_set(webview_instance_, x, y);
@@ -457,7 +476,7 @@ void WebView::HandleMethodCall(const FlMethodCall& method_call,
       result->Error("Invalid argument", "No x or y provided.");
     }
   } else if (method_name == "scrollBy") {
-    int x = 0, y = 0;
+    int32_t x = 0, y = 0;
     if (GetValueFromEncodableMap(arguments, "x", &x) &&
         GetValueFromEncodableMap(arguments, "y", &y)) {
       ewk_view_scroll_by(webview_instance_, x, y);
@@ -466,11 +485,11 @@ void WebView::HandleMethodCall(const FlMethodCall& method_call,
       result->Error("Invalid argument", "No x or y provided.");
     }
   } else if (method_name == "getScrollX") {
-    int x = 0;
+    int32_t x = 0;
     ewk_view_scroll_pos_get(webview_instance_, &x, nullptr);
     result->Success(flutter::EncodableValue(x));
   } else if (method_name == "getScrollY") {
-    int y = 0;
+    int32_t y = 0;
     ewk_view_scroll_pos_get(webview_instance_, nullptr, &y);
     result->Success(flutter::EncodableValue(y));
   } else if (method_name == "loadFlutterAsset") {
@@ -496,9 +515,7 @@ void WebView::HandleMethodCall(const FlMethodCall& method_call,
       result->Error("Invalid argument", "No html provided.");
       return;
     }
-    if (GetValueFromEncodableMap(arguments, "baseUrl", &base_url)) {
-      LOG_WARN("loadHtmlString: baseUrl is not supported and will be ignored.");
-    }
+    GetValueFromEncodableMap(arguments, "baseUrl", &base_url);
     ewk_view_html_string_load(webview_instance_, html.c_str(), base_url.c_str(),
                               nullptr);
     result->Success();
@@ -531,10 +548,11 @@ void WebView::HandleCookieMethodCall(const FlMethodCall& method_call,
   const std::string& method_name = method_call.method_name();
 
   if (method_name == "clearCookies") {
-    Ewk_Cookie_Manager* manager =
-        ewk_context_cookie_manager_get(ewk_view_context_get(webview_instance_));
-    if (manager) {
-      ewk_cookie_manager_cookies_clear(manager);
+    Ewk_Context* context = ewk_view_context_get(webview_instance_);
+    Ewk_Cookie_Manager* cookie_manager =
+        ewk_context_cookie_manager_get(context);
+    if (cookie_manager) {
+      ewk_cookie_manager_cookies_clear(cookie_manager);
       result->Success(flutter::EncodableValue(true));
     } else {
       result->Error("Operation failed", "Failed to get cookie manager");
@@ -587,9 +605,8 @@ void WebView::OnFrameRendered(void* data, Evas_Object* obj, void* event_info) {
 void WebView::OnLoadStarted(void* data, Evas_Object* obj, void* event_info) {
   WebView* webview = static_cast<WebView*>(data);
   std::string url = std::string(ewk_view_url_get(webview->webview_instance_));
-  flutter::EncodableMap args;
-  args.insert(std::make_pair<flutter::EncodableValue, flutter::EncodableValue>(
-      flutter::EncodableValue("url"), flutter::EncodableValue(url)));
+  flutter::EncodableMap args = {
+      {flutter::EncodableValue("url"), flutter::EncodableValue(url)}};
   webview->channel_->InvokeMethod(
       "onPageStarted", std::make_unique<flutter::EncodableValue>(args));
 }
@@ -597,9 +614,8 @@ void WebView::OnLoadStarted(void* data, Evas_Object* obj, void* event_info) {
 void WebView::OnLoadFinished(void* data, Evas_Object* obj, void* event_info) {
   WebView* webview = static_cast<WebView*>(data);
   std::string url = std::string(ewk_view_url_get(webview->webview_instance_));
-  flutter::EncodableMap args;
-  args.insert(std::make_pair<flutter::EncodableValue, flutter::EncodableValue>(
-      flutter::EncodableValue("url"), flutter::EncodableValue(url)));
+  flutter::EncodableMap args = {
+      {flutter::EncodableValue("url"), flutter::EncodableValue(url)}};
   webview->channel_->InvokeMethod(
       "onPageFinished", std::make_unique<flutter::EncodableValue>(args));
 }
@@ -623,12 +639,21 @@ void WebView::OnLoadError(void* data, Evas_Object* obj, void* event_info) {
 
 void WebView::OnConsoleMessage(void* data, Evas_Object* obj, void* event_info) {
   Ewk_Console_Message* message = static_cast<Ewk_Console_Message*>(event_info);
-  LOG_INFO(
-      "console message:%s: %d: %d: %s",
-      EwkInternalApiBinding::GetInstance().console_message.SourceGet(message),
-      EwkInternalApiBinding::GetInstance().console_message.LineGet(message),
-      EwkInternalApiBinding::GetInstance().console_message.LevelGet(message),
-      EwkInternalApiBinding::GetInstance().console_message.TextGet(message));
+  Ewk_Console_Message_Level log_level =
+      EwkInternalApiBinding::GetInstance().console_message.LevelGet(message);
+  std::string source =
+      EwkInternalApiBinding::GetInstance().console_message.SourceGet(message);
+  int32_t line =
+      EwkInternalApiBinding::GetInstance().console_message.LineGet(message);
+  std::string text =
+      EwkInternalApiBinding::GetInstance().console_message.TextGet(message);
+  std::ostream& stream =
+      log_level == EWK_CONSOLE_MESSAGE_LEVEL_ERROR ? std::cerr : std::cout;
+  stream << "WebView: ";
+  if (!source.empty() && line > 0) {
+    stream << source << "(" << line << ") > ";
+  }
+  stream << text << std::endl;
 }
 
 void WebView::OnNavigationPolicy(void* data, Evas_Object* obj,
@@ -657,7 +682,11 @@ void WebView::OnNavigationPolicy(void* data, Evas_Object* obj,
 void WebView::OnEvaluateJavaScript(Evas_Object* obj, const char* result_value,
                                    void* user_data) {
   FlMethodResult* result = static_cast<FlMethodResult*>(user_data);
-  result->Success(flutter::EncodableValue(result_value));
+  if (result_value) {
+    result->Success(flutter::EncodableValue(result_value));
+  } else {
+    result->Success();
+  }
   delete result;
 }
 
@@ -668,13 +697,13 @@ void WebView::OnJavaScriptMessage(Evas_Object* obj,
         static_cast<WebView*>(evas_object_data_get(obj, kEwkInstance));
     if (webview->channel_) {
       std::string channel_name(message.name);
-      std::string channel_message(static_cast<char*>(message.body));
+      std::string message_body(static_cast<char*>(message.body));
 
       flutter::EncodableMap args = {
           {flutter::EncodableValue("channel"),
            flutter::EncodableValue(channel_name)},
           {flutter::EncodableValue("message"),
-           flutter::EncodableValue(channel_message)},
+           flutter::EncodableValue(message_body)},
       };
       webview->channel_->InvokeMethod(
           "javascriptChannelMessage",
