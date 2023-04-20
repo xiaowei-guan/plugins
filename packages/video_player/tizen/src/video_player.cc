@@ -43,8 +43,8 @@ static std::string StateToString(player_state_e state) {
 }
 
 void VideoPlayer::ReleaseMediaPacket(void *data) {
+  LOG_DEBUG("[VideoPlayer] ReleaseMediaPacket");
   auto *player = reinterpret_cast<VideoPlayer *>(data);
-
   std::lock_guard<std::mutex> lock(player->mutex_);
   player->is_rendering_ = false;
   player->OnRenderingCompleted();
@@ -52,6 +52,7 @@ void VideoPlayer::ReleaseMediaPacket(void *data) {
 
 FlutterDesktopGpuSurfaceDescriptor *VideoPlayer::ObtainGpuSurface(
     size_t width, size_t height) {
+  LOG_DEBUG("[VideoPlayer] ObtainGpuSurface");
   std::lock_guard<std::mutex> lock(mutex_);
   if (!current_media_packet_) {
     LOG_ERROR("[VideoPlayer] current media packet not valid.");
@@ -257,6 +258,23 @@ void VideoPlayer::Dispose() {
   event_sink_ = nullptr;
   event_channel_->SetStreamHandler(nullptr);
 
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (player_) {
+    player_unprepare(player_);
+    player_unset_media_packet_video_frame_decoded_cb(player_);
+    player_unset_buffering_cb(player_);
+    player_unset_completed_cb(player_);
+    player_unset_interrupted_cb(player_);
+    player_unset_error_cb(player_);
+    player_destroy(player_);
+    player_ = nullptr;
+  }
+
+  if (texture_registrar_) {
+    texture_registrar_->UnregisterTexture(texture_id_);
+    texture_registrar_ = nullptr;
+  }
+
   while (!packet_queue_.empty()) {
     media_packet_destroy(packet_queue_.front());
     packet_queue_.pop();
@@ -270,21 +288,6 @@ void VideoPlayer::Dispose() {
   if (previous_media_packet_) {
     media_packet_destroy(previous_media_packet_);
     previous_media_packet_ = nullptr;
-  }
-  if (player_) {
-    player_unprepare(player_);
-    player_unset_media_packet_video_frame_decoded_cb(player_);
-    player_unset_buffering_cb(player_);
-    player_unset_completed_cb(player_);
-    player_unset_interrupted_cb(player_);
-    player_unset_error_cb(player_);
-    player_destroy(player_);
-    player_ = 0;
-  }
-
-  if (texture_registrar_) {
-    texture_registrar_->UnregisterTexture(texture_id_);
-    texture_registrar_ = nullptr;
   }
 }
 
@@ -436,6 +439,11 @@ void VideoPlayer::OnError(int code, void *data) {
 void VideoPlayer::OnVideoFrameDecoded(media_packet_h packet, void *data) {
   auto *player = reinterpret_cast<VideoPlayer *>(data);
   std::lock_guard<std::mutex> lock(player->mutex_);
+  if (!player->player_) {
+    LOG_ERROR("[VideoPlayer] player has been destoryed.");
+    media_packet_destroy(packet);
+    return;
+  }
   player->packet_queue_.push(packet);
   player->RequestRendering();
 }
