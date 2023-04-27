@@ -46,6 +46,8 @@ class VideoPlayer {
   void SetUpEventChannel(flutter::BinaryMessenger *messenger);
   void SendInitialized();
   void OnRenderingCompleted();
+  void EnqueueMediaPacket(media_packet_h packet);
+  void DestoryMediaPacket(media_packet_h packet);
 
   FlutterDesktopGpuSurfaceDescriptor *ObtainGpuSurface(size_t width,
                                                        size_t height);
@@ -73,6 +75,8 @@ class VideoPlayer {
   std::mutex mutex_;
   SeekCompletedCallback on_seek_completed_;
   std::queue<media_packet_h> packet_queue_;
+  int64_t enqueue_mediapacket_count_ = 0;
+  int64_t destory_mediapacket_count_ = 0;
 };
 
 #endif  // FLUTTER_PLUGIN_VIDEO_PLAYER_H_

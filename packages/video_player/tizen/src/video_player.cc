@@ -66,7 +66,7 @@ FlutterDesktopGpuSurfaceDescriptor *VideoPlayer::ObtainGpuSurface(
   if (ret != MEDIA_PACKET_ERROR_NONE || !surface) {
     LOG_ERROR("[VideoPlayer] Failed to get a tbm surface, error: %d", ret);
     is_rendering_ = false;
-    media_packet_destroy(current_media_packet_);
+    DestoryMediaPacket(current_media_packet_);
     current_media_packet_ = nullptr;
     OnRenderingCompleted();
     return nullptr;
@@ -159,7 +159,43 @@ VideoPlayer::VideoPlayer(flutter::PluginRegistrar *plugin_registrar,
   SetUpEventChannel(plugin_registrar->messenger());
 }
 
-VideoPlayer::~VideoPlayer() { Dispose(); }
+VideoPlayer::~VideoPlayer() {
+  if (player_) {
+    player_unset_buffering_cb(player_);
+    player_unset_completed_cb(player_);
+    player_unset_interrupted_cb(player_);
+    player_unset_error_cb(player_);
+    player_unprepare(player_);
+    player_stop(player_);
+
+    if (player_unset_media_packet_video_frame_decoded_cb(player_) != 0) {
+      LOG_ERROR(
+          "[VideoPlayer] player_unset_media_packet_video_frame_decoded_cb "
+          "fail");
+    }
+    player_destroy(player_);
+    player_ = nullptr;
+  }
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (previous_media_packet_) {
+    DestoryMediaPacket(previous_media_packet_);
+    previous_media_packet_ = nullptr;
+  }
+
+  if (current_media_packet_) {
+    DestoryMediaPacket(current_media_packet_);
+    current_media_packet_ = nullptr;
+  }
+
+  while (!packet_queue_.empty()) {
+    DestoryMediaPacket(packet_queue_.front());
+    packet_queue_.pop();
+  }
+  LOG_DEBUG("[VideoPlayer] ~VideoPlayer  enqueue_mediapacket_count_ == %d",
+            enqueue_mediapacket_count_);
+  LOG_DEBUG("[VideoPlayer] ~VideoPlayer  destory_mediapacket_count_ == %d",
+            destory_mediapacket_count_);
+}
 
 void VideoPlayer::Play() {
   LOG_DEBUG("[VideoPlayer] start player");
@@ -252,42 +288,13 @@ int VideoPlayer::GetPosition() {
 }
 
 void VideoPlayer::Dispose() {
-  LOG_DEBUG("[VideoPlayer] dispose player");
-
+  std::lock_guard<std::mutex> lock(mutex_);
   is_initialized_ = false;
   event_sink_ = nullptr;
   event_channel_->SetStreamHandler(nullptr);
-
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (player_) {
-    player_unprepare(player_);
-    player_unset_media_packet_video_frame_decoded_cb(player_);
-    player_unset_buffering_cb(player_);
-    player_unset_completed_cb(player_);
-    player_unset_interrupted_cb(player_);
-    player_unset_error_cb(player_);
-    player_destroy(player_);
-    player_ = nullptr;
-  }
-
   if (texture_registrar_) {
     texture_registrar_->UnregisterTexture(texture_id_);
     texture_registrar_ = nullptr;
-  }
-
-  while (!packet_queue_.empty()) {
-    media_packet_destroy(packet_queue_.front());
-    packet_queue_.pop();
-  }
-
-  if (current_media_packet_) {
-    media_packet_destroy(current_media_packet_);
-    current_media_packet_ = nullptr;
-  }
-
-  if (previous_media_packet_) {
-    media_packet_destroy(previous_media_packet_);
-    previous_media_packet_ = nullptr;
   }
 }
 
@@ -444,21 +451,41 @@ void VideoPlayer::OnVideoFrameDecoded(media_packet_h packet, void *data) {
     media_packet_destroy(packet);
     return;
   }
-  player->packet_queue_.push(packet);
+
+  if (!player->is_initialized_) {
+    LOG_ERROR("[VideoPlayer] player not initialized.");
+    media_packet_destroy(packet);
+    return;
+  }
+  player->EnqueueMediaPacket(packet);
   player->RequestRendering();
+}
+
+void VideoPlayer::EnqueueMediaPacket(media_packet_h packet) {
+  packet_queue_.push(packet);
+  enqueue_mediapacket_count_++;
+}
+
+void VideoPlayer::DestoryMediaPacket(media_packet_h packet) {
+  if (media_packet_destroy(packet) != 0) {
+    LOG_ERROR("[VideoPlayer] media_packet_destroy fail");
+    return;
+  }
+  destory_mediapacket_count_++;
 }
 
 void VideoPlayer::RequestRendering() {
   if (packet_queue_.empty() || is_rendering_) {
     return;
   }
-  if (texture_registrar_->MarkTextureFrameAvailable(texture_id_)) {
+  if (texture_registrar_ != nullptr &&
+      texture_registrar_->MarkTextureFrameAvailable(texture_id_)) {
     is_rendering_ = true;
     previous_media_packet_ = current_media_packet_;
     current_media_packet_ = packet_queue_.front();
     packet_queue_.pop();
     while (!packet_queue_.empty()) {
-      media_packet_destroy(packet_queue_.front());
+      DestoryMediaPacket(packet_queue_.front());
       packet_queue_.pop();
     }
   }
@@ -466,7 +493,7 @@ void VideoPlayer::RequestRendering() {
 
 void VideoPlayer::OnRenderingCompleted() {
   if (previous_media_packet_) {
-    media_packet_destroy(previous_media_packet_);
+    DestoryMediaPacket(previous_media_packet_);
     previous_media_packet_ = nullptr;
   }
   RequestRendering();
