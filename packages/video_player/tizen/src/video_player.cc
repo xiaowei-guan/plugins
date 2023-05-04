@@ -43,7 +43,6 @@ static std::string StateToString(player_state_e state) {
 }
 
 void VideoPlayer::ReleaseMediaPacket(void *data) {
-  LOG_DEBUG("[VideoPlayer] ReleaseMediaPacket");
   auto *player = reinterpret_cast<VideoPlayer *>(data);
   std::lock_guard<std::mutex> lock(player->mutex_);
   player->is_rendering_ = false;
@@ -52,7 +51,6 @@ void VideoPlayer::ReleaseMediaPacket(void *data) {
 
 FlutterDesktopGpuSurfaceDescriptor *VideoPlayer::ObtainGpuSurface(
     size_t width, size_t height) {
-  LOG_DEBUG("[VideoPlayer] ObtainGpuSurface");
   std::lock_guard<std::mutex> lock(mutex_);
   if (!current_media_packet_) {
     LOG_ERROR("[VideoPlayer] current media packet not valid.");
@@ -167,7 +165,6 @@ VideoPlayer::~VideoPlayer() {
     player_unset_error_cb(player_);
     player_unprepare(player_);
     player_stop(player_);
-
     if (player_unset_media_packet_video_frame_decoded_cb(player_) != 0) {
       LOG_ERROR(
           "[VideoPlayer] player_unset_media_packet_video_frame_decoded_cb "
@@ -175,21 +172,6 @@ VideoPlayer::~VideoPlayer() {
     }
     player_destroy(player_);
     player_ = nullptr;
-  }
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (previous_media_packet_) {
-    DestoryMediaPacket(previous_media_packet_);
-    previous_media_packet_ = nullptr;
-  }
-
-  if (current_media_packet_) {
-    DestoryMediaPacket(current_media_packet_);
-    current_media_packet_ = nullptr;
-  }
-
-  while (!packet_queue_.empty()) {
-    DestoryMediaPacket(packet_queue_.front());
-    packet_queue_.pop();
   }
   LOG_DEBUG("[VideoPlayer] ~VideoPlayer  enqueue_mediapacket_count_ == %d",
             enqueue_mediapacket_count_);
@@ -295,6 +277,20 @@ void VideoPlayer::Dispose() {
   if (texture_registrar_) {
     texture_registrar_->UnregisterTexture(texture_id_);
     texture_registrar_ = nullptr;
+  }
+  if (previous_media_packet_) {
+    DestoryMediaPacket(previous_media_packet_);
+    previous_media_packet_ = nullptr;
+  }
+
+  if (current_media_packet_) {
+    DestoryMediaPacket(current_media_packet_);
+    current_media_packet_ = nullptr;
+  }
+
+  while (!packet_queue_.empty()) {
+    DestoryMediaPacket(packet_queue_.front());
+    packet_queue_.pop();
   }
 }
 
