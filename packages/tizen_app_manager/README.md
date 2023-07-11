@@ -2,7 +2,7 @@
 
  [![pub package](https://img.shields.io/pub/v/tizen_app_manager.svg)](https://pub.dev/packages/tizen_app_manager)
 
-Tizen application manager APIs. Used for getting app info and getting app running context on a Tizen device.
+Tizen application manager APIs. Used to get app info and app running context on a Tizen device.
 
 ## Usage
 
@@ -50,7 +50,7 @@ You can listen for app state changes by subscribing to `AppManager.onAppLaunched
 
 ```dart
 var subscription = AppManager.onAppLaunched.listen((AppRunningContext context) {
-  print('Launched ${context.appId}');
+  String appId = context.appId;
 });
 ...
 subscription.cancel();

@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:tizen_interop/6.5/tizen.dart';
 
@@ -84,7 +85,9 @@ abstract class StubBase {
 
     final Stream<dynamic> stream = _eventChannel
         .receiveBroadcastStream(<String, Object>{'handle': _handle.address});
-    _streamSubscription = stream.listen((dynamic map) async {
+    _streamSubscription = stream.listen((dynamic data) async {
+      final Map<String, dynamic> map =
+          (data as Map<dynamic, dynamic>).cast<String, dynamic>();
       final int handle = map['handle'] as int;
       if (handle != _handle.address) {
         return;
@@ -101,7 +104,7 @@ abstract class StubBase {
         final Parcel parcel = Parcel.fromRaw(rawData);
         await onReceivedEvent(sender, instance, parcel);
       } else {
-        print('Unknown event: $event');
+        debugPrint('Unknown event: $event');
       }
     }, onError: onError);
   }

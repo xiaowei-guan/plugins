@@ -1,15 +1,17 @@
 # sqflite_tizen
 
-The Tizen implementation of [`sqflite`](https://github.com/tekartik/sqflite).
+[![pub package](https://img.shields.io/pub/v/sqflite_tizen.svg)](https://pub.dev/packages/sqflite_tizen)
+
+The Tizen implementation of [`sqflite`](https://pub.dev/packages/sqflite).
 
 ## Getting Started
 
- This package is not an _endorsed_ implementation of `sqflite`. Therefore, you have to include `sqflite_tizen` alongside `sqflite` as dependencies in your `pubspec.yaml` file.
+This package is not an _endorsed_ implementation of `sqflite`. Therefore, you have to include `sqflite_tizen` alongside `sqflite` as dependencies in your `pubspec.yaml` file.
 
- ```yaml
+```yaml
 dependencies:
-  sqflite: ^2.0.1
-  sqflite_tizen: ^0.1.1
+  sqflite: ^2.2.8
+  sqflite_tizen: ^0.1.2
 ```
 
 Then you can import `sqflite` in your Dart code:

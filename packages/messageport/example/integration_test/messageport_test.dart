@@ -27,10 +27,12 @@ void main() {
   testWidgets('Create remote port', (WidgetTester tester) async {
     final LocalPort localPort = await LocalPort.create(kTestPort);
     localPort.register((dynamic message, [RemotePort? remotePort]) => null);
+
     final RemotePort remotePort =
         await RemotePort.connect(kTestAppId, kTestPort);
     expect(remotePort.remoteAppId, equals(kTestAppId));
     expect(remotePort.portName, equals(kTestPort));
+
     await localPort.unregister();
   }, timeout: const Timeout(Duration(seconds: 5)));
 
@@ -39,36 +41,41 @@ void main() {
     final LocalPort localPort =
         await LocalPort.create(kTestPort, trusted: false);
     localPort.register((dynamic message, [RemotePort? remotePort]) => null);
+
     await expectLater(
       () => RemotePort.connect(kTestAppId, kTestPort),
       throwsException,
     );
+
     await localPort.unregister();
   }, timeout: const Timeout(Duration(seconds: 5)));
 
   testWidgets('Check for remote', (WidgetTester tester) async {
     final LocalPort localPort = await LocalPort.create(kTestPort);
     localPort.register((dynamic message, [RemotePort? remotePort]) => null);
+
     final RemotePort remotePort =
         await RemotePort.connect(kTestAppId, kTestPort);
     expect(await remotePort.check(), isTrue);
+
     await localPort.unregister();
     expect(await remotePort.check(), isFalse);
   }, timeout: const Timeout(Duration(seconds: 5)));
 
   testWidgets('Send simple message', (WidgetTester tester) async {
     final LocalPort localPort = await LocalPort.create(kTestPort);
-    final Completer<List<dynamic>> completer = Completer<List<dynamic>>();
+    final Completer<dynamic> completer = Completer<dynamic>();
     localPort.register((dynamic message, [RemotePort? remotePort]) {
-      completer.complete(<dynamic>[message, remotePort]);
+      expect(remotePort, isNull);
+      completer.complete(message);
     });
+
     final RemotePort port = await RemotePort.connect(kTestAppId, kTestPort);
     await port.send('Test message 1');
-    final List<dynamic> value = await completer.future;
-    final String message = value[0] as String;
-    final RemotePort? remotePort = value[1] as RemotePort?;
+
+    final dynamic message = await completer.future;
     expect(message, equals('Test message 1'));
-    expect(remotePort, isNull);
+
     await localPort.unregister();
   }, timeout: const Timeout(Duration(seconds: 5)));
 
@@ -76,55 +83,56 @@ void main() {
     final LocalPort localPort = await LocalPort.create(kTestPort);
     final Completer<List<dynamic>> completer = Completer<List<dynamic>>();
     localPort.register((dynamic message, [RemotePort? remotePort]) {
-      if (completer.isCompleted) {
-        print('WARNING: additional message received: $message');
-      } else {
+      if (!completer.isCompleted) {
         completer.complete(<dynamic>[message, remotePort]);
       }
     });
+
     final RemotePort port = await RemotePort.connect(kTestAppId, kTestPort);
     await port.sendWithLocalPort('Test message 2', localPort);
+
     final List<dynamic> value = await completer.future;
     final String message = value[0] as String;
     final RemotePort? remotePort = value[1] as RemotePort?;
     expect(message, equals('Test message 2'));
     expect(remotePort?.remoteAppId, equals(kTestAppId));
     expect(remotePort?.portName, equals(kTestPort));
+
     await localPort.unregister();
   }, timeout: const Timeout(Duration(seconds: 5)));
 
   group('Types test', () {
     late LocalPort localPort;
     late RemotePort remotePort;
-    late Completer<List<dynamic>> completer;
-
-    void onMessage(dynamic message, [RemotePort? remotePort]) {
-      completer.complete(<dynamic>[message, remotePort]);
-    }
+    late Completer<dynamic> completer;
 
     setUpAll(() async {
       localPort = await LocalPort.create(kTestPort);
-      localPort.register(onMessage);
+      localPort.register((dynamic message, [RemotePort? remotePort]) {
+        expect(remotePort, isNull);
+        completer.complete(message);
+      });
       remotePort = await RemotePort.connect(kTestAppId, kTestPort);
     });
 
     setUp(() {
-      completer = Completer<List<dynamic>>();
+      completer = Completer<dynamic>();
     });
 
     tearDownAll(() async {
       await localPort.unregister();
     });
 
-    Future<void> checkForMessage<T>(dynamic message) async {
+    Future<void> checkForMessage<T>(T message) async {
       await remotePort.send(message);
-      final List<dynamic> ret = await completer.future;
-      final dynamic receivedMessage = ret[0];
-      final dynamic receivedPort = ret[1];
+
+      final T receivedMessage = await completer.future as T;
       expect(receivedMessage, equals(message));
-      expect(receivedMessage, isA<T>());
-      expect(receivedPort, isNull);
     }
+
+    testWidgets('null', (WidgetTester tester) async {
+      await checkForMessage(null);
+    }, timeout: const Timeout(Duration(seconds: 5)));
 
     testWidgets('bool', (WidgetTester tester) async {
       const bool value = true;

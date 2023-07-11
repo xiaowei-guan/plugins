@@ -52,7 +52,7 @@ class IntegrationTestCommand extends PackageLoopingCommand {
           'plugins:\n'
           '  a: [wearable-5.5, tv-6.0]\n'
           '  b: [mobile-6.0]\n'
-          '  c: [wearable-4.0]\n'
+          '  c: [wearable-5.5]\n'
           '  d: [] # explicitly excluded\n',
       valueHelp: 'recipe.yaml',
     );
@@ -86,12 +86,12 @@ class IntegrationTestCommand extends PackageLoopingCommand {
   Recipe? _recipe;
 
   @override
-  String get description =>
-      'Runs integration tests for plugin example apps.\n\n'
-      'This command requires "flutter-tizen" to be in your path.';
+  final String name = 'integration-test';
 
   @override
-  String get name => 'integration-test';
+  final String description =
+      'Runs integration tests for plugin example apps.\n\n'
+      'This command requires "flutter-tizen" to be in your path.';
 
   @override
   Future<void> initializeRun() async {
@@ -132,13 +132,23 @@ class IntegrationTestCommand extends PackageLoopingCommand {
       }
     }
 
-    final io.ProcessResult processResult = await processRunner.run(
-      'flutter-tizen',
-      <String>['precache', '--tizen'],
-    );
+    late io.ProcessResult processResult;
+    for (int attempts = 0; attempts < 5; attempts++) {
+      // This operation often fails with an exit code 128.
+      processResult = await processRunner.run(
+        'flutter-tizen',
+        <String>['precache', '--tizen'],
+      );
+      if (processResult.exitCode == 0) {
+        break;
+      }
+      print('Waiting 5 seconds before trying again...');
+      await Future<void>.delayed(const Duration(seconds: 5));
+    }
     if (processResult.exitCode != 0) {
-      print('Cannot cache tizen artifacts used for integration-test.');
-      throw ToolExit(exitCommandFoundErrors);
+      print('Cannot precache Tizen artifacts for integration test:\n'
+          '${processResult.stderr}');
+      throw ToolExit(processResult.exitCode);
     }
   }
 

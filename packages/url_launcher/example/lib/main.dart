@@ -15,7 +15,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({super.key, required this.title});
   final String title;
 
   @override
@@ -58,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
       url,
       mode: LaunchMode.externalApplication,
     )) {
-      throw 'Could not launch $url';
+      throw Exception('Could not launch $url');
     }
   }
 
@@ -69,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
       webViewConfiguration: const WebViewConfiguration(
           headers: <String, String>{'my_header_key': 'my_header_value'}),
     )) {
-      throw 'Could not launch $url';
+      throw Exception('Could not launch $url');
     }
   }
 
@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
       mode: LaunchMode.inAppWebView,
       webViewConfiguration: const WebViewConfiguration(enableJavaScript: false),
     )) {
-      throw 'Could not launch $url';
+      throw Exception('Could not launch $url');
     }
   }
 
@@ -89,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
       mode: LaunchMode.inAppWebView,
       webViewConfiguration: const WebViewConfiguration(enableDomStorage: false),
     )) {
-      throw 'Could not launch $url';
+      throw Exception('Could not launch $url');
     }
   }
 
@@ -196,7 +196,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () => setState(() {
                   _launched = _launchInWebViewOrVC(toLaunch);
                   Timer(const Duration(seconds: 5), () {
-                    print('Closing WebView after 5 seconds...');
                     closeInAppWebView();
                   });
                 }),

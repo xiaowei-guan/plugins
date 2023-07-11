@@ -3,6 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore_for_file: avoid_dynamic_calls
+
 part of google_maps_flutter_tizen;
 
 /// This class implements a Map Controller and its events
@@ -229,7 +231,7 @@ class GoogleMapsController {
             _streamController.add(MapReadyEvent(_mapId));
             _isFirst = true;
           } catch (e) {
-            print('Javascript Error: $e');
+            debugPrint('Javascript Error: $e');
           }
         });
   }
@@ -250,7 +252,7 @@ class GoogleMapsController {
               _streamController.add(MapTapEvent(_mapId, position));
             }
           } catch (e) {
-            print('Javascript Error: $e');
+            debugPrint('Javascript Error: $e');
           }
         });
   }
@@ -272,7 +274,7 @@ class GoogleMapsController {
               _streamController.add(MapLongPressEvent(_mapId, position));
             }
           } catch (e) {
-            print('Javascript Error: $e');
+            debugPrint('Javascript Error: $e');
           }
         });
   }
@@ -295,7 +297,7 @@ class GoogleMapsController {
               }
             }
           } catch (e) {
-            print('Javascript Error: $e');
+            debugPrint('Javascript Error: $e');
           }
         });
   }
@@ -327,7 +329,7 @@ class GoogleMapsController {
               }
             }
           } catch (e) {
-            print('Javascript Error: $e');
+            debugPrint('Javascript Error: $e');
           }
         });
   }
@@ -351,7 +353,7 @@ class GoogleMapsController {
               }
             }
           } catch (e) {
-            print('Javascript Error: $e');
+            debugPrint('Javascript Error: $e');
           }
         });
   }
@@ -375,7 +377,7 @@ class GoogleMapsController {
               }
             }
           } catch (e) {
-            print('Javascript Error: $e');
+            debugPrint('Javascript Error: $e');
           }
         });
   }
@@ -398,7 +400,7 @@ class GoogleMapsController {
               }
             }
           } catch (e) {
-            print('Javascript Error: $e');
+            debugPrint('Javascript Error: $e');
           }
         });
   }
@@ -534,7 +536,7 @@ class GoogleMapsController {
 
   Future<String> _callMethod(
       WebViewController mapView, String method, List<Object?> args) async {
-    return await mapView.runJavascriptReturningResult(
+    return mapView.runJavascriptReturningResult(
         'JSON.stringify(map.$method.apply(map, $args))');
   }
 
@@ -542,7 +544,7 @@ class GoogleMapsController {
     try {
       return double.parse(await _callMethod(c, 'getZoom', <String>[]));
     } catch (e) {
-      print('Javascript Error: $e');
+      debugPrint('Javascript Error: $e');
       return 0.0;
     }
   }
@@ -614,7 +616,7 @@ class GoogleMapsController {
             focusLatLng = await _pixelToLatLng(
                 json[2][0] as double, json[2][1] as double);
           } catch (e) {
-            print('Error computing focus LatLng. JS Error: $e');
+            debugPrint('Error computing focus LatLng. JS Error: $e');
           }
         }
         await _setZoom('${(await getZoomLevel()) + newZoomDelta}');
@@ -651,7 +653,7 @@ class GoogleMapsController {
       JSON.stringify(getPixelToLatLng());
     ''';
 
-    return await (await controller).runJavascriptReturningResult(command);
+    return (await controller).runJavascriptReturningResult(command);
   }
 
   Future<String> _latLngToPoint(LatLng latLng) async {
@@ -671,12 +673,12 @@ class GoogleMapsController {
       JSON.stringify(getLatLngToPixel());
     ''';
 
-    return await (await controller).runJavascriptReturningResult(command);
+    return (await controller).runJavascriptReturningResult(command);
   }
 
   /// Returns the zoom level of the current viewport.
   Future<double> getZoomLevel() async {
-    return await _getZoom(await controller);
+    return _getZoom(await controller);
   }
 
   // Geometry manipulation

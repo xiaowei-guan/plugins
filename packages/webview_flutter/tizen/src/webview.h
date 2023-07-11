@@ -19,6 +19,10 @@
 #include <mutex>
 #include <string>
 
+typedef flutter::MethodCall<flutter::EncodableValue> FlMethodCall;
+typedef flutter::MethodResult<flutter::EncodableValue> FlMethodResult;
+typedef flutter::MethodChannel<flutter::EncodableValue> FlMethodChannel;
+
 class BufferPool;
 class BufferUnit;
 
@@ -52,22 +56,21 @@ class WebView : public PlatformView {
                                                        size_t height);
 
  private:
-  void HandleMethodCall(
-      const flutter::MethodCall<flutter::EncodableValue>& method_call,
-      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
-  void HandleCookieMethodCall(
-      const flutter::MethodCall<flutter::EncodableValue>& method_call,
-      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleWebViewMethodCall(const FlMethodCall& method_call,
+                               std::unique_ptr<FlMethodResult> result);
+  void HandleCookieMethodCall(const FlMethodCall& method_call,
+                              std::unique_ptr<FlMethodResult> result);
 
-  void ApplySettings(const flutter::EncodableMap& settings);
   void RegisterJavaScriptChannelName(const std::string& name);
-  std::string GetChannelName();
+  std::string GetWebViewChannelName();
+  std::string GetNavigationDelegateChannelName();
 
   void InitWebView();
 
   static void OnFrameRendered(void* data, Evas_Object* obj, void* event_info);
   static void OnLoadStarted(void* data, Evas_Object* obj, void* event_info);
   static void OnLoadFinished(void* data, Evas_Object* obj, void* event_info);
+  static void OnProgress(void* data, Evas_Object* obj, void* event_info);
   static void OnLoadError(void* data, Evas_Object* obj, void* event_info);
   static void OnConsoleMessage(void* data, Evas_Object* obj, void* event_info);
   static void OnNavigationPolicy(void* data, Evas_Object* obj,
@@ -77,16 +80,16 @@ class WebView : public PlatformView {
   static void OnJavaScriptMessage(Evas_Object* obj, Ewk_Script_Message message);
 
   Evas_Object* webview_instance_ = nullptr;
-  void* window_ = nullptr;
   flutter::TextureRegistrar* texture_registrar_;
   double width_ = 0.0;
   double height_ = 0.0;
+  void* window_ = nullptr;
   BufferUnit* working_surface_ = nullptr;
   BufferUnit* candidate_surface_ = nullptr;
   BufferUnit* rendered_surface_ = nullptr;
   bool has_navigation_delegate_ = false;
-  bool has_progress_tracking_ = false;
-  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
+  std::unique_ptr<FlMethodChannel> webview_channel_;
+  std::unique_ptr<FlMethodChannel> navigation_delegate_channel_;
   std::unique_ptr<flutter::TextureVariant> texture_variant_;
   std::mutex mutex_;
   std::unique_ptr<BufferPool> tbm_pool_;

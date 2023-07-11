@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/wakelock_tizen.svg)](https://pub.dev/packages/wakelock_tizen)
 
-The Tizen implementation of [`wakelock`](https://github.com/creativecreatorormaybenot/wakelock).
+The Tizen implementation of [`wakelock`](https://pub.dev/packages/wakelock).
 
 ## Usage
 
@@ -10,8 +10,8 @@ This package is not an _endorsed_ implementation of `wakelock`. Therefore, you h
 
 ```yaml
 dependencies:
-  wakelock: ^0.5.6
-  wakelock_tizen: ^1.0.1
+  wakelock: ^0.6.2
+  wakelock_tizen: ^1.0.2
 ```
 
 Then you can import `wakelock` in your Dart code:
@@ -31,3 +31,7 @@ To use the wakelock plugin in a Tizen application, the display privilege must be
   <privilege>http://tizen.org/privilege/display</privilege>
 </privileges>
 ```
+
+## Supported devices
+
+- Galaxy Watch series (running Tizen 5.5)

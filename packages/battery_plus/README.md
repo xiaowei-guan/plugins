@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/battery_plus_tizen.svg)](https://pub.dev/packages/battery_plus_tizen)
 
-The Tizen implementation of [`battery_plus`](https://github.com/fluttercommunity/plus_plugins/tree/main/packages/battery_plus).
+The Tizen implementation of [`battery_plus`](https://pub.dev/packages/battery_plus).
 
 ## Usage
 
@@ -10,8 +10,8 @@ This package is not an _endorsed_ implementation of `battery_plus`. Therefore, y
 
 ```yaml
 dependencies:
-  battery_plus: ^2.1.3
-  battery_plus_tizen: ^1.1.1
+  battery_plus: ^4.0.1
+  battery_plus_tizen: ^1.1.2
 ```
 
 Then you can import `battery_plus` in your Dart code:
@@ -31,4 +31,4 @@ For detailed usage, see https://pub.dev/packages/battery_plus#usage.
 
 ## Supported devices
 
-- Galaxy Watch series (running Tizen 4.0 or later)
+- Galaxy Watch series (running Tizen 5.5)

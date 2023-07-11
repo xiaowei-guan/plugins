@@ -1,13 +1,8 @@
-// Copyright (c) 2018 湖北捷智云技术有限公司. All rights reserved.
-//
-// Distributed under the MIT software license, see the accompanying
-// file LICENSE.
-
 #include "flutter_common.h"
 
 class MethodCallProxyImpl : public MethodCallProxy {
  public:
-  MethodCallProxyImpl(const MethodCall& method_call)
+  explicit MethodCallProxyImpl(const MethodCall& method_call)
       : method_call_(method_call) {}
 
   ~MethodCallProxyImpl() {}
@@ -34,7 +29,7 @@ std::unique_ptr<MethodCallProxy> MethodCallProxy::Create(
 
 class MethodResultProxyImpl : public MethodResultProxy {
  public:
-  MethodResultProxyImpl(std::unique_ptr<MethodResult> method_result)
+  explicit MethodResultProxyImpl(std::unique_ptr<MethodResult> method_result)
       : method_result_(std::move(method_result)) {}
   ~MethodResultProxyImpl() {}
 

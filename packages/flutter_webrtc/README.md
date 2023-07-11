@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/flutter_webrtc_tizen.svg)](https://pub.dev/packages/flutter_webrtc_tizen)
 
-The Tizen implementation of [`flutter_webrtc`](https://github.com/flutter-webrtc/flutter-webrtc).
+The Tizen implementation of [`flutter_webrtc`](https://pub.dev/packages/flutter_webrtc).
 
 ## Required privileges
 
@@ -40,8 +40,8 @@ For other Tizen devices :
 
  ```yaml
 dependencies:
-  flutter_webrtc: ^0.9.18
-  flutter_webrtc_tizen: ^0.1.0
+  flutter_webrtc: ^0.9.28
+  flutter_webrtc_tizen: ^0.1.2
 ```
 
 ## Functionality
@@ -49,9 +49,14 @@ dependencies:
 |      Feature       |       Tizen        |
 | :----------------: | :----------------: |
 |    Audio/Video     | :heavy_check_mark: |
-|    Data Channel    |       [WIP]        |
+|    Data Channel    | :heavy_check_mark: |
 |   Screen Capture   |       [WIP]        |
 |    Unified-Plan    | :heavy_check_mark: |
-|     Simulcast      |       [WIP]        |
+|     Simulcast      | :heavy_check_mark: |
 |   MediaRecorder    |       [WIP]        |
+|SFrame/FrameCryptor | :heavy_check_mark: |
 | Insertable Streams |       [WIP]        |
+
+## Supported devices
+
+This plugin is supported on Tizen devices running Tizen 6.0 or later.

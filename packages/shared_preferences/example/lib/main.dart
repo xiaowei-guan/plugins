@@ -14,7 +14,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
 }
 
 class SharedPreferencesDemo extends StatefulWidget {
-  const SharedPreferencesDemo({Key? key}) : super(key: key);
+  const SharedPreferencesDemo({super.key});
 
   @override
   SharedPreferencesDemoState createState() => SharedPreferencesDemoState();
@@ -66,9 +66,11 @@ class SharedPreferencesDemoState extends State<SharedPreferencesDemo> {
               future: _counter,
               builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
                 switch (snapshot.connectionState) {
+                  case ConnectionState.none:
                   case ConnectionState.waiting:
                     return const CircularProgressIndicator();
-                  default:
+                  case ConnectionState.active:
+                  case ConnectionState.done:
                     if (snapshot.hasError) {
                       return Text('Error: ${snapshot.error}');
                     } else {

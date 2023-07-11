@@ -14,7 +14,7 @@ import 'package:video_player/video_player.dart';
 /// Camera example home widget.
 class CameraExampleHome extends StatefulWidget {
   /// Default Constructor
-  const CameraExampleHome({Key? key}) : super(key: key);
+  const CameraExampleHome({super.key});
 
   @override
   State<CameraExampleHome> createState() {
@@ -31,17 +31,16 @@ IconData getCameraLensIcon(CameraLensDirection direction) {
       return Icons.camera_front;
     case CameraLensDirection.external:
       return Icons.camera;
-    default:
-      throw ArgumentError('Unknown lens direction');
   }
+  // This enum is from a different package, so a new value could be added at
+  // any time. The example should keep working if that happens.
+  // ignore: dead_code
+  return Icons.camera;
 }
 
 void _logError(String code, String? message) {
-  if (message != null) {
-    print('Error: $code\nError Message: $message');
-  } else {
-    print('Error: $code');
-  }
+  // ignore: avoid_print
+  print('Error: $code${message == null ? '' : '\nError Message: $message'}');
 }
 
 class _CameraExampleHomeState extends State<CameraExampleHome>
@@ -1053,7 +1052,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
 /// CameraApp is the Main Application.
 class CameraApp extends StatelessWidget {
   /// Default Constructor
-  const CameraApp({Key? key}) : super(key: key);
+  const CameraApp({super.key});
 
   @override
   Widget build(BuildContext context) {

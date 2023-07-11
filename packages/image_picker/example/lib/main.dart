@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// ignore_for_file: public_member_api_docs
+// ignore_for_file: public_member_api_docs, avoid_print
 
 import 'dart:async';
 import 'dart:io';
@@ -17,7 +17,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, this.title}) : super(key: key);
+  const MyHomePage({super.key, this.title});
 
   final String? title;
 
@@ -260,7 +260,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       );
                     case ConnectionState.done:
                       return _handlePreview();
-                    default:
+                    case ConnectionState.active:
                       if (snapshot.hasError) {
                         return Text(
                           'Pick image/video error: ${snapshot.error}}',
@@ -423,7 +423,7 @@ typedef OnPickImageCallback = void Function(
     double? maxWidth, double? maxHeight, int? quality);
 
 class AspectRatioVideo extends StatefulWidget {
-  const AspectRatioVideo(this.controller, {Key? key}) : super(key: key);
+  const AspectRatioVideo(this.controller, {super.key});
 
   final VideoPlayerController? controller;
 

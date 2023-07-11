@@ -3,6 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore_for_file: avoid_dynamic_calls
+
 part of google_maps_flutter_tizen;
 
 // Indices in the plugin side don't match with the ones
@@ -171,7 +173,7 @@ LatLngBounds _convertToBounds(String value) {
           northeast: LatLng(bound['north'] as double, bound['east'] as double));
     }
   } catch (e) {
-    print('Javascript Error: $e');
+    debugPrint('Javascript Error: $e');
   }
   return util.nullLatLngBounds;
 }
@@ -184,7 +186,7 @@ LatLng _convertToLatLng(String value) {
       return LatLng((latlng['lat'] as num) + 0.0, (latlng['lng'] as num) + 0.0);
     }
   } catch (e) {
-    print('Javascript Error: $e');
+    debugPrint('Javascript Error: $e');
   }
   return util.nullLatLng;
 }
@@ -205,7 +207,7 @@ ScreenCoordinate _convertToPoint(String value) {
       return ScreenCoordinate(x: x, y: y);
     }
   } catch (e) {
-    print('Javascript Error: $e');
+    debugPrint('Javascript Error: $e');
   }
   return util.nullScreenCoordinate;
 }
@@ -324,12 +326,10 @@ util.GPolygonOptions _polygonOptionsFromPolygon(Polygon polygon) {
     List<LatLng> holePath = polygon.holes[i];
     if (_isPolygonClockwise(holePath) == polygonDirection) {
       holePath = holePath.reversed.toList();
-      if (kDebugMode) {
-        print(
-            'Hole [$holeIndex] in Polygon [${polygon.polygonId.value}] has been reversed.'
-            ' Ensure holes in polygons are "wound in the opposite direction to the outer path."'
-            ' More info: https://github.com/flutter/flutter/issues/74096');
-      }
+      debugPrint(
+          'Hole [$holeIndex] in Polygon [${polygon.polygonId.value}] has been reversed.'
+          ' Ensure holes in polygons are "wound in the opposite direction to the outer path."'
+          ' More info: https://github.com/flutter/flutter/issues/74096');
     }
     paths.add(holePath);
     holeIndex++;

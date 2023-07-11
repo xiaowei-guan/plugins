@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/geolocator_tizen.svg)](https://pub.dev/packages/geolocator_tizen)
 
-The Tizen implementation of [`geolocator`](https://github.com/Baseflow/flutter-geolocator/tree/master/geolocator).
+The Tizen implementation of [`geolocator`](https://pub.dev/packages/geolocator).
 
 ## Usage
 
@@ -11,7 +11,7 @@ The Tizen implementation of [`geolocator`](https://github.com/Baseflow/flutter-g
  ```yaml
 dependencies:
   geolocator: ^8.0.0
-  geolocator_tizen: ^1.0.5
+  geolocator_tizen: ^1.0.6
 ```
 
 Then you can import `geolocator` in your Dart code:
@@ -36,7 +36,7 @@ To use this plugin, you need to declare privileges in `tizen-manifest.xml` of yo
 
 ## Supported devices
 
-- Galaxy Watch series (running Tizen 4.0 or later)
+- Galaxy Watch series (running Tizen 5.5)
 
 ## Supported APIs
 

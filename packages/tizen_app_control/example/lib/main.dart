@@ -54,7 +54,7 @@ void serviceMain() {
 /// The main UI app widget.
 class MyApp extends StatefulWidget {
   /// The main UI app widget.
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -132,7 +132,10 @@ class _MyAppState extends State<MyApp> {
         String? imagePath;
         if (result == AppControlReplyResult.succeeded &&
             reply.extraData.containsKey(kAppControlDataSelected)) {
-          imagePath = reply.extraData[kAppControlDataSelected][0] as String;
+          final List<String> imagePaths =
+              (reply.extraData[kAppControlDataSelected] as List<Object?>)
+                  .cast<String>();
+          imagePath = imagePaths[0];
         }
         _messengerKey.currentState!.showSnackBar(
           SnackBar(content: Text(imagePath ?? 'No image selected.')),
