@@ -18,7 +18,7 @@
 class PlusPlayer : public VideoPlayer, public plusplayer::EventListener {
  public:
   explicit PlusPlayer(flutter::BinaryMessenger *messenger, void *native_window,
-                      std::string video_format);
+                      std::string &video_format);
   ~PlusPlayer();
 
   int64_t Create(const std::string &uri, int drm_type,

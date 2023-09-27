@@ -12,7 +12,7 @@
 #include "log.h"
 
 PlusPlayer::PlusPlayer(flutter::BinaryMessenger *messenger, void *native_window,
-                       std::string video_format)
+                       std::string &video_format)
     : VideoPlayer(messenger),
       native_window_(native_window),
       video_format_(video_format) {}
