@@ -7,7 +7,6 @@
 #include <app_manager.h>
 #include <dlfcn.h>
 #include <system_info.h>
-#include <unistd.h>
 
 #include <sstream>
 
@@ -36,7 +35,7 @@ int64_t PlusPlayer::Create(const std::string &uri, int drm_type,
                            bool is_prebuffer_mode,
                            flutter::EncodableMap &http_headers) {
   LOG_INFO("[PlusPlayer] Create player.");
-  if (!video_format_.compare("dash")) {
+  if (video_format_ == "dash") {
     player_ = plusplayer::PlusPlayer::Create(plusplayer::PlayerType::kDASH);
   } else {
     player_ = plusplayer::PlusPlayer::Create();
@@ -103,7 +102,7 @@ int64_t PlusPlayer::Create(const std::string &uri, int drm_type,
   }
 
   if (!player_->PrepareAsync()) {
-    LOG_ERROR("[PlusPlayer] Failed to prepare");
+    LOG_ERROR("[PlusPlayer] Failed to prepare.");
     return -1;
   }
   return SetUpEventChannel();
@@ -112,12 +111,23 @@ int64_t PlusPlayer::Create(const std::string &uri, int drm_type,
 void PlusPlayer::Dispose() {
   LOG_INFO("[PlusPlayer] Disposing.");
 
-  if (player_) {
-    player_->Stop();
-    player_->Close();
+  if (!player_) {
+    LOG_ERROR("[PlusPlayer] Player not created.");
+    return;
+  }
+  if (!player_->Stop()) {
+    LOG_INFO("[PlusPlayer] Player stop failed.");
+    return;
   }
 
-  // drm should be released after destroy of player
+  plusplayer::State state = player_->GetState();
+  if (state == plusplayer::State::kIdle || state == plusplayer::State::kNone) {
+    if (!player_->Close()) {
+      LOG_INFO("[PlusPlayer] Player close failed.");
+      return;
+    }
+  }
+
   if (drm_manager_) {
     drm_manager_->ReleaseDrmSession();
   }
@@ -154,7 +164,7 @@ void PlusPlayer::Play() {
   }
 }
 
-bool PlusPlayer::SetActivate() {
+bool PlusPlayer::Activate() {
   if (!player_->Activate(plusplayer::kTrackTypeVideo)) {
     LOG_ERROR("[PlusPlayer] Fail to activate video.");
     return false;
@@ -170,7 +180,7 @@ bool PlusPlayer::SetActivate() {
   return true;
 }
 
-bool PlusPlayer::SetDeactivate() {
+bool PlusPlayer::Deactivate() {
   if (is_prebuffer_mode_) {
     player_->Stop();
     return true;
@@ -250,6 +260,7 @@ void PlusPlayer::SeekTo(int64_t position, SeekCompletedCallback callback) {
     std::string str = player_->GetStreamingProperty("GET_LIVE_DURATION");
     if (str.empty()) {
       LOG_ERROR("[PlusPlayer] Fail to get live duration.");
+      return;
     }
     std::vector<std::string> time_str = split(str, '|');
     int64_t start_time = std::stoll(time_str[0].c_str());
@@ -324,17 +335,18 @@ void PlusPlayer::GetVideoSize(int32_t *width, int32_t *height) {
         *width = track.width;
         *height = track.height;
         found = true;
+        break;
       }
     }
     if (!found) {
       LOG_ERROR("[PlusPlayer] Failed to get video size.");
     } else {
-      LOG_INFO("[PlusPlayer] Video widht: %d, height: %d.", *width, *height);
+      LOG_INFO("[PlusPlayer] Video width: %d, height: %d.", *width, *height);
     }
   }
 }
 
-bool PlusPlayer::isReady() {
+bool PlusPlayer::IsReady() {
   return plusplayer::State::kReady == player_->GetState();
 }
 
@@ -371,7 +383,7 @@ flutter::EncodableList PlusPlayer::getTrackInfo(int32_t track_type) {
   }
 
   plusplayer::State state = player_->GetState();
-  if (state == plusplayer::State::kNone || state == plusplayer::State::kIdle) {
+  if (state < plusplayer::State::kTrackSourceReady) {
     LOG_ERROR("[PlusPlayer] Player is in invalid state.");
     return {};
   }
@@ -478,7 +490,7 @@ bool PlusPlayer::SetTrackSelection(int32_t track_id, int32_t track_type) {
   }
 
   plusplayer::State state = player_->GetState();
-  if (state == plusplayer::State::kNone || state == plusplayer::State::kIdle) {
+  if (state < plusplayer::State::kTrackSourceReady) {
     LOG_ERROR("[PlusPlayer] Player is in invalid state.");
     return false;
   }

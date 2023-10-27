@@ -17,4 +17,4 @@ class EcoreWl2WindowProxy {
   void *ecore_wl2_window_handle_ = nullptr;
 };
 
-#endif
+#endif  // FLUTTER_PLUGIN_ECORE_WL2_WINDOW_PROXY_H_

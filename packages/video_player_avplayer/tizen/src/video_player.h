@@ -36,8 +36,8 @@ class VideoPlayer {
   virtual void SetDisplayRoi(int32_t x, int32_t y, int32_t width,
                              int32_t height) = 0;
   virtual void Play() = 0;
-  virtual bool SetDeactivate() { return false; };
-  virtual bool SetActivate() { return false; };
+  virtual bool Deactivate() { return false; };
+  virtual bool Activate() { return false; };
   virtual void Pause() = 0;
   virtual void SetLooping(bool is_looping) = 0;
   virtual void SetVolume(double volume) = 0;
@@ -45,7 +45,7 @@ class VideoPlayer {
   virtual void SeekTo(int64_t position, SeekCompletedCallback callback) = 0;
   virtual int64_t GetPosition() = 0;
   virtual int64_t GetDuration() = 0;
-  virtual bool isReady() = 0;
+  virtual bool IsReady() = 0;
   virtual flutter::EncodableList getTrackInfo(int32_t track_type) = 0;
   virtual bool SetTrackSelection(int32_t track_id, int32_t track_type) = 0;
   // send port is used for drm

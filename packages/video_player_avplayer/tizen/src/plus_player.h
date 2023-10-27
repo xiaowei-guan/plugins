@@ -29,8 +29,8 @@ class PlusPlayer : public VideoPlayer, public plusplayer::EventListener {
   void SetDisplayRoi(int32_t x, int32_t y, int32_t width,
                      int32_t height) override;
   void Play() override;
-  bool SetDeactivate() override;
-  bool SetActivate() override;
+  bool Deactivate() override;
+  bool Activate() override;
   void Pause() override;
   void SetLooping(bool is_looping) override;
   void SetVolume(double volume) override;
@@ -39,7 +39,7 @@ class PlusPlayer : public VideoPlayer, public plusplayer::EventListener {
   int64_t GetPosition() override;
   int64_t GetDuration() override;
   void GetVideoSize(int32_t *width, int32_t *height) override;
-  bool isReady() override;
+  bool IsReady() override;
   flutter::EncodableList getTrackInfo(int32_t track_type) override;
   bool SetTrackSelection(int32_t track_id, int32_t track_type) override;
 
@@ -89,4 +89,4 @@ class PlusPlayer : public VideoPlayer, public plusplayer::EventListener {
   SeekCompletedCallback on_seek_completed_;
 };
 
-#endif  // VIDEO_PLAYER_H_
+#endif  // FLUTTER_PLUGIN_PLUS_PLAYER_H_

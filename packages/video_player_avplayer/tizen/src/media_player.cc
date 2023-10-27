@@ -313,7 +313,7 @@ void MediaPlayer::GetVideoSize(int32_t *width, int32_t *height) {
   *height = h;
 }
 
-bool MediaPlayer::isReady() {
+bool MediaPlayer::IsReady() {
   player_state_e state = PLAYER_STATE_NONE;
   int ret = player_get_state(player_, &state);
   if (ret != PLAYER_ERROR_NONE) {

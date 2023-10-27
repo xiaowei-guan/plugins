@@ -47,7 +47,7 @@ int64_t VideoPlayer::SetUpEventChannel() {
           std::unique_ptr<flutter::EventSink<>> &&events)
           -> std::unique_ptr<flutter::StreamHandlerError<>> {
         event_sink_ = std::move(events);
-        if (isReady()) {
+        if (IsReady()) {
           SendInitialized();
         } else {
           LOG_INFO("Video Player is not ready.");

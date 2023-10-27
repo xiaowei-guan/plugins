@@ -178,12 +178,18 @@ ErrorOr<PlayerMessage> VideoPlayerTizenPlugin::Create(
                                                native_window, format);
     player_id = player->Create(uri, drm_type, license_server_url,
                                prebuffer_mode, http_headers);
+    if (player_id == -1) {
+      return FlutterError("Operation failed", "Failed to create a player.");
+    }
     players_[player_id] = std::move(player);
   } else {
     auto player = std::make_unique<MediaPlayer>(plugin_registrar_->messenger(),
                                                 native_window);
     player_id = player->Create(uri, drm_type, license_server_url,
                                prebuffer_mode, http_headers);
+    if (player_id == -1) {
+      return FlutterError("Operation failed", "Failed to create a player.");
+    }
     players_[player_id] = std::move(player);
   }
 
@@ -267,7 +273,7 @@ ErrorOr<bool> VideoPlayerTizenPlugin::SetDeactivate(const PlayerMessage &msg) {
   if (!player) {
     return FlutterError("Invalid argument", "Player not found.");
   }
-  return player->SetDeactivate();
+  return player->Deactivate();
 }
 
 ErrorOr<bool> VideoPlayerTizenPlugin::SetActivate(const PlayerMessage &msg) {
@@ -275,7 +281,7 @@ ErrorOr<bool> VideoPlayerTizenPlugin::SetActivate(const PlayerMessage &msg) {
   if (!player) {
     return FlutterError("Invalid argument", "Player not found.");
   }
-  return player->SetActivate();
+  return player->Activate();
 }
 
 std::optional<FlutterError> VideoPlayerTizenPlugin::Pause(

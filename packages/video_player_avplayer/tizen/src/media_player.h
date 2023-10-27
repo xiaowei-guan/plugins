@@ -37,7 +37,7 @@ class MediaPlayer : public VideoPlayer {
   int64_t GetPosition() override;
   int64_t GetDuration() override;
   void GetVideoSize(int32_t *width, int32_t *height) override;
-  bool isReady() override;
+  bool IsReady() override;
   flutter::EncodableList getTrackInfo(int32_t track_type) override;
   bool SetTrackSelection(int32_t track_id, int32_t track_type) override;
 
