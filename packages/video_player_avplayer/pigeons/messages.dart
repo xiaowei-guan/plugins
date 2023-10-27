@@ -83,7 +83,7 @@ class GeometryMessage {
 }
 
 @HostApi()
-abstract class VideoPlayerVideoholeApi {
+abstract class VideoPlayerAvplayApi {
   void initialize();
   PlayerMessage create(CreateMessage msg);
   void dispose(PlayerMessage msg);

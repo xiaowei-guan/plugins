@@ -13,9 +13,9 @@ import 'messages.g.dart';
 import 'tracks.dart';
 
 /// An implementation of [VideoPlayerPlatform] that uses the
-/// Pigeon-generated [TizenVideoPlayerApi].
+/// Pigeon-generated [VideoPlayerAvplayApi].
 class VideoPlayerTizen extends VideoPlayerPlatform {
-  final VideoPlayerVideoholeApi _api = VideoPlayerVideoholeApi();
+  final VideoPlayerAvplayApi _api = VideoPlayerAvplayApi();
 
   @override
   Future<void> init() {

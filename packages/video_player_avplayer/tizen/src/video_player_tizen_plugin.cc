@@ -23,7 +23,7 @@
 namespace {
 
 class VideoPlayerTizenPlugin : public flutter::Plugin,
-                               public VideoPlayerVideoholeApi {
+                               public VideoPlayerAvplayApi {
  public:
   static void RegisterWithRegistrar(
       FlutterDesktopPluginRegistrarRef registrar_ref,
@@ -85,7 +85,7 @@ VideoPlayerTizenPlugin::VideoPlayerTizenPlugin(
     FlutterDesktopPluginRegistrarRef registrar_ref,
     flutter::PluginRegistrar *plugin_registrar)
     : registrar_ref_(registrar_ref), plugin_registrar_(plugin_registrar) {
-  VideoPlayerVideoholeApi::SetUp(plugin_registrar->messenger(), this);
+  VideoPlayerAvplayApi::SetUp(plugin_registrar->messenger(), this);
 }
 
 VideoPlayerTizenPlugin::~VideoPlayerTizenPlugin() { DisposeAllPlayers(); }

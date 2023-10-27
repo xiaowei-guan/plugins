@@ -46,7 +46,7 @@ class ErrorOr {
   const FlutterError& error() const { return std::get<FlutterError>(v_); };
 
  private:
-  friend class VideoPlayerVideoholeApi;
+  friend class VideoPlayerAvplayApi;
   ErrorOr() = default;
   T TakeValue() && { return std::get<T>(std::move(v_)); }
 
@@ -65,8 +65,8 @@ class PlayerMessage {
  private:
   static PlayerMessage FromEncodableList(const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
 };
 
@@ -85,8 +85,8 @@ class LoopingMessage {
  private:
   static LoopingMessage FromEncodableList(const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
   bool is_looping_;
 };
@@ -106,8 +106,8 @@ class VolumeMessage {
  private:
   static VolumeMessage FromEncodableList(const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
   double volume_;
 };
@@ -128,8 +128,8 @@ class PlaybackSpeedMessage {
   static PlaybackSpeedMessage FromEncodableList(
       const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
   double speed_;
 };
@@ -150,8 +150,8 @@ class TrackMessage {
  private:
   static TrackMessage FromEncodableList(const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
   flutter::EncodableList tracks_;
 };
@@ -171,8 +171,8 @@ class TrackTypeMessage {
  private:
   static TrackTypeMessage FromEncodableList(const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
   int64_t track_type_;
 };
@@ -197,8 +197,8 @@ class SelectedTracksMessage {
   static SelectedTracksMessage FromEncodableList(
       const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
   int64_t track_id_;
   int64_t track_type_;
@@ -219,8 +219,8 @@ class PositionMessage {
  private:
   static PositionMessage FromEncodableList(const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
   int64_t position_;
 };
@@ -270,8 +270,8 @@ class CreateMessage {
  private:
   static CreateMessage FromEncodableList(const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   std::optional<std::string> asset_;
   std::optional<std::string> uri_;
   std::optional<std::string> package_name_;
@@ -294,8 +294,8 @@ class MixWithOthersMessage {
   static MixWithOthersMessage FromEncodableList(
       const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   bool mix_with_others_;
 };
 
@@ -324,8 +324,8 @@ class GeometryMessage {
  private:
   static GeometryMessage FromEncodableList(const flutter::EncodableList& list);
   flutter::EncodableList ToEncodableList() const;
-  friend class VideoPlayerVideoholeApi;
-  friend class VideoPlayerVideoholeApiCodecSerializer;
+  friend class VideoPlayerAvplayApi;
+  friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
   int64_t x_;
   int64_t y_;
@@ -333,12 +333,12 @@ class GeometryMessage {
   int64_t height_;
 };
 
-class VideoPlayerVideoholeApiCodecSerializer
+class VideoPlayerAvplayApiCodecSerializer
     : public flutter::StandardCodecSerializer {
  public:
-  VideoPlayerVideoholeApiCodecSerializer();
-  inline static VideoPlayerVideoholeApiCodecSerializer& GetInstance() {
-    static VideoPlayerVideoholeApiCodecSerializer sInstance;
+  VideoPlayerAvplayApiCodecSerializer();
+  inline static VideoPlayerAvplayApiCodecSerializer& GetInstance() {
+    static VideoPlayerAvplayApiCodecSerializer sInstance;
     return sInstance;
   }
 
@@ -352,11 +352,11 @@ class VideoPlayerVideoholeApiCodecSerializer
 
 // Generated interface from Pigeon that represents a handler of messages from
 // Flutter.
-class VideoPlayerVideoholeApi {
+class VideoPlayerAvplayApi {
  public:
-  VideoPlayerVideoholeApi(const VideoPlayerVideoholeApi&) = delete;
-  VideoPlayerVideoholeApi& operator=(const VideoPlayerVideoholeApi&) = delete;
-  virtual ~VideoPlayerVideoholeApi() {}
+  VideoPlayerAvplayApi(const VideoPlayerAvplayApi&) = delete;
+  VideoPlayerAvplayApi& operator=(const VideoPlayerAvplayApi&) = delete;
+  virtual ~VideoPlayerAvplayApi() {}
   virtual std::optional<FlutterError> Initialize() = 0;
   virtual ErrorOr<PlayerMessage> Create(const CreateMessage& msg) = 0;
   virtual std::optional<FlutterError> Dispose(const PlayerMessage& msg) = 0;
@@ -379,16 +379,16 @@ class VideoPlayerVideoholeApi {
   virtual std::optional<FlutterError> SetDisplayGeometry(
       const GeometryMessage& msg) = 0;
 
-  // The codec used by VideoPlayerVideoholeApi.
+  // The codec used by VideoPlayerAvplayApi.
   static const flutter::StandardMessageCodec& GetCodec();
-  // Sets up an instance of `VideoPlayerVideoholeApi` to handle messages through
+  // Sets up an instance of `VideoPlayerAvplayApi` to handle messages through
   // the `binary_messenger`.
   static void SetUp(flutter::BinaryMessenger* binary_messenger,
-                    VideoPlayerVideoholeApi* api);
+                    VideoPlayerAvplayApi* api);
   static flutter::EncodableValue WrapError(std::string_view error_message);
   static flutter::EncodableValue WrapError(const FlutterError& error);
 
  protected:
-  VideoPlayerVideoholeApi() = default;
+  VideoPlayerAvplayApi() = default;
 };
 #endif  // PIGEON_MESSAGES_H_

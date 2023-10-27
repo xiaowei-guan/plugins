@@ -332,8 +332,8 @@ class GeometryMessage {
   }
 }
 
-class _VideoPlayerVideoholeApiCodec extends StandardMessageCodec {
-  const _VideoPlayerVideoholeApiCodec();
+class _VideoPlayerAvplayApiCodec extends StandardMessageCodec {
+  const _VideoPlayerAvplayApiCodec();
   @override
   void writeValue(WriteBuffer buffer, Object? value) {
     if (value is CreateMessage) {
@@ -405,19 +405,19 @@ class _VideoPlayerVideoholeApiCodec extends StandardMessageCodec {
   }
 }
 
-class VideoPlayerVideoholeApi {
-  /// Constructor for [VideoPlayerVideoholeApi].  The [binaryMessenger] named argument is
+class VideoPlayerAvplayApi {
+  /// Constructor for [VideoPlayerAvplayApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  VideoPlayerVideoholeApi({BinaryMessenger? binaryMessenger})
+  VideoPlayerAvplayApi({BinaryMessenger? binaryMessenger})
       : _binaryMessenger = binaryMessenger;
   final BinaryMessenger? _binaryMessenger;
 
-  static const MessageCodec<Object?> codec = _VideoPlayerVideoholeApiCodec();
+  static const MessageCodec<Object?> codec = _VideoPlayerAvplayApiCodec();
 
   Future<void> initialize() async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.initialize', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.initialize', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList = await channel.send(null) as List<Object?>?;
     if (replyList == null) {
@@ -438,7 +438,7 @@ class VideoPlayerVideoholeApi {
 
   Future<PlayerMessage> create(CreateMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.create', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.create', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -465,7 +465,7 @@ class VideoPlayerVideoholeApi {
 
   Future<void> dispose(PlayerMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.dispose', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.dispose', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -487,7 +487,7 @@ class VideoPlayerVideoholeApi {
 
   Future<void> setLooping(LoopingMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.setLooping', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.setLooping', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -509,7 +509,7 @@ class VideoPlayerVideoholeApi {
 
   Future<void> setVolume(VolumeMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.setVolume', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.setVolume', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -531,7 +531,7 @@ class VideoPlayerVideoholeApi {
 
   Future<void> setPlaybackSpeed(PlaybackSpeedMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.setPlaybackSpeed', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.setPlaybackSpeed', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -553,7 +553,7 @@ class VideoPlayerVideoholeApi {
 
   Future<void> play(PlayerMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.play', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.play', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -575,7 +575,7 @@ class VideoPlayerVideoholeApi {
 
   Future<bool> setDeactivate(PlayerMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.setDeactivate', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.setDeactivate', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -602,7 +602,7 @@ class VideoPlayerVideoholeApi {
 
   Future<bool> setActivate(PlayerMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.setActivate', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.setActivate', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -629,7 +629,7 @@ class VideoPlayerVideoholeApi {
 
   Future<TrackMessage> track(TrackTypeMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.track', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.track', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -656,7 +656,7 @@ class VideoPlayerVideoholeApi {
 
   Future<bool> setTrackSelection(SelectedTracksMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.setTrackSelection', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.setTrackSelection', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -683,7 +683,7 @@ class VideoPlayerVideoholeApi {
 
   Future<PositionMessage> position(PlayerMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.position', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.position', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -710,7 +710,7 @@ class VideoPlayerVideoholeApi {
 
   Future<void> seekTo(PositionMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.seekTo', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.seekTo', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -732,7 +732,7 @@ class VideoPlayerVideoholeApi {
 
   Future<void> pause(PlayerMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.pause', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.pause', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -754,7 +754,7 @@ class VideoPlayerVideoholeApi {
 
   Future<void> setMixWithOthers(MixWithOthersMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.setMixWithOthers', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.setMixWithOthers', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
@@ -776,7 +776,7 @@ class VideoPlayerVideoholeApi {
 
   Future<void> setDisplayGeometry(GeometryMessage arg_msg) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.VideoPlayerVideoholeApi.setDisplayGeometry', codec,
+        'dev.flutter.pigeon.VideoPlayerAvplayApi.setDisplayGeometry', codec,
         binaryMessenger: _binaryMessenger);
     final List<Object?>? replyList =
         await channel.send(<Object?>[arg_msg]) as List<Object?>?;
