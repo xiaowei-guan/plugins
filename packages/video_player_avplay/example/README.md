@@ -1,6 +1,6 @@
-# video_player_avplayer_example
+# video_player_avplay_example
 
-Demonstrates how to use the video_player_avplayer plugin.
+Demonstrates how to use the video_player_avplay plugin.
 
 ## Getting Started
 

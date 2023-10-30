@@ -1,5 +1,5 @@
-name: video_player_avplayer_example
-description: Demonstrates how to use the video_player_avplayer plugin.
+name: video_player_avplay_example
+description: Demonstrates how to use the video_player_avplay plugin.
 publish_to: "none"
 
 environment:
@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.0
-  video_player_avplayer:
+  video_player_avplay:
     path: ../
 
 dev_dependencies:

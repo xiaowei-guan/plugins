@@ -10,8 +10,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:video_player_avplayer/video_player.dart';
-import 'package:video_player_avplayer/video_player_platform_interface.dart';
+import 'package:video_player_avplay/video_player.dart';
+import 'package:video_player_avplay/video_player_platform_interface.dart';
 
 void main() {
   runApp(

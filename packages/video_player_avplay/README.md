@@ -1,6 +1,6 @@
-# video_player_avplayer
+# video_player_avplay
 
-[![pub package](https://img.shields.io/pub/v/video_player_avplayer.svg)](https://pub.dev/packages/video_player_avplayer)
+[![pub package](https://img.shields.io/pub/v/video_player_avplay.svg)](https://pub.dev/packages/video_player_avplay)
 
 A downloadable plugin which supports MMPlayer and PlusPlayer(PlusPlayer is a new multimedia player object-oriented designed) on Tizen TV devices.
 
@@ -8,28 +8,28 @@ This plugin is only supported on Tizen TV devices. If you are targeting other ty
 
 ## Usage
 
-To use this package, add `video_player_avplayer` as a dependency in your `pubspec.yaml` file.
+To use this package, add `video_player_avplay` as a dependency in your `pubspec.yaml` file.
 
 ```yaml
 dependencies:
-  video_player_avplayer: ^0.1.0
+  video_player_avplay: ^0.1.0
 ```
 
-Then you can import `video_player_avplayer` in your Dart code:
+Then you can import `video_player_avplay` in your Dart code:
 
 ```dart
-import 'package:video_player_avplayer/video_player.dart';
+import 'package:video_player_avplay/video_player.dart';
 ```
 
-Note that `video_player_avplayer` is not compatible with the original `video_player` plugin. If you're writing a cross-platform app for Tizen and other platforms, it is recommended to create two separate source files and import `video_player` and `video_player_avplayer` in the files respectively.
+Note that `video_player_avplay` is not compatible with the original `video_player` plugin. If you're writing a cross-platform app for Tizen and other platforms, it is recommended to create two separate source files and import `video_player` and `video_player_avplay` in the files respectively.
 
-Note that `video_player_avplayer` uses a compiled dynamic library, the api-version in tizen-manifest.xml is your TV version.
+Note that `video_player_avplay` uses a compiled dynamic library, the api-version in tizen-manifest.xml is your TV version.
 
 ### Example
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:video_player_avplayer/video_player.dart';
+import 'package:video_player_avplay/video_player.dart';
 
 class RemoteVideo extends StatefulWidget {
   const RemoteVideo({Key? key}) : super(key: key);
