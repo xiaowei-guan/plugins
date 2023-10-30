@@ -141,7 +141,7 @@ class TrackTypeMessage {
 
   int playerId;
 
-  int trackType;
+  String trackType;
 
   Object encode() {
     return <Object?>[
@@ -154,7 +154,7 @@ class TrackTypeMessage {
     result as List<Object?>;
     return TrackTypeMessage(
       playerId: result[0]! as int,
-      trackType: result[1]! as int,
+      trackType: result[1]! as String,
     );
   }
 }
@@ -170,7 +170,7 @@ class SelectedTracksMessage {
 
   int trackId;
 
-  int trackType;
+  String trackType;
 
   Object encode() {
     return <Object?>[
@@ -185,7 +185,7 @@ class SelectedTracksMessage {
     return SelectedTracksMessage(
       playerId: result[0]! as int,
       trackId: result[1]! as int,
-      trackType: result[2]! as int,
+      trackType: result[2]! as String,
     );
   }
 }

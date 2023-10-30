@@ -160,13 +160,13 @@ class TrackMessage {
 class TrackTypeMessage {
  public:
   // Constructs an object setting all fields.
-  explicit TrackTypeMessage(int64_t player_id, int64_t track_type);
+  explicit TrackTypeMessage(int64_t player_id, const std::string& track_type);
 
   int64_t player_id() const;
   void set_player_id(int64_t value_arg);
 
-  int64_t track_type() const;
-  void set_track_type(int64_t value_arg);
+  const std::string& track_type() const;
+  void set_track_type(std::string_view value_arg);
 
  private:
   static TrackTypeMessage FromEncodableList(const flutter::EncodableList& list);
@@ -174,7 +174,7 @@ class TrackTypeMessage {
   friend class VideoPlayerAvplayApi;
   friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
-  int64_t track_type_;
+  std::string track_type_;
 };
 
 // Generated class from Pigeon that represents data sent in messages.
@@ -182,7 +182,7 @@ class SelectedTracksMessage {
  public:
   // Constructs an object setting all fields.
   explicit SelectedTracksMessage(int64_t player_id, int64_t track_id,
-                                 int64_t track_type);
+                                 const std::string& track_type);
 
   int64_t player_id() const;
   void set_player_id(int64_t value_arg);
@@ -190,8 +190,8 @@ class SelectedTracksMessage {
   int64_t track_id() const;
   void set_track_id(int64_t value_arg);
 
-  int64_t track_type() const;
-  void set_track_type(int64_t value_arg);
+  const std::string& track_type() const;
+  void set_track_type(std::string_view value_arg);
 
  private:
   static SelectedTracksMessage FromEncodableList(
@@ -201,7 +201,7 @@ class SelectedTracksMessage {
   friend class VideoPlayerAvplayApiCodecSerializer;
   int64_t player_id_;
   int64_t track_id_;
-  int64_t track_type_;
+  std::string track_type_;
 };
 
 // Generated class from Pigeon that represents data sent in messages.

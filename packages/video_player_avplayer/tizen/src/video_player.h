@@ -46,8 +46,8 @@ class VideoPlayer {
   virtual int64_t GetPosition() = 0;
   virtual int64_t GetDuration() = 0;
   virtual bool IsReady() = 0;
-  virtual flutter::EncodableList getTrackInfo(int32_t track_type) = 0;
-  virtual bool SetTrackSelection(int32_t track_id, int32_t track_type) = 0;
+  virtual flutter::EncodableList getTrackInfo(std::string track_type) = 0;
+  virtual bool SetTrackSelection(int32_t track_id, std::string track_type) = 0;
   // send port is used for drm
   void RegisterSendPort(Dart_Port send_port) { send_port_ = send_port; }
 

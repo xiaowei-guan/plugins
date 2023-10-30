@@ -22,6 +22,18 @@ static std::string RotationToString(player_display_rotation_e rotation) {
   return std::string();
 }
 
+static player_stream_type_e ConvertTrackType(std::string track_type) {
+  if (track_type == "video") {
+    return PLAYER_STREAM_TYPE_VIDEO;
+  }
+  if (track_type == "audio") {
+    return PLAYER_STREAM_TYPE_AUDIO;
+  }
+  if (track_type == "text") {
+    return PLAYER_STREAM_TYPE_TEXT;
+  }
+}
+
 MediaPlayer::MediaPlayer(flutter::BinaryMessenger *messenger,
                          void *native_window)
     : VideoPlayer(messenger), native_window_(native_window) {
@@ -348,7 +360,7 @@ bool MediaPlayer::SetDisplay() {
   return true;
 }
 
-flutter::EncodableList MediaPlayer::getTrackInfo(int32_t track_type) {
+flutter::EncodableList MediaPlayer::getTrackInfo(std::string track_type) {
   player_state_e state = PLAYER_STATE_NONE;
   int ret = player_get_state(player_, &state);
   if (ret != PLAYER_ERROR_NONE) {
@@ -361,9 +373,10 @@ flutter::EncodableList MediaPlayer::getTrackInfo(int32_t track_type) {
     return {};
   }
 
+  player_stream_type_e type = ConvertTrackType(track_type);
   int track_count = 0;
-  ret = media_player_proxy_->player_get_track_count_v2(
-      player_, (player_stream_type_e)track_type, &track_count);
+  ret = media_player_proxy_->player_get_track_count_v2(player_, type,
+                                                       &track_count);
   if (ret != PLAYER_ERROR_NONE) {
     LOG_ERROR("[MediaPlayer] player_get_track_count_v2 failed: %s",
               get_error_message(ret));
@@ -375,9 +388,9 @@ flutter::EncodableList MediaPlayer::getTrackInfo(int32_t track_type) {
 
   flutter::EncodableList trackSelections = {};
   flutter::EncodableMap trackSelection = {};
-  trackSelection.insert({flutter::EncodableValue("trackType"),
-                         flutter::EncodableValue(track_type)});
-  if (track_type == PLAYER_STREAM_TYPE_VIDEO) {
+  trackSelection.insert(
+      {flutter::EncodableValue("trackType"), flutter::EncodableValue(type)});
+  if (type == PLAYER_STREAM_TYPE_VIDEO) {
     LOG_INFO("[MediaPlayer] video_count: %d", track_count);
 
     for (int video_index = 0; video_index < track_count; video_index++) {
@@ -411,7 +424,7 @@ flutter::EncodableList MediaPlayer::getTrackInfo(int32_t track_type) {
       trackSelections.push_back(flutter::EncodableValue(trackSelection));
     }
 
-  } else if (track_type == PLAYER_STREAM_TYPE_AUDIO) {
+  } else if (type == PLAYER_STREAM_TYPE_AUDIO) {
     LOG_INFO("[MediaPlayer] audio_count: %d", track_count);
 
     for (int audio_index = 0; audio_index < track_count; audio_index++) {
@@ -445,7 +458,7 @@ flutter::EncodableList MediaPlayer::getTrackInfo(int32_t track_type) {
       trackSelections.push_back(flutter::EncodableValue(trackSelection));
     }
 
-  } else if (track_type == PLAYER_STREAM_TYPE_TEXT) {
+  } else if (type == PLAYER_STREAM_TYPE_TEXT) {
     LOG_INFO("[MediaPlayer] subtitle_count: %d", track_count);
 
     for (int sub_index = 0; sub_index < track_count; sub_index++) {
@@ -474,8 +487,9 @@ flutter::EncodableList MediaPlayer::getTrackInfo(int32_t track_type) {
   return trackSelections;
 }
 
-bool MediaPlayer::SetTrackSelection(int32_t track_id, int32_t track_type) {
-  LOG_INFO("[MediaPlayer] track_id: %d,track_type: %d", track_id, track_type);
+bool MediaPlayer::SetTrackSelection(int32_t track_id, std::string track_type) {
+  LOG_INFO("[MediaPlayer] track_id: %d,track_type: %s", track_id,
+           track_type.c_str());
 
   player_state_e state = PLAYER_STATE_NONE;
   int ret = player_get_state(player_, &state);
@@ -489,8 +503,7 @@ bool MediaPlayer::SetTrackSelection(int32_t track_id, int32_t track_type) {
     return false;
   }
 
-  ret =
-      player_select_track(player_, (player_stream_type_e)track_type, track_id);
+  ret = player_select_track(player_, ConvertTrackType(track_type), track_id);
   if (ret != PLAYER_ERROR_NONE) {
     LOG_ERROR("[MediaPlayer] player_select_track failed: %s",
               get_error_message(ret));

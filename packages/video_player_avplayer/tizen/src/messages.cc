@@ -153,7 +153,8 @@ TrackMessage TrackMessage::FromEncodableList(const EncodableList& list) {
 
 // TrackTypeMessage
 
-TrackTypeMessage::TrackTypeMessage(int64_t player_id, int64_t track_type)
+TrackTypeMessage::TrackTypeMessage(int64_t player_id,
+                                   const std::string& track_type)
     : player_id_(player_id), track_type_(track_type) {}
 
 int64_t TrackTypeMessage::player_id() const { return player_id_; }
@@ -162,9 +163,9 @@ void TrackTypeMessage::set_player_id(int64_t value_arg) {
   player_id_ = value_arg;
 }
 
-int64_t TrackTypeMessage::track_type() const { return track_type_; }
+const std::string& TrackTypeMessage::track_type() const { return track_type_; }
 
-void TrackTypeMessage::set_track_type(int64_t value_arg) {
+void TrackTypeMessage::set_track_type(std::string_view value_arg) {
   track_type_ = value_arg;
 }
 
@@ -178,7 +179,7 @@ EncodableList TrackTypeMessage::ToEncodableList() const {
 
 TrackTypeMessage TrackTypeMessage::FromEncodableList(
     const EncodableList& list) {
-  TrackTypeMessage decoded(list[0].LongValue(), list[1].LongValue());
+  TrackTypeMessage decoded(list[0].LongValue(), std::get<std::string>(list[1]));
   return decoded;
 }
 
@@ -186,7 +187,7 @@ TrackTypeMessage TrackTypeMessage::FromEncodableList(
 
 SelectedTracksMessage::SelectedTracksMessage(int64_t player_id,
                                              int64_t track_id,
-                                             int64_t track_type)
+                                             const std::string& track_type)
     : player_id_(player_id), track_id_(track_id), track_type_(track_type) {}
 
 int64_t SelectedTracksMessage::player_id() const { return player_id_; }
@@ -201,9 +202,11 @@ void SelectedTracksMessage::set_track_id(int64_t value_arg) {
   track_id_ = value_arg;
 }
 
-int64_t SelectedTracksMessage::track_type() const { return track_type_; }
+const std::string& SelectedTracksMessage::track_type() const {
+  return track_type_;
+}
 
-void SelectedTracksMessage::set_track_type(int64_t value_arg) {
+void SelectedTracksMessage::set_track_type(std::string_view value_arg) {
   track_type_ = value_arg;
 }
 
@@ -219,7 +222,7 @@ EncodableList SelectedTracksMessage::ToEncodableList() const {
 SelectedTracksMessage SelectedTracksMessage::FromEncodableList(
     const EncodableList& list) {
   SelectedTracksMessage decoded(list[0].LongValue(), list[1].LongValue(),
-                                list[2].LongValue());
+                                std::get<std::string>(list[2]));
   return decoded;
 }
 

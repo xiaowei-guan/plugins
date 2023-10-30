@@ -22,6 +22,18 @@ static std::vector<std::string> split(const std::string &s, char delim) {
   return tokens;
 }
 
+static plusplayer::TrackType ConvertTrackType(std::string track_type) {
+  if (track_type == "video") {
+    return plusplayer::TrackType::kTrackTypeVideo;
+  }
+  if (track_type == "audio") {
+    return plusplayer::TrackType::kTrackTypeAudio;
+  }
+  if (track_type == "text") {
+    return plusplayer::TrackType::kTrackTypeSubtitle;
+  }
+}
+
 PlusPlayer::PlusPlayer(flutter::BinaryMessenger *messenger, void *native_window,
                        std::string &video_format)
     : VideoPlayer(messenger),
@@ -376,7 +388,7 @@ bool PlusPlayer::SetDisplay() {
   return true;
 }
 
-flutter::EncodableList PlusPlayer::getTrackInfo(int32_t track_type) {
+flutter::EncodableList PlusPlayer::getTrackInfo(std::string track_type) {
   if (!player_) {
     LOG_ERROR("[PlusPlayer] Player not created.");
     return {};
@@ -388,21 +400,7 @@ flutter::EncodableList PlusPlayer::getTrackInfo(int32_t track_type) {
     return {};
   }
 
-  plusplayer::TrackType type;
-  switch (track_type) {
-    case 1:
-      type = plusplayer::TrackType::kTrackTypeAudio;
-      break;
-    case 2:
-      type = plusplayer::TrackType::kTrackTypeVideo;
-      break;
-    case 3:
-      type = plusplayer::TrackType::kTrackTypeSubtitle;
-      break;
-    default:
-      LOG_ERROR("[PlusPlayer] Invalid track type: %d", track_type);
-      return {};
-  }
+  plusplayer::TrackType type = ConvertTrackType(track_type);
 
   int track_count = player_->GetTrackCount(type);
   if (track_count <= 0) {
@@ -481,8 +479,9 @@ flutter::EncodableList PlusPlayer::getTrackInfo(int32_t track_type) {
   return trackSelections;
 }
 
-bool PlusPlayer::SetTrackSelection(int32_t track_id, int32_t track_type) {
-  LOG_INFO("[PlusPlayer] track_id: %d,track_type: %d", track_id, track_type);
+bool PlusPlayer::SetTrackSelection(int32_t track_id, std::string track_type) {
+  LOG_INFO("[PlusPlayer] track_id: %d,track_type: %s", track_id,
+           track_type.c_str());
 
   if (!player_) {
     LOG_ERROR("[PlusPlayer] Player not created.");
@@ -495,22 +494,7 @@ bool PlusPlayer::SetTrackSelection(int32_t track_id, int32_t track_type) {
     return false;
   }
 
-  plusplayer::TrackType type;
-  switch (track_type) {
-    case 1:
-      type = plusplayer::TrackType::kTrackTypeAudio;
-      break;
-    case 2:
-      type = plusplayer::TrackType::kTrackTypeVideo;
-      break;
-    case 3:
-      type = plusplayer::TrackType::kTrackTypeSubtitle;
-      break;
-    default:
-      LOG_ERROR("[PlusPlayer] Invalid track type: %d", track_type);
-      return {};
-  }
-  if (!player_->SelectTrack(type, track_id)) {
+  if (!player_->SelectTrack(ConvertTrackType(track_type), track_id)) {
     LOG_ERROR("[PlusPlayer] Player select track failed.");
     return false;
   }

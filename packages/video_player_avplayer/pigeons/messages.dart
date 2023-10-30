@@ -41,14 +41,14 @@ class TrackMessage {
 class TrackTypeMessage {
   TrackTypeMessage(this.playerId, this.trackType);
   int playerId;
-  int trackType;
+  String trackType;
 }
 
 class SelectedTracksMessage {
   SelectedTracksMessage(this.playerId, this.trackId, this.trackType);
   int playerId;
   int trackId;
-  int trackType;
+  String trackType;
 }
 
 class PositionMessage {

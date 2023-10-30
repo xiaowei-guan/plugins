@@ -104,9 +104,7 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
   Future<List<VideoTrack>> getVideoTracks(int playerId) async {
     final TrackMessage response = await _api.track(TrackTypeMessage(
       playerId: playerId,
-      trackType: _intTrackTypeMap.keys.firstWhere(
-          (int key) => _intTrackTypeMap[key] == TrackType.video,
-          orElse: () => -1),
+      trackType: TrackType.video.name,
     ));
 
     final List<VideoTrack> videoTracks = <VideoTrack>[];
@@ -131,9 +129,7 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
   Future<List<AudioTrack>> getAudioTracks(int playerId) async {
     final TrackMessage response = await _api.track(TrackTypeMessage(
       playerId: playerId,
-      trackType: _intTrackTypeMap.keys.firstWhere(
-          (int key) => _intTrackTypeMap[key] == TrackType.audio,
-          orElse: () => -1),
+      trackType: TrackType.audio.name,
     ));
 
     final List<AudioTrack> audioTracks = <AudioTrack>[];
@@ -159,9 +155,7 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
   Future<List<TextTrack>> getTextTracks(int playerId) async {
     final TrackMessage response = await _api.track(TrackTypeMessage(
       playerId: playerId,
-      trackType: _intTrackTypeMap.keys.firstWhere(
-          (int key) => _intTrackTypeMap[key] == TrackType.text,
-          orElse: () => -1),
+      trackType: TrackType.text.name,
     ));
 
     final List<TextTrack> textTracks = <TextTrack>[];
@@ -183,9 +177,7 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
     return _api.setTrackSelection(SelectedTracksMessage(
       playerId: playerId,
       trackId: track.trackId,
-      trackType: _intTrackTypeMap.keys.firstWhere(
-          (int key) => _intTrackTypeMap[key] == track.trackType,
-          orElse: () => -1),
+      trackType: track.trackType.name,
     ));
   }
 
@@ -274,12 +266,6 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
     VideoFormat.hls: 'hls',
     VideoFormat.dash: 'dash',
     VideoFormat.other: 'other',
-  };
-
-  static const Map<int, TrackType> _intTrackTypeMap = <int, TrackType>{
-    1: TrackType.audio,
-    2: TrackType.video,
-    3: TrackType.text,
   };
 
   static const Map<int, AudioTrackChannelType> _intChannelTypeMap =
