@@ -52,14 +52,14 @@ int MediaPlayerProxy::player_set_ecore_wl_display(player_h player,
                                                   int height) {
   if (!media_player_handle_) {
     LOG_ERROR("media_player_handle_ not valid");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   FuncPlayerSetEcoreWlDisplay player_set_ecore_wl_display =
       reinterpret_cast<FuncPlayerSetEcoreWlDisplay>(
           dlsym(media_player_handle_, "player_set_ecore_wl_display"));
   if (!player_set_ecore_wl_display) {
     LOG_ERROR("Fail to find player_set_ecore_wl_display.");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   return player_set_ecore_wl_display(player, type, ecore_wl_window, x, y, width,
                                      height);
@@ -70,14 +70,14 @@ int MediaPlayerProxy::player_set_drm_handle(player_h player,
                                             int drm_handle) {
   if (!media_player_handle_) {
     LOG_ERROR("media_player_handle_ not valid");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   FuncPlayerSetDrmHandle player_set_drm_handle =
       reinterpret_cast<FuncPlayerSetDrmHandle>(
           dlsym(media_player_handle_, "player_set_drm_handle"));
   if (!player_set_drm_handle) {
     LOG_ERROR("Fail to find player_set_ecore_wl_display.");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   return player_set_drm_handle(player, drm_type, drm_handle);
 }
@@ -86,14 +86,14 @@ int MediaPlayerProxy::player_set_drm_init_complete_cb(
     player_h player, security_init_complete_cb callback, void* user_data) {
   if (!media_player_handle_) {
     LOG_ERROR("media_player_handle_ not valid");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   FuncPlayerSetDrmInitCompleteCB player_set_drm_init_complete_cb =
       reinterpret_cast<FuncPlayerSetDrmInitCompleteCB>(
           dlsym(media_player_handle_, "player_set_drm_init_complete_cb"));
   if (!player_set_drm_init_complete_cb) {
     LOG_ERROR("Fail to find player_set_drm_init_complete_cb.");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   return player_set_drm_init_complete_cb(player, callback, user_data);
 }
@@ -103,14 +103,14 @@ int MediaPlayerProxy::player_set_drm_init_data_cb(player_h player,
                                                   void* user_data) {
   if (!media_player_handle_) {
     LOG_ERROR("media_player_handle_ not valid");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   FuncPlayerSetDrmInitDataCB player_set_drm_init_data_cb =
       reinterpret_cast<FuncPlayerSetDrmInitDataCB>(
           dlsym(media_player_handle_, "player_set_drm_init_data_cb"));
   if (!player_set_drm_init_data_cb) {
     LOG_ERROR("Fail to find player_set_drm_init_data_cb.");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   return player_set_drm_init_data_cb(player, callback, user_data);
 }
@@ -120,14 +120,14 @@ int MediaPlayerProxy::player_get_track_count_v2(player_h player,
                                                 int* pcount) {
   if (!media_player_handle_) {
     LOG_ERROR("media_player_handle_ not valid");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   FuncPlayerGetTrackCountV2 player_get_track_count_v2 =
       reinterpret_cast<FuncPlayerGetTrackCountV2>(
           dlsym(media_player_handle_, "player_get_track_count_v2"));
   if (!player_get_track_count_v2) {
     LOG_ERROR("Fail to find player_get_track_count_v2.");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   return player_get_track_count_v2(player, type, pcount);
 }
@@ -136,14 +136,14 @@ int MediaPlayerProxy::player_get_video_track_info_v2(
     player_h player, int index, player_video_track_info_v2** track_info) {
   if (!media_player_handle_) {
     LOG_ERROR("media_player_handle_ not valid");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   FuncPlayerGetVideoTrackInfoV2 player_get_video_track_info_v2 =
       reinterpret_cast<FuncPlayerGetVideoTrackInfoV2>(
           dlsym(media_player_handle_, "player_get_video_track_info_v2"));
   if (!player_get_video_track_info_v2) {
     LOG_ERROR("Fail to find player_get_video_track_info_v2.");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   return player_get_video_track_info_v2(player, index, track_info);
 }
@@ -152,14 +152,14 @@ int MediaPlayerProxy::player_get_audio_track_info_v2(
     player_h player, int index, player_audio_track_info_v2** track_info) {
   if (!media_player_handle_) {
     LOG_ERROR("media_player_handle_ not valid");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   FuncPlayerGetAudioTrackInfoV2 player_get_audio_track_info_v2 =
       reinterpret_cast<FuncPlayerGetAudioTrackInfoV2>(
           dlsym(media_player_handle_, "player_get_audio_track_info_v2"));
   if (!player_get_audio_track_info_v2) {
     LOG_ERROR("Fail to find player_get_audio_track_info_v2.");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   return player_get_audio_track_info_v2(player, index, track_info);
 }
@@ -168,14 +168,14 @@ int MediaPlayerProxy::player_get_subtitle_track_info_v2(
     player_h player, int index, player_subtitle_track_info_v2** track_info) {
   if (!media_player_handle_) {
     LOG_ERROR("media_player_handle_ not valid");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   FuncPlayerGetSubtitleTrackInfoV2 player_get_subtitle_track_info_v2 =
       reinterpret_cast<FuncPlayerGetSubtitleTrackInfoV2>(
           dlsym(media_player_handle_, "player_get_subtitle_track_info_v2"));
   if (!player_get_subtitle_track_info_v2) {
     LOG_ERROR("Fail to find player_get_subtitle_track_info_v2.");
-    return -1;
+    return PLAYER_ERROR_NOT_AVAILABLE;
   }
   return player_get_subtitle_track_info_v2(player, index, track_info);
 }
