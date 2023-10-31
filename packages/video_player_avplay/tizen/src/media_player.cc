@@ -188,83 +188,91 @@ void MediaPlayer::SetDisplayRoi(int32_t x, int32_t y, int32_t width,
   }
 }
 
-void MediaPlayer::Play() {
+bool MediaPlayer::Play() {
   LOG_INFO("[MediaPlayer] Player starting.");
 
   player_state_e state = PLAYER_STATE_NONE;
   int ret = player_get_state(player_, &state);
   if (ret != PLAYER_ERROR_NONE) {
     LOG_ERROR("[MediaPlayer] Unable to get player state.");
-    return;
   }
   if (state == PLAYER_STATE_NONE || state == PLAYER_STATE_IDLE) {
     LOG_ERROR("[MediaPlayer] Player not ready.");
-    return;
+    return false;
   }
   if (state == PLAYER_STATE_PLAYING) {
     LOG_INFO("[MediaPlayer] Player already playing.");
-    return;
+    return false;
   }
   ret = player_start(player_);
   if (ret != PLAYER_ERROR_NONE) {
     LOG_ERROR("[MediaPlayer] player_start failed: %s.", get_error_message(ret));
+    return false;
   }
+  return true;
 }
 
-void MediaPlayer::Pause() {
+bool MediaPlayer::Pause() {
   LOG_INFO("[MediaPlayer] Player pausing.");
 
   player_state_e state = PLAYER_STATE_NONE;
   int ret = player_get_state(player_, &state);
   if (ret != PLAYER_ERROR_NONE) {
     LOG_ERROR("[MediaPlayer] Unable to get player state.");
-    return;
   }
   if (state == PLAYER_STATE_NONE || state == PLAYER_STATE_IDLE) {
     LOG_ERROR("[MediaPlayer] Player not ready.");
-    return;
+    return false;
   }
   if (state != PLAYER_STATE_PLAYING) {
     LOG_INFO("[MediaPlayer] Player not playing.");
-    return;
+    return false;
   }
   ret = player_pause(player_);
   if (ret != PLAYER_ERROR_NONE) {
     LOG_ERROR("[MediaPlayer] player_pause failed: %s.", get_error_message(ret));
+    return false;
   }
+  return true;
 }
 
-void MediaPlayer::SetLooping(bool is_looping) {
+bool MediaPlayer::SetLooping(bool is_looping) {
   LOG_INFO("[MediaPlayer] is_looping: %d.", is_looping);
 
   int ret = player_set_looping(player_, is_looping);
   if (ret != PLAYER_ERROR_NONE) {
     LOG_ERROR("[MediaPlayer] player_set_looping failed: %s.",
               get_error_message(ret));
+    return false;
   }
+  return true;
 }
 
-void MediaPlayer::SetVolume(double volume) {
+bool MediaPlayer::SetVolume(double volume) {
   LOG_INFO("[MediaPlayer] volume: %f.", volume);
 
   int ret = player_set_volume(player_, volume, volume);
   if (ret != PLAYER_ERROR_NONE) {
     LOG_ERROR("[MediaPlayer] player_set_volume failed: %s.",
               get_error_message(ret));
+    return false;
   }
+  return true;
 }
 
-void MediaPlayer::SetPlaybackSpeed(double speed) {
+bool MediaPlayer::SetPlaybackSpeed(double speed) {
   LOG_INFO("[MediaPlayer] speed: %f.", speed);
 
   int ret = player_set_playback_rate(player_, speed);
   if (ret != PLAYER_ERROR_NONE) {
     LOG_ERROR("[MediaPlayer] player_set_playback_rate failed: %s.",
               get_error_message(ret));
+    return false;
   }
+  return true;
 }
 
-void MediaPlayer::SeekTo(int64_t position, SeekCompletedCallback callback) {
+bool MediaPlayer::SeekTo(int64_t position, SeekCompletedCallback callback) {
   LOG_INFO("[MediaPlayer] position: %d.", position);
 
   on_seek_completed_ = std::move(callback);
@@ -274,7 +282,9 @@ void MediaPlayer::SeekTo(int64_t position, SeekCompletedCallback callback) {
     on_seek_completed_ = nullptr;
     LOG_ERROR("[MediaPlayer] player_set_play_position failed: %s.",
               get_error_message(ret));
+    return false;
   }
+  return true;
 }
 
 int64_t MediaPlayer::GetPosition() {

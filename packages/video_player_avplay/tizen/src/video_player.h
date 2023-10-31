@@ -35,14 +35,14 @@ class VideoPlayer {
 
   virtual void SetDisplayRoi(int32_t x, int32_t y, int32_t width,
                              int32_t height) = 0;
-  virtual void Play() = 0;
+  virtual bool Play() = 0;
   virtual bool Deactivate() { return false; };
   virtual bool Activate() { return false; };
-  virtual void Pause() = 0;
-  virtual void SetLooping(bool is_looping) = 0;
-  virtual void SetVolume(double volume) = 0;
-  virtual void SetPlaybackSpeed(double speed) = 0;
-  virtual void SeekTo(int64_t position, SeekCompletedCallback callback) = 0;
+  virtual bool Pause() = 0;
+  virtual bool SetLooping(bool is_looping) = 0;
+  virtual bool SetVolume(double volume) = 0;
+  virtual bool SetPlaybackSpeed(double speed) = 0;
+  virtual bool SeekTo(int64_t position, SeekCompletedCallback callback) = 0;
   virtual int64_t GetPosition() = 0;
   virtual int64_t GetDuration() = 0;
   virtual bool IsReady() = 0;

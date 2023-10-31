@@ -157,23 +157,28 @@ void PlusPlayer::SetDisplayRoi(int32_t x, int32_t y, int32_t width,
   }
 }
 
-void PlusPlayer::Play() {
+bool PlusPlayer::Play() {
   LOG_INFO("[PlusPlayer] Play video.");
   plusplayer::State state = player_->GetState();
   if (state < plusplayer::State::kTrackSourceReady) {
     LOG_ERROR("[PlusPlayer] Player is not ready.");
-    return;
+    return false;
   }
 
   if (state <= plusplayer::State::kReady) {
     if (!player_->Start()) {
       LOG_ERROR("[PlusPlayer] Fail to start.");
+      return false;
     }
+    return true;
   } else if (state == plusplayer::State::kPaused) {
     if (!player_->Resume()) {
       LOG_ERROR("[PlusPlayer] Fail to resume playing.");
+      return false;
     }
+    return true;
   }
+  return false;
 }
 
 bool PlusPlayer::Activate() {
@@ -213,53 +218,64 @@ bool PlusPlayer::Deactivate() {
   return true;
 }
 
-void PlusPlayer::Pause() {
+bool PlusPlayer::Pause() {
   LOG_INFO("[PlusPlayer] Pause video.");
   plusplayer::State state = player_->GetState();
   if (state < plusplayer::State::kReady) {
     LOG_ERROR("[PlusPlayer] Player is not ready.");
-    return;
+    return false;
   }
 
   if (state == plusplayer::State::kPlaying) {
     if (!player_->Pause()) {
       LOG_ERROR("[PlusPlayer] Fail to pause video.");
+      return false;
     }
+    return true;
   }
+  return false;
 }
 
-void PlusPlayer::SetLooping(bool is_looping) {
+bool PlusPlayer::SetLooping(bool is_looping) {
   LOG_ERROR("[PlusPlayer] Not support to set looping.");
+  return false;
 }
 
-void PlusPlayer::SetVolume(double volume) {
+bool PlusPlayer::SetVolume(double volume) {
   if (player_->GetState() == plusplayer::State::kPlaying ||
       player_->GetState() == plusplayer::State::kPaused) {
-    player_->SetVolume(volume);
+    if (!player_->SetVolume(volume)) {
+      LOG_ERROR("[PlusPlayer] Fail to set volume.");
+      return false;
+    }
+    return true;
   }
+  return false;
 }
 
-void PlusPlayer::SetPlaybackSpeed(double speed) {
+bool PlusPlayer::SetPlaybackSpeed(double speed) {
   LOG_INFO("[PlusPlayer] Sets playback speed(%f).", speed);
   if (player_->GetState() <= plusplayer::State::kIdle) {
     LOG_ERROR("[PlusPlayer] Player is not prepared.");
-    return;
+    return false;
   }
   if (!player_->SetPlaybackRate(speed)) {
     LOG_ERROR("[PlusPlayer] Fail to set playback rate.");
+    return false;
   }
+  return true;
 }
 
-void PlusPlayer::SeekTo(int64_t position, SeekCompletedCallback callback) {
+bool PlusPlayer::SeekTo(int64_t position, SeekCompletedCallback callback) {
   LOG_INFO("PlusPlayer seeks to position(%lld)", position);
   if (player_->GetState() < plusplayer::State::kReady) {
     LOG_ERROR("[PlusPlayer] Player is not ready.");
-    return;
+    return false;
   }
 
   if (on_seek_completed_) {
     LOG_ERROR("[PlusPlayer] Player is already seeking.");
-    return;
+    return false;
   }
 
   on_seek_completed_ = std::move(callback);
@@ -272,7 +288,7 @@ void PlusPlayer::SeekTo(int64_t position, SeekCompletedCallback callback) {
     std::string str = player_->GetStreamingProperty("GET_LIVE_DURATION");
     if (str.empty()) {
       LOG_ERROR("[PlusPlayer] Fail to get live duration.");
-      return;
+      return false;
     }
     std::vector<std::string> time_str = split(str, '|');
     int64_t start_time = std::stoll(time_str[0].c_str());
@@ -281,19 +297,22 @@ void PlusPlayer::SeekTo(int64_t position, SeekCompletedCallback callback) {
     if (position < start_time || position > end_time) {
       on_seek_completed_ = nullptr;
       LOG_ERROR("[PlusPlayer] position out of range.");
-      return;
+      return false;
     }
 
     if (!player_->Seek(position)) {
       on_seek_completed_ = nullptr;
       LOG_ERROR("[PlusPlayer] Fail to seek.");
+      return false;
     }
   } else {
     if (!player_->Seek(position)) {
       on_seek_completed_ = nullptr;
       LOG_ERROR("[PlusPlayer] Fail to seek.");
+      return false;
     }
   }
+  return true;
 }
 
 int64_t PlusPlayer::GetPosition() {

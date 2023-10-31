@@ -28,14 +28,14 @@ class PlusPlayer : public VideoPlayer, public plusplayer::EventListener {
 
   void SetDisplayRoi(int32_t x, int32_t y, int32_t width,
                      int32_t height) override;
-  void Play() override;
+  bool Play() override;
   bool Deactivate() override;
   bool Activate() override;
-  void Pause() override;
-  void SetLooping(bool is_looping) override;
-  void SetVolume(double volume) override;
-  void SetPlaybackSpeed(double speed) override;
-  void SeekTo(int64_t position, SeekCompletedCallback callback) override;
+  bool Pause() override;
+  bool SetLooping(bool is_looping) override;
+  bool SetVolume(double volume) override;
+  bool SetPlaybackSpeed(double speed) override;
+  bool SeekTo(int64_t position, SeekCompletedCallback callback) override;
   int64_t GetPosition() override;
   int64_t GetDuration() override;
   void GetVideoSize(int32_t *width, int32_t *height) override;
