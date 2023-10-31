@@ -5,9 +5,11 @@
 #ifndef FLUTTER_PLUGIN_DRM_MANAGER_H_
 #define FLUTTER_PLUGIN_DRM_MANAGER_H_
 
+#include <flutter/method_channel.h>
 #include <glib.h>
 
 #include <functional>
+#include <memory>
 
 #include "drm_manager_proxy.h"
 
@@ -19,17 +21,14 @@ class DrmManager {
     DRM_TYPE_WIDEVINECDM,
   } DrmType;
 
-  using ChallengeCallback =
-      std::function<void(const void *challenge, unsigned long challenge_len,
-                         void **response, unsigned long *response_len)>;
-
   explicit DrmManager();
   ~DrmManager();
 
   bool CreateDrmSession(int drm_type, bool local_mode);
   bool SetChallenge(const std::string &media_url,
                     const std::string &license_server_url);
-  bool SetChallenge(const std::string &media_url, ChallengeCallback callback);
+  bool SetChallenge(const std::string &media_url,
+                    flutter::BinaryMessenger *binary_messenger);
   void ReleaseDrmSession();
 
   bool GetDrmHandle(int *handle);
@@ -46,7 +45,7 @@ class DrmManager {
     std::string message;
     void *user_data;
   };
-
+  void RequestLicense(std::string &session_id, std::string &message);
   int SetChallenge(const std::string &media_url);
   static int OnChallengeData(void *session_id, int message_type, void *message,
                              int message_length, void *user_data);
@@ -57,9 +56,10 @@ class DrmManager {
   void *drm_manager_proxy_ = nullptr;
   int drm_type_;
   std::string license_server_url_;
-  ChallengeCallback challenge_callback_;
   unsigned int source_id_ = 0;
   bool initialized_ = false;
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
+      request_license_channel_;
 };
 
 #endif  // FLUTTER_PLUGIN_DRM_MANAGER_H_

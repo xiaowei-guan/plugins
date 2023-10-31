@@ -4,6 +4,9 @@
 
 #include "drm_manager.h"
 
+#include <flutter/method_result_functions.h>
+#include <flutter/standard_method_codec.h>
+
 #include "drm_license_helper.h"
 #include "drm_manager_proxy.h"
 #include "log.h"
@@ -78,14 +81,17 @@ bool DrmManager::CreateDrmSession(int drm_type, bool local_mode) {
 }
 
 bool DrmManager::SetChallenge(const std::string &media_url,
-                              const std::string &license_server_url) {
-  license_server_url_ = license_server_url;
+                              flutter::BinaryMessenger *binary_messenger) {
+  request_license_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          binary_messenger, "dev.flutter.videoplayer.drm",
+          &flutter::StandardMethodCodec::GetInstance());
   return DM_ERROR_NONE == SetChallenge(media_url);
 }
 
 bool DrmManager::SetChallenge(const std::string &media_url,
-                              ChallengeCallback callback) {
-  challenge_callback_ = callback;
+                              const std::string &license_server_url) {
+  license_server_url_ = license_server_url;
   return DM_ERROR_NONE == SetChallenge(media_url);
 }
 
@@ -245,15 +251,10 @@ gboolean DrmManager::ProcessLicense(void *user_data) {
       return false;
     }
     response = static_cast<void *>(response_data);
-  } else if (self->challenge_callback_) {
-    // Get license via the Dart callback.
-    self->challenge_callback_(data->message.c_str(), data->message.size(),
-                              &response, &response_len);
-    if (nullptr == response || 0 == response_len) {
-      LOG_ERROR("Failed to get respone by callback");
-      delete data;
-      return false;
-    }
+  } else if (self->request_license_channel_) {
+    self->RequestLicense(data->session_id, data->message);
+    delete data;
+    return false;
   } else {
     LOG_ERROR("No way to request license");
     delete data;
@@ -273,4 +274,46 @@ gboolean DrmManager::ProcessLicense(void *user_data) {
   }
   delete data;
   return false;
+}
+
+void DrmManager::RequestLicense(std::string &session_id, std::string &message) {
+  if (request_license_channel_ == nullptr) {
+    LOG_ERROR("request license channel is null");
+    return;
+  }
+  std::vector<uint8_t> message_vec(message.begin(), message.end());
+  flutter::EncodableMap args_map = {
+      {flutter::EncodableValue("message"),
+       flutter::EncodableValue(message_vec)},
+  };
+  auto result_handler =
+      std::make_unique<flutter::MethodResultFunctions<flutter::EncodableValue>>(
+
+          [session_id, this](const flutter::EncodableValue *success_value) {
+            std::vector<uint8_t> response;
+            if (std::holds_alternative<std::vector<uint8_t>>(*success_value)) {
+              response = std::get<std::vector<uint8_t>>(*success_value);
+            } else {
+              LOG_ERROR("Fail to get response");
+              return;
+            }
+            LOG_INFO("Response length : %d", response.size());
+            SetDataParam_t license_param = {};
+            license_param.param1 = const_cast<void *>(
+                reinterpret_cast<const void *>(session_id.c_str()));
+            license_param.param2 = response.data();
+            license_param.param3 = reinterpret_cast<void *>(response.size());
+            int ret =
+                DMGRSetData(drm_session_, "install_eme_key", &license_param);
+            if (ret != DM_ERROR_NONE) {
+              LOG_ERROR("[DrmManager] Setting install_eme_key failed: %s",
+                        get_error_message(ret));
+            }
+          },
+          nullptr, nullptr);
+  request_license_channel_->InvokeMethod(
+      "requestLicense",
+      std::make_unique<flutter::EncodableValue>(
+          flutter::EncodableValue(args_map)),
+      std::move(result_handler));
 }

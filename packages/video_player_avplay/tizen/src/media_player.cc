@@ -562,11 +562,7 @@ bool MediaPlayer::SetDrm(const std::string &uri, int drm_type,
   }
 
   if (license_server_url.empty()) {
-    bool success = drm_manager_->SetChallenge(
-        uri, [this](const void *challenge, unsigned long challenge_len,
-                    void **response, unsigned long *response_len) {
-          OnLicenseChallenge(challenge, challenge_len, response, response_len);
-        });
+    bool success = drm_manager_->SetChallenge(uri, binary_messenger_);
     if (!success) {
       LOG_ERROR("[MediaPlayer] Failed to set challenge.");
       return false;

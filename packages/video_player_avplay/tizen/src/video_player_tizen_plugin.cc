@@ -352,15 +352,3 @@ void VideoPlayerTizenPluginRegisterWithRegistrar(
       registrar, flutter::PluginRegistrarManager::GetInstance()
                      ->GetRegistrar<flutter::PluginRegistrar>(registrar));
 }
-
-intptr_t VideoPlayerTizenPluginInitDartApi(void *data) {
-  return Dart_InitializeApiDL(data);
-}
-
-void VideoPlayerTizenPluginRegisterSendPort(int64_t player_id,
-                                            Dart_Port send_port) {
-  VideoPlayer *player = VideoPlayerTizenPlugin::FindPlayerById(player_id);
-  if (player) {
-    player->RegisterSendPort(send_port);
-  }
-}
