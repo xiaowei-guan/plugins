@@ -49,7 +49,7 @@ int64_t VideoPlayer::SetUpEventChannel() {
         if (IsReady()) {
           SendInitialized();
         } else {
-          LOG_INFO("Video Player is not ready.");
+          LOG_INFO("[VideoPlayer] Player is not ready.");
         }
         return nullptr;
       },
@@ -84,7 +84,7 @@ void VideoPlayer::ExecuteSinkEvents() {
 void VideoPlayer::PushEvent(flutter::EncodableValue encodable_value) {
   std::lock_guard<std::mutex> lock(queue_mutex_);
   if (event_sink_ == nullptr) {
-    LOG_ERROR("event sink is nullptr");
+    LOG_ERROR("[VideoPlayer] event sink is nullptr.");
     return;
   }
   encodable_event_queue_.push(encodable_value);

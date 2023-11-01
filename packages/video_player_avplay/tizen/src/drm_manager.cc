@@ -26,13 +26,13 @@ DrmManager::DrmManager() : drm_type_(DM_TYPE_NONE) {
   if (drm_manager_proxy_) {
     int ret = InitDrmManagerProxy(drm_manager_proxy_);
     if (ret != DM_ERROR_NONE) {
-      LOG_ERROR("[DrmManager] Failed to initialize DRM manager: %s",
+      LOG_ERROR("[DrmManager] Fail to initialize DRM manager: %s",
                 get_error_message(ret));
       CloseDrmManagerProxy(drm_manager_proxy_);
       drm_manager_proxy_ = nullptr;
     }
   } else {
-    LOG_ERROR("[DrmManager] Failed to dlopen libdrmmanager.");
+    LOG_ERROR("[DrmManager] Fail to dlopen libdrmmanager.");
   }
 }
 
@@ -60,7 +60,7 @@ bool DrmManager::CreateDrmSession(int drm_type, bool local_mode) {
   LOG_INFO("[DrmManager] drm type is %s", sub_type.c_str());
   drm_session_ = DMGRCreateDRMSession(DM_TYPE_EME, sub_type.c_str());
   if (!drm_session_) {
-    LOG_ERROR("[DrmManager] Failed to create drm session.");
+    LOG_ERROR("[DrmManager] Fail to create drm session.");
     return false;
   }
   LOG_INFO("[DrmManager] Drm session is created, drm_session: %p",
@@ -72,7 +72,7 @@ bool DrmManager::CreateDrmSession(int drm_type, bool local_mode) {
   int ret = DMGRSetData(drm_session_, "error_event_callback", &configure_param);
   if (ret != DM_ERROR_NONE) {
     LOG_ERROR(
-        "[DrmManager] Failed to set error_event_callback to drm session: %s",
+        "[DrmManager] Fail to set error_event_callback to drm session: %s",
         get_error_message(ret));
     ReleaseDrmSession();
     return false;
@@ -109,7 +109,7 @@ void DrmManager::ReleaseDrmSession() {
       if (ret == DM_ERROR_NONE) {
         initialized_ = false;
       } else {
-        LOG_ERROR("[DrmManager] Failed to set finalize to drm session: %s",
+        LOG_ERROR("[DrmManager] Fail to set finalize to drm session: %s",
                   get_error_message(ret));
       }
     }
@@ -117,7 +117,7 @@ void DrmManager::ReleaseDrmSession() {
     if (ret == DM_ERROR_NONE) {
       drm_session_ = nullptr;
     } else {
-      LOG_ERROR("[DrmManager] Failed to release drm session: %s",
+      LOG_ERROR("[DrmManager] Fail to release drm session: %s",
                 get_error_message(ret));
     }
   }
@@ -128,7 +128,7 @@ bool DrmManager::GetDrmHandle(int *handle) {
     *handle = 0;
     int ret = DMGRGetData(drm_session_, "drm_handle", handle);
     if (ret != DM_ERROR_NONE) {
-      LOG_ERROR("[DrmManager] Failed to get drm_handle from drm session: %s",
+      LOG_ERROR("[DrmManager] Fail to get drm_handle from drm session: %s",
                 get_error_message(ret));
       return false;
     }
@@ -151,7 +151,7 @@ int DrmManager::UpdatePsshData(const void *data, int length) {
   pssh_data_param.param2 = reinterpret_cast<void *>(length);
   int ret = DMGRSetData(drm_session_, "update_pssh_data", &pssh_data_param);
   if (DM_ERROR_NONE != ret) {
-    LOG_ERROR("[DrmManager] Failed to set update_pssh_data to drm session: %s",
+    LOG_ERROR("[DrmManager] Fail to set update_pssh_data to drm session: %s",
               get_error_message(ret));
   }
   return ret;
@@ -186,7 +186,7 @@ int DrmManager::SetChallenge(const std::string &media_url) {
                         &challenge_data_param);
   if (ret != DM_ERROR_NONE) {
     LOG_ERROR(
-        "[DrmManager] Failed to set eme_request_key_callback to drm session: "
+        "[DrmManager] Fail to set eme_request_key_callback to drm session: "
         "%s",
         get_error_message(ret));
     return ret;
@@ -196,14 +196,14 @@ int DrmManager::SetChallenge(const std::string &media_url) {
                     static_cast<void *>(const_cast<char *>(media_url.c_str())));
   if (ret != DM_ERROR_NONE) {
     LOG_ERROR(
-        "[DrmManager] Failed to set set_playready_manifest to drm session: %s",
+        "[DrmManager] Fail to set set_playready_manifest to drm session: %s",
         get_error_message(ret));
     return ret;
   }
 
   ret = DMGRSetData(drm_session_, "Initialize", nullptr);
   if (ret != DM_ERROR_NONE) {
-    LOG_ERROR("[DrmManager] Failed to set initialize to drm session: %s",
+    LOG_ERROR("[DrmManager] Fail to set initialize to drm session: %s",
               get_error_message(ret));
     return ret;
   }
@@ -225,7 +225,7 @@ int DrmManager::OnChallengeData(void *session_id, int message_type,
   data->user_data = self;
   self->source_id_ = g_idle_add(ProcessLicense, data);
   if (self->source_id_ <= 0) {
-    LOG_ERROR("[DrmManager] g_idle_add failed.");
+    LOG_ERROR("[DrmManager] Fail to add g_idle.");
     delete data;
     return DM_ERROR_INTERNAL_ERROR;
   }
@@ -254,7 +254,7 @@ gboolean DrmManager::ProcessLicense(void *user_data) {
         static_cast<DrmLicenseHelper::DrmType>(self->drm_type_), nullptr,
         nullptr);
     if (DRM_SUCCESS != ret || nullptr == response_data || 0 == response_len) {
-      LOG_ERROR("[DrmManager] Failed to get respone by license server url.");
+      LOG_ERROR("[DrmManager] Fail to get respone by license server url.");
       delete data;
       return false;
     }
@@ -284,7 +284,7 @@ void DrmManager::InstallKey(void *session_id, void *response_data,
   license_param.param3 = response_len;
   int ret = DMGRSetData(drm_session_, "install_eme_key", &license_param);
   if (ret != DM_ERROR_NONE) {
-    LOG_ERROR("[DrmManager] Setting install_eme_key failed: %s",
+    LOG_ERROR("[DrmManager] Fail to install eme key: %s",
               get_error_message(ret));
   }
 }

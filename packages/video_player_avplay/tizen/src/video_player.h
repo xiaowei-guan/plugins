@@ -46,7 +46,7 @@ class VideoPlayer {
   virtual int64_t GetPosition() = 0;
   virtual int64_t GetDuration() = 0;
   virtual bool IsReady() = 0;
-  virtual flutter::EncodableList getTrackInfo(std::string track_type) = 0;
+  virtual flutter::EncodableList GetTrackInfo(std::string track_type) = 0;
   virtual bool SetTrackSelection(int32_t track_id, std::string track_type) = 0;
 
  protected:
@@ -61,14 +61,16 @@ class VideoPlayer {
   void SendError(const std::string &error_code,
                  const std::string &error_message);
 
-  bool is_initialized_ = false;
   std::mutex queue_mutex_;
   std::unique_ptr<EcoreWl2WindowProxy> ecore_wl2_window_proxy_ = nullptr;
   flutter::BinaryMessenger *binary_messenger_;
 
+  bool is_initialized_ = false;
+
  private:
   void ExecuteSinkEvents();
   void PushEvent(flutter::EncodableValue encodable_value);
+
   std::queue<flutter::EncodableValue> encodable_event_queue_;
   std::queue<std::pair<std::string, std::string>> error_event_queue_;
   std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>

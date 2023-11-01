@@ -251,7 +251,7 @@ ErrorOr<TrackMessage> VideoPlayerTizenPlugin::Track(
     return FlutterError("Invalid argument", "Player not found");
   }
 
-  TrackMessage result(msg.player_id(), player->getTrackInfo(msg.track_type()));
+  TrackMessage result(msg.player_id(), player->GetTrackInfo(msg.track_type()));
   return result;
 }
 

@@ -370,7 +370,7 @@ bool MediaPlayer::SetDisplay() {
   return true;
 }
 
-flutter::EncodableList MediaPlayer::getTrackInfo(std::string track_type) {
+flutter::EncodableList MediaPlayer::GetTrackInfo(std::string track_type) {
   player_state_e state = PLAYER_STATE_NONE;
   int ret = player_get_state(player_, &state);
   if (ret != PLAYER_ERROR_NONE) {
