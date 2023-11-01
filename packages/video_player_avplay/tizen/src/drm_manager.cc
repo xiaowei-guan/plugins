@@ -235,7 +235,7 @@ gboolean DrmManager::ProcessLicense(void *user_data) {
   DataForLicenseProcess *data = static_cast<DataForLicenseProcess *>(user_data);
   DrmManager *self = static_cast<DrmManager *>(data->user_data);
 
-  void *response = nullptr;
+  unsigned char *response_data = nullptr;
   unsigned long response_len = 0;
   if (!self->license_server_url_.empty()) {
     // Get license via the license server.
@@ -250,30 +250,32 @@ gboolean DrmManager::ProcessLicense(void *user_data) {
       delete data;
       return false;
     }
-    response = static_cast<void *>(response_data);
+    LOG_INFO("Response length : %d", response_len);
+    self->InstallKey(const_cast<void *>(reinterpret_cast<const void *>(
+                         data->session_id.c_str())),
+                     static_cast<void *>(response_data),
+                     reinterpret_cast<void *>(response_len));
   } else if (self->request_license_channel_) {
     self->RequestLicense(data->session_id, data->message);
-    delete data;
-    return false;
   } else {
     LOG_ERROR("No way to request license");
-    delete data;
-    return false;
   }
 
-  LOG_INFO("Response length: %ld", response_len);
+  delete data;
+  return false;
+}
+
+void DrmManager::InstallKey(void *session_id, void *response_data,
+                            void *response_len) {
   SetDataParam_t license_param = {};
-  license_param.param1 = const_cast<void *>(
-      reinterpret_cast<const void *>(data->session_id.c_str()));
-  license_param.param2 = response;
-  license_param.param3 = reinterpret_cast<void *>(response_len);
-  int ret = DMGRSetData(self->drm_session_, "install_eme_key", &license_param);
+  license_param.param1 = session_id;
+  license_param.param2 = response_data;
+  license_param.param3 = response_len;
+  int ret = DMGRSetData(drm_session_, "install_eme_key", &license_param);
   if (ret != DM_ERROR_NONE) {
     LOG_ERROR("[DrmManager] Setting install_eme_key failed: %s",
               get_error_message(ret));
   }
-  delete data;
-  return false;
 }
 
 void DrmManager::RequestLicense(std::string &session_id, std::string &message) {
@@ -298,17 +300,10 @@ void DrmManager::RequestLicense(std::string &session_id, std::string &message) {
               return;
             }
             LOG_INFO("Response length : %d", response.size());
-            SetDataParam_t license_param = {};
-            license_param.param1 = const_cast<void *>(
-                reinterpret_cast<const void *>(session_id.c_str()));
-            license_param.param2 = response.data();
-            license_param.param3 = reinterpret_cast<void *>(response.size());
-            int ret =
-                DMGRSetData(drm_session_, "install_eme_key", &license_param);
-            if (ret != DM_ERROR_NONE) {
-              LOG_ERROR("[DrmManager] Setting install_eme_key failed: %s",
-                        get_error_message(ret));
-            }
+            InstallKey(const_cast<void *>(
+                           reinterpret_cast<const void *>(session_id.c_str())),
+                       reinterpret_cast<void *>(response.data()),
+                       reinterpret_cast<void *>(response.size()));
           },
           nullptr, nullptr);
   request_license_channel_->InvokeMethod(

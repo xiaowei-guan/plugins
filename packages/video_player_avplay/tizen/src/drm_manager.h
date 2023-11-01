@@ -47,6 +47,7 @@ class DrmManager {
   };
   void RequestLicense(std::string &session_id, std::string &message);
   int SetChallenge(const std::string &media_url);
+  void InstallKey(void *session_id, void *response_data, void *response_len);
   static int OnChallengeData(void *session_id, int message_type, void *message,
                              int message_length, void *user_data);
   static void OnDrmManagerError(long error_code, char *error_message,
