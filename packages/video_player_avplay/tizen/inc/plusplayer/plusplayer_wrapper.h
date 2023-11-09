@@ -1,5 +1,9 @@
-#ifndef PLUSPLAYER_WRAPPER_H_
-#define PLUSPLAYER_WRAPPER_H_
+// Copyright 2022 Samsung Electronics Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef FLUTTER_PLUGIN_PLUSPLAYER_WRAPPER_H
+#define FLUTTER_PLUGIN_PLUSPLAYER_WRAPPER_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -531,4 +535,4 @@ PLUS_PLAYER_EXPORT void UnregisterListener(PlusplayerRef player);
 // extern "C"
 #endif
 
-#endif
+#endif  // FLUTTER_PLUGIN_PLUSPLAYER_WRAPPER_H
