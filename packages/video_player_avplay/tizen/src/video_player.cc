@@ -27,7 +27,12 @@ VideoPlayer::VideoPlayer(flutter::BinaryMessenger *messenger,
 VideoPlayer::~VideoPlayer() {
   if (sink_event_pipe_) {
     ecore_pipe_del(sink_event_pipe_);
+    sink_event_pipe_ = nullptr;
   }
+}
+
+void VideoPlayer::ClearUpEventChannel() {
+  is_initialized_ = false;
   event_sink_ = nullptr;
   if (event_channel_) {
     event_channel_->SetStreamHandler(nullptr);
@@ -96,14 +101,18 @@ void VideoPlayer::PushEvent(flutter::EncodableValue encodable_value) {
 void VideoPlayer::SendInitialized() {
   if (!is_initialized_ && event_sink_) {
     int32_t width = 0, height = 0;
-    int64_t duration = GetDuration();
     GetVideoSize(&width, &height);
     is_initialized_ = true;
+    auto duration = GetDuration();
+    flutter::EncodableList duration_range{
+        flutter::EncodableValue(duration.first),
+        flutter::EncodableValue(duration.second)};
+
     flutter::EncodableMap result = {
         {flutter::EncodableValue("event"),
          flutter::EncodableValue("initialized")},
         {flutter::EncodableValue("duration"),
-         flutter::EncodableValue(duration)},
+         flutter::EncodableValue(duration_range)},
         {flutter::EncodableValue("width"), flutter::EncodableValue(width)},
         {flutter::EncodableValue("height"), flutter::EncodableValue(height)},
     };

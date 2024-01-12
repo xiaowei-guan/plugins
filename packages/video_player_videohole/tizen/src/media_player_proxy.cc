@@ -21,9 +21,11 @@ typedef int (*FuncPlayerSetDrmInitCompleteCB)(
 typedef int (*FuncPlayerSetDrmInitDataCB)(player_h player,
                                           set_drm_init_data_cb callback,
                                           void* user_data);
+
 typedef int (*FuncPlayerGetAdaptiveStreamingInfo)(player_h player,
                                                   void* adaptive_info,
                                                   int adaptive_type);
+
 typedef int (*FuncPlayerGetTrackCountV2)(player_h player,
                                          player_stream_type_e type,
                                          int* pcount);

@@ -38,7 +38,19 @@ PlusPlayer::PlusPlayer(flutter::BinaryMessenger *messenger,
                        std::string &video_format)
     : VideoPlayer(messenger, flutter_view), video_format_(video_format) {}
 
-PlusPlayer::~PlusPlayer() { Dispose(); }
+PlusPlayer::~PlusPlayer() {
+  if (player_) {
+    Stop(player_);
+    Close(player_);
+    UnregisterListener(player_);
+    DestroyPlayer(player_);
+    player_ = nullptr;
+  }
+
+  if (drm_manager_) {
+    drm_manager_->ReleaseDrmSession();
+  }
+}
 
 void PlusPlayer::RegisterListener() {
   listener_.buffering_callback = OnBufferStatus;
@@ -134,30 +146,7 @@ int64_t PlusPlayer::Create(const std::string &uri, int drm_type,
 
 void PlusPlayer::Dispose() {
   LOG_INFO("[PlusPlayer] Player disposing.");
-
-  if (!player_) {
-    LOG_ERROR("[PlusPlayer] Player not created.");
-    return;
-  }
-  if (!Stop(player_)) {
-    LOG_INFO("[PlusPlayer] Player fail to stop.");
-    return;
-  }
-
-  plusplayer::State state = GetState(player_);
-  if (state == plusplayer::State::kIdle || state == plusplayer::State::kNone) {
-    if (!Close(player_)) {
-      LOG_INFO("[PlusPlayer] Player fail to close.");
-      return;
-    }
-  }
-  UnregisterListener(player_);
-  DestroyPlayer(player_);
-  player_ = nullptr;
-
-  if (drm_manager_) {
-    drm_manager_->ReleaseDrmSession();
-  }
+  ClearUpEventChannel();
 }
 
 void PlusPlayer::SetDisplayRoi(int32_t x, int32_t y, int32_t width,
@@ -305,39 +294,12 @@ bool PlusPlayer::SeekTo(int64_t position, SeekCompletedCallback callback) {
   }
 
   on_seek_completed_ = std::move(callback);
-  plusplayer::PlayerMemento memento;
-  if (!GetMemento(player_, &memento)) {
-    LOG_ERROR("[PlusPlayer] Player fail to get memento.");
+  if (!Seek(player_, position)) {
+    on_seek_completed_ = nullptr;
+    LOG_ERROR("[PlusPlayer] Player fail to seek.");
+    return false;
   }
 
-  if (memento.is_live) {
-    std::string str = GetStreamingProperty(player_, "GET_LIVE_DURATION");
-    if (str.empty()) {
-      LOG_ERROR("[PlusPlayer] Player fail to get live duration.");
-      return false;
-    }
-    std::vector<std::string> time_str = split(str, '|');
-    int64_t start_time = std::stoll(time_str[0].c_str());
-    int64_t end_time = std::stoll(time_str[1].c_str());
-
-    if (position < start_time || position > end_time) {
-      on_seek_completed_ = nullptr;
-      LOG_ERROR("[PlusPlayer] Position out of range.");
-      return false;
-    }
-
-    if (!Seek(player_, position)) {
-      on_seek_completed_ = nullptr;
-      LOG_ERROR("[PlusPlayer] Player fail to seek.");
-      return false;
-    }
-  } else {
-    if (!Seek(player_, position)) {
-      on_seek_completed_ = nullptr;
-      LOG_ERROR("[PlusPlayer] Player fail to seek.");
-      return false;
-    }
-  }
   return true;
 }
 
@@ -353,34 +315,40 @@ int64_t PlusPlayer::GetPosition() {
   return static_cast<int64_t>(position);
 }
 
-int64_t PlusPlayer::GetDuration() {
-  int64_t duration = 0;
-  if (GetState(player_) >= plusplayer::State::kTrackSourceReady) {
-    plusplayer::PlayerMemento memento;
-    if (!GetMemento(player_, &memento)) {
-      LOG_ERROR("[PlusPlayer] Player fail to get memento.");
-    }
-
-    if (memento.is_live) {
-      std::string str = GetStreamingProperty(player_, "GET_LIVE_DURATION");
-      if (str.empty()) {
-        LOG_ERROR("[PlusPlayer] Player fail to get live duration.");
-        return duration;
-      }
-      std::vector<std::string> time_str = split(str, '|');
-      int64_t start_time = std::stoll(time_str[0].c_str());
-      int64_t end_time = std::stoll(time_str[1].c_str());
-
-      duration = end_time - start_time;
-    } else {
-      if (!::GetDuration(player_, &duration)) {
-        LOG_ERROR("[PlusPlayer] Player fail to get the duration.");
-      }
-    }
+bool PlusPlayer::IsLive() {
+  plusplayer::PlayerMemento memento;
+  if (!GetMemento(player_, &memento)) {
+    LOG_ERROR("[PlusPlayer] Player fail to get memento.");
+    return false;
   }
 
-  LOG_INFO("[PlusPlayer] Video duration: %lld.", duration);
-  return duration;
+  return memento.is_live;
+}
+
+std::pair<int64_t, int64_t> PlusPlayer::GetLiveDuration() {
+  std::string live_duration_str =
+      GetStreamingProperty(player_, "GET_LIVE_DURATION");
+  if (live_duration_str.empty()) {
+    LOG_ERROR("[PlusPlayer] Player fail to get live duration.");
+    return std::make_pair(0, 0);
+  }
+
+  std::vector<std::string> time_vec = split(live_duration_str, '|');
+  return std::make_pair(std::stoll(time_vec[0]), std::stoll(time_vec[1]));
+}
+
+std::pair<int64_t, int64_t> PlusPlayer::GetDuration() {
+  if (IsLive()) {
+    return GetLiveDuration();
+  } else {
+    int64_t duration = 0;
+    if (!::GetDuration(player_, &duration)) {
+      LOG_ERROR("[PlusPlayer] Player fail to get the duration.");
+      return std::make_pair(0, 0);
+    }
+    LOG_INFO("[PlusPlayer] Video duration: %lld.", duration);
+    return std::make_pair(0, duration);
+  }
 }
 
 void PlusPlayer::GetVideoSize(int32_t *width, int32_t *height) {
@@ -617,6 +585,10 @@ bool PlusPlayer::OnLicenseAcquired(int *drm_handle, unsigned int length,
 void PlusPlayer::OnPrepareDone(bool ret, void *user_data) {
   LOG_INFO("[PlusPlayer] Prepare done, result: %d.", ret);
   PlusPlayer *self = reinterpret_cast<PlusPlayer *>(user_data);
+
+  if (!SetDisplayVisible(self->player_, true)) {
+    LOG_ERROR("[PlusPlayer] Fail to set display visible.");
+  }
 
   if (!self->is_initialized_ && ret) {
     self->SendInitialized();

@@ -13,8 +13,6 @@ import 'package:flutter/services.dart';
 import 'src/closed_caption_file.dart';
 import 'src/drm_configs.dart';
 import 'src/hole.dart';
-import 'src/register_drm_callback_stub.dart'
-    if (dart.library.ffi) 'src/register_drm_callback_real.dart';
 import 'src/tracks.dart';
 import 'video_player_platform_interface.dart';
 
@@ -59,12 +57,14 @@ class VideoPlayerValue {
 
   /// Returns an instance for a video that hasn't been loaded.
   VideoPlayerValue.uninitialized()
-      : this(duration: Duration.zero, isInitialized: false);
+      : this(
+            duration: DurationRange(Duration.zero, Duration.zero),
+            isInitialized: false);
 
   /// Returns an instance with the given [errorDescription].
   VideoPlayerValue.erroneous(String errorDescription)
       : this(
-            duration: Duration.zero,
+            duration: DurationRange(Duration.zero, Duration.zero),
             isInitialized: false,
             errorDescription: errorDescription);
 
@@ -75,7 +75,7 @@ class VideoPlayerValue {
   /// The total duration of the video.
   ///
   /// The duration is [Duration.zero] if the video hasn't been initialized.
-  final Duration duration;
+  final DurationRange duration;
 
   /// The current playback position.
   final Duration position;
@@ -147,7 +147,7 @@ class VideoPlayerValue {
   /// Returns a new instance that has the same values as this current instance,
   /// except for any overrides passed in as arguments to [copyWidth].
   VideoPlayerValue copyWith({
-    Duration? duration,
+    DurationRange? duration,
     Size? size,
     Duration? position,
     Caption? caption,
@@ -218,13 +218,18 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// The name of the asset is given by the [dataSource] argument and must not be
   /// null. The [package] argument must be non-null when the asset comes from a
   /// package and null otherwise.
-  VideoPlayerController.asset(this.dataSource,
-      {this.package, this.closedCaptionFile, this.videoPlayerOptions})
-      : dataSourceType = DataSourceType.asset,
+  VideoPlayerController.asset(
+    this.dataSource, {
+    this.package,
+    this.closedCaptionFile,
+    this.videoPlayerOptions,
+  })  : dataSourceType = DataSourceType.asset,
         formatHint = null,
         httpHeaders = const <String, String>{},
         drmConfigs = null,
-        super(VideoPlayerValue(duration: Duration.zero));
+        playerOptions = const <String, dynamic>{},
+        super(VideoPlayerValue(
+            duration: DurationRange(Duration.zero, Duration.zero)));
 
   /// Constructs a [VideoPlayerController] playing a video from obtained from
   /// the network.
@@ -242,31 +247,39 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     this.videoPlayerOptions,
     this.httpHeaders = const <String, String>{},
     this.drmConfigs,
+    this.playerOptions,
   })  : dataSourceType = DataSourceType.network,
         package = null,
-        super(VideoPlayerValue(duration: Duration.zero));
+        super(VideoPlayerValue(
+            duration: DurationRange(Duration.zero, Duration.zero)));
 
   /// Constructs a [VideoPlayerController] playing a video from a file.
   ///
   /// This will load the file from the file-URI given by:
   /// `'file://${file.path}'`.
-  VideoPlayerController.file(File file,
-      {this.closedCaptionFile, this.videoPlayerOptions})
-      : dataSource = 'file://${file.path}',
+  VideoPlayerController.file(
+    File file, {
+    this.closedCaptionFile,
+    this.videoPlayerOptions,
+  })  : dataSource = 'file://${file.path}',
         dataSourceType = DataSourceType.file,
         package = null,
         formatHint = null,
         httpHeaders = const <String, String>{},
         drmConfigs = null,
-        super(VideoPlayerValue(duration: Duration.zero));
+        playerOptions = const <String, dynamic>{},
+        super(VideoPlayerValue(
+            duration: DurationRange(Duration.zero, Duration.zero)));
 
   /// Constructs a [VideoPlayerController] playing a video from a contentUri.
   ///
   /// This will load the video from the input content-URI.
   /// This is supported on Android only.
-  VideoPlayerController.contentUri(Uri contentUri,
-      {this.closedCaptionFile, this.videoPlayerOptions})
-      : assert(defaultTargetPlatform == TargetPlatform.android,
+  VideoPlayerController.contentUri(
+    Uri contentUri, {
+    this.closedCaptionFile,
+    this.videoPlayerOptions,
+  })  : assert(defaultTargetPlatform == TargetPlatform.android,
             'VideoPlayerController.contentUri is only supported on Android.'),
         dataSource = contentUri.toString(),
         dataSourceType = DataSourceType.contentUri,
@@ -274,7 +287,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         formatHint = null,
         httpHeaders = const <String, String>{},
         drmConfigs = null,
-        super(VideoPlayerValue(duration: Duration.zero));
+        playerOptions = const <String, dynamic>{},
+        super(VideoPlayerValue(
+            duration: DurationRange(Duration.zero, Duration.zero)));
 
   /// The URI to the video file. This will be in different formats depending on
   /// the [DataSourceType] of the original video.
@@ -288,6 +303,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// Configurations for playing DRM content (optional).
   /// Only for [VideoPlayerController.network].
   final DrmConfigs? drmConfigs;
+
+  /// Player Options used for add additional parameters.
+  /// Only for [VideoPlayerController.network].
+  final Map<String, dynamic>? playerOptions;
 
   /// **Android only**. Will override the platform's generic file format
   /// detection with whatever is set here.
@@ -312,6 +331,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   ClosedCaptionFile? _closedCaptionFile;
   Timer? _timer;
+  Timer? _durationTimer;
   bool _isDisposed = false;
   Completer<void>? _creatingCompleter;
   StreamSubscription<dynamic>? _eventSubscription;
@@ -326,6 +346,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// on the plugin.
   @visibleForTesting
   int get playerId => _playerId;
+
+  final MethodChannel _channel =
+      const MethodChannel('dev.flutter.videoplayer.drm');
 
   /// Attempts to open the given [dataSource] and load metadata about the video.
   Future<void> initialize() async {
@@ -353,6 +376,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           formatHint: formatHint,
           httpHeaders: httpHeaders,
           drmConfigs: drmConfigs,
+          playerOptions: playerOptions,
         );
         break;
       case DataSourceType.file:
@@ -396,13 +420,16 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _applyLooping();
           _applyVolume();
           _applyPlayPause();
+          _durationTimer?.cancel();
+          _durationTimer = _createDurationTimer();
           break;
         case VideoEventType.completed:
           // In this case we need to stop _timer, set isPlaying=false, and
           // position=value.duration. Instead of setting the values directly,
           // we use pause() and seekTo() to ensure the platform stops playing
           // and seeks to the last frame of the video.
-          pause().then((void pauseResult) => seekTo(value.duration));
+          pause().then((void pauseResult) => seekTo(value.duration.end));
+          _durationTimer?.cancel();
           break;
         case VideoEventType.bufferingUpdate:
           value = value.copyWith(buffered: event.buffered);
@@ -417,7 +444,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           final Caption caption = Caption(
             number: 0,
             start: value.position,
-            end: value.position + (event.duration ?? Duration.zero),
+            end: value.position + (event.duration?.end ?? Duration.zero),
             text: event.text ?? '',
           );
           value = value.copyWith(caption: caption);
@@ -433,13 +460,23 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     }
 
     if (drmConfigs?.licenseCallback != null) {
-      registerDrmCallback(drmConfigs!.licenseCallback!, _playerId);
+      _channel.setMethodCallHandler((MethodCall call) async {
+        if (call.method == 'requestLicense') {
+          final Map<dynamic, dynamic> argumentsMap =
+              call.arguments as Map<dynamic, dynamic>;
+          final Uint8List message = argumentsMap['message']! as Uint8List;
+          return drmConfigs!.licenseCallback!(message);
+        } else {
+          throw Exception('not implemented ${call.method}');
+        }
+      });
     }
 
     void errorListener(Object obj) {
       final PlatformException e = obj as PlatformException;
       value = VideoPlayerValue.erroneous(e.message!);
       _timer?.cancel();
+      _durationTimer?.cancel();
       if (!initializingCompleter.isCompleted) {
         initializingCompleter.completeError(obj);
       }
@@ -458,6 +495,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       if (!_isDisposed) {
         _isDisposed = true;
         _timer?.cancel();
+        _durationTimer?.cancel();
         await _eventSubscription?.cancel();
         await _videoPlayerPlatform.dispose(_playerId);
       }
@@ -475,11 +513,21 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// has been sent to the platform, not when playback itself is totally
   /// finished.
   Future<void> play() async {
-    if (value.position == value.duration) {
+    if (value.position == value.duration.end) {
       await seekTo(Duration.zero);
     }
     value = value.copyWith(isPlaying: true);
     await _applyPlayPause();
+  }
+
+  /// Sets the video activated. Use it if create two native players.
+  Future<bool> activate() async {
+    return _applyActivate();
+  }
+
+  /// Sets the video deactivated. Use it if create two native players.
+  Future<bool> deactivate() async {
+    return _applyDeactivate();
   }
 
   /// Sets whether or not the video should loop after playing once. See also
@@ -495,11 +543,49 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _applyPlayPause();
   }
 
+  /// The duration in the current video.
+  Future<DurationRange?> get duration async {
+    if (_isDisposed) {
+      return null;
+    }
+    return _videoPlayerPlatform.getDuration(_playerId);
+  }
+
+  Timer _createDurationTimer() {
+    return Timer.periodic(
+      const Duration(milliseconds: 1000),
+      (Timer timer) async {
+        if (_isDisposed) {
+          return;
+        }
+        final DurationRange? newDuration = await duration;
+        if (newDuration == null) {
+          return;
+        }
+        _updateDuration(newDuration);
+      },
+    );
+  }
+
   Future<void> _applyLooping() async {
     if (_isDisposedOrNotInitialized) {
       return;
     }
     await _videoPlayerPlatform.setLooping(_playerId, value.isLooping);
+  }
+
+  Future<bool> _applyActivate() async {
+    if (_isDisposedOrNotInitialized) {
+      return false;
+    }
+    return _videoPlayerPlatform.setActivate(_playerId);
+  }
+
+  Future<bool> _applyDeactivate() async {
+    if (_isDisposedOrNotInitialized) {
+      return false;
+    }
+    return _videoPlayerPlatform.setDeactivate(_playerId);
   }
 
   Future<void> _applyPlayPause() async {
@@ -577,8 +663,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     if (_isDisposedOrNotInitialized) {
       return;
     }
-    if (position > value.duration) {
-      position = value.duration;
+    if (position > value.duration.end) {
+      position = value.duration.end;
     } else if (position < Duration.zero) {
       position = Duration.zero;
     }
@@ -611,11 +697,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   /// Sets the selected tracks.
-  Future<void> setTrackSelection(Track track) async {
+  Future<bool> setTrackSelection(Track track) async {
     if (!value.isInitialized || _isDisposed) {
-      return;
+      return false;
     }
-    await _videoPlayerPlatform.setTrackSelection(_playerId, track);
+    return _videoPlayerPlatform.setTrackSelection(_playerId, track);
   }
 
   /// Sets the audio volume of [this].
@@ -705,6 +791,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       position: position,
       caption: _getCaptionAt(position),
     );
+  }
+
+  void _updateDuration(DurationRange duration) {
+    value = value.copyWith(duration: duration);
   }
 
   @override
@@ -904,7 +994,7 @@ class _VideoScrubberState extends State<_VideoScrubber> {
       final RenderBox box = context.findRenderObject()! as RenderBox;
       final Offset tapPos = box.globalToLocal(globalPosition);
       final double relative = tapPos.dx / box.size.width;
-      final Duration position = controller.value.duration * relative;
+      final Duration position = controller.value.duration.end * relative;
       controller.seekTo(position);
     }
 
@@ -928,7 +1018,7 @@ class _VideoScrubberState extends State<_VideoScrubber> {
       },
       onHorizontalDragEnd: (DragEndDetails details) {
         if (_controllerWasPlaying &&
-            controller.value.position != controller.value.duration) {
+            controller.value.position != controller.value.duration.end) {
           controller.play();
         }
       },
@@ -1021,7 +1111,7 @@ class _VideoProgressIndicatorState extends State<VideoProgressIndicator> {
   Widget build(BuildContext context) {
     Widget progressIndicator;
     if (controller.value.isInitialized) {
-      final int duration = controller.value.duration.inMilliseconds;
+      final int duration = controller.value.duration.end.inMilliseconds;
       final int position = controller.value.position.inMilliseconds;
 
       progressIndicator = Stack(

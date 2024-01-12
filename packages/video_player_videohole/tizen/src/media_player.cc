@@ -10,16 +10,6 @@
 
 #include "log.h"
 
-static std::vector<std::string> split(const std::string &s, char delim) {
-  std::stringstream ss(s);
-  std::string item;
-  std::vector<std::string> tokens;
-  while (getline(ss, item, delim)) {
-    tokens.push_back(item);
-  }
-  return tokens;
-}
-
 static std::string RotationToString(player_display_rotation_e rotation) {
   switch (rotation) {
     case PLAYER_DISPLAY_ROTATION_NONE:
@@ -313,41 +303,6 @@ int64_t MediaPlayer::GetPosition() {
   return position;
 }
 
-bool MediaPlayer::IsLive() {
-  int is_live = 0;
-  int ret = media_player_proxy_->player_get_adaptive_streaming_info(
-      player_, &is_live, PLAYER_ADAPTIVE_INFO_IS_LIVE);
-  if (ret != PLAYER_ERROR_NONE) {
-    LOG_ERROR("[MediaPlayer] player_get_adaptive_streaming_info failed: %s",
-              get_error_message(ret));
-    return false;
-  }
-  return is_live != 0;
-}
-
-std::pair<int64_t, int64_t> MediaPlayer::GetLiveDuration() {
-  std::string live_duration_str = "";
-  char *live_duration_buff = static_cast<char *>(malloc(sizeof(char) * 64));
-  memset(live_duration_buff, 0, sizeof(char) * 64);
-  int ret = media_player_proxy_->player_get_adaptive_streaming_info(
-      player_, (void *)&live_duration_buff, PLAYER_ADAPTIVE_INFO_LIVE_DURATION);
-  if (ret != PLAYER_ERROR_NONE) {
-    LOG_ERROR("[MediaPlayer] player_get_adaptive_streaming_info failed: %s",
-              get_error_message(ret));
-    free(live_duration_buff);
-    return std::make_pair(0, 0);
-  }
-  if (*live_duration_buff) {
-    live_duration_str = std::string(live_duration_buff);
-  }
-  free(live_duration_buff);
-  if (live_duration_str.empty()) {
-    return std::make_pair(0, 0);
-  }
-  std::vector<std::string> time_vec = split(live_duration_str, '|');
-  return std::make_pair(std::stoll(time_vec[0]), std::stoll(time_vec[1]));
-}
-
 std::pair<int64_t, int64_t> MediaPlayer::GetDuration() {
   if (IsLive()) {
     return GetLiveDuration();
@@ -427,6 +382,51 @@ bool MediaPlayer::SetDisplay() {
     return false;
   }
   return true;
+}
+
+bool MediaPlayer::IsLive() {
+  int is_live = 0;
+  int ret = media_player_proxy_->player_get_adaptive_streaming_info(
+      player_, &is_live, PLAYER_ADAPTIVE_INFO_IS_LIVE);
+  if (ret != PLAYER_ERROR_NONE) {
+    LOG_ERROR("[MediaPlayer] player_get_adaptive_streaming_info failed: %s",
+              get_error_message(ret));
+    return false;
+  }
+  return is_live != 0;
+}
+
+static std::vector<std::string> split(const std::string &s, char delim) {
+  std::stringstream ss(s);
+  std::string item;
+  std::vector<std::string> tokens;
+  while (getline(ss, item, delim)) {
+    tokens.push_back(item);
+  }
+  return tokens;
+}
+
+std::pair<int64_t, int64_t> MediaPlayer::GetLiveDuration() {
+  std::string live_duration_str = "";
+  char *live_duration_buff = static_cast<char *>(malloc(sizeof(char) * 64));
+  memset(live_duration_buff, 0, sizeof(char) * 64);
+  int ret = media_player_proxy_->player_get_adaptive_streaming_info(
+      player_, (void *)&live_duration_buff, PLAYER_ADAPTIVE_INFO_LIVE_DURATION);
+  if (ret != PLAYER_ERROR_NONE) {
+    LOG_ERROR("[MediaPlayer] player_get_adaptive_streaming_info failed: %s",
+              get_error_message(ret));
+    free(live_duration_buff);
+    return std::make_pair(0, 0);
+  }
+  if (*live_duration_buff) {
+    live_duration_str = std::string(live_duration_buff);
+  }
+  free(live_duration_buff);
+  if (live_duration_str.empty()) {
+    return std::make_pair(0, 0);
+  }
+  std::vector<std::string> time_vec = split(live_duration_str, '|');
+  return std::make_pair(std::stoll(time_vec[0]), std::stoll(time_vec[1]));
 }
 
 flutter::EncodableList MediaPlayer::GetTrackInfo(std::string track_type) {

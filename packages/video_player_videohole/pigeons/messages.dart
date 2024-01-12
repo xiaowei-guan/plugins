@@ -41,14 +41,14 @@ class TrackMessage {
 class TrackTypeMessage {
   TrackTypeMessage(this.playerId, this.trackType);
   int playerId;
-  int trackType;
+  String trackType;
 }
 
 class SelectedTracksMessage {
   SelectedTracksMessage(this.playerId, this.trackId, this.trackType);
   int playerId;
   int trackId;
-  int trackType;
+  String trackType;
 }
 
 class PositionMessage {
@@ -65,6 +65,7 @@ class CreateMessage {
   String? formatHint;
   Map<Object?, Object?>? httpHeaders;
   Map<Object?, Object?>? drmConfigs;
+  Map<Object?, Object?>? playerOptions;
 }
 
 class MixWithOthersMessage {
@@ -81,6 +82,12 @@ class GeometryMessage {
   int height;
 }
 
+class DurationMessage {
+  DurationMessage(this.playerId);
+  int playerId;
+  List<int?>? durationRange;
+}
+
 @HostApi()
 abstract class VideoPlayerVideoholeApi {
   void initialize();
@@ -90,12 +97,15 @@ abstract class VideoPlayerVideoholeApi {
   void setVolume(VolumeMessage msg);
   void setPlaybackSpeed(PlaybackSpeedMessage msg);
   void play(PlayerMessage msg);
+  bool setDeactivate(PlayerMessage msg);
+  bool setActivate(PlayerMessage msg);
+  TrackMessage track(TrackTypeMessage msg);
+  bool setTrackSelection(SelectedTracksMessage msg);
   PositionMessage position(PlayerMessage msg);
   @async
   void seekTo(PositionMessage msg);
-  TrackMessage track(TrackTypeMessage msg);
-  void setTrackSelection(SelectedTracksMessage msg);
   void pause(PlayerMessage msg);
   void setMixWithOthers(MixWithOthersMessage msg);
   void setDisplayGeometry(GeometryMessage msg);
+  DurationMessage duration(PlayerMessage msg);
 }
