@@ -99,6 +99,7 @@ int64_t PlusPlayer::Create(const std::string &uri,
     std::string adaptive_info = flutter_common::GetValue(
         create_message.streaming_property(), "ADAPTIVE_INFO", std::string());
     if (!adaptive_info.empty()) {
+      LOG_ERROR("[PlusPlayer] SetStreamingProperty::adaptive_info = %s", adaptive_info.c_str());
       SetStreamingProperty(player_, "ADAPTIVE_INFO", adaptive_info);
     }
   }
@@ -368,22 +369,27 @@ std::pair<int64_t, int64_t> PlusPlayer::GetDuration() {
 void PlusPlayer::GetVideoSize(int32_t *width, int32_t *height) {
   if (GetState(player_) >= plusplayer::State::kTrackSourceReady) {
     bool found = false;
+    int bitrate = 0;
     std::vector<plusplayer::Track> tracks = GetActiveTrackInfo(player_);
     for (auto track : tracks) {
       if (track.type == plusplayer::TrackType::kTrackTypeVideo) {
         *width = track.width;
         *height = track.height;
+        bitrate = track.bitrate;
         found = true;
         break;
       }
     }
+
     if (!found) {
       LOG_ERROR("[PlusPlayer] Player fail to get video size.");
     } else {
-      LOG_INFO("[PlusPlayer] Video width: %d, height: %d.", *width, *height);
+      LOG_INFO("[PlusPlayer] Video width: %d, height: %d, bitrate = %d.", *width, *height, bitrate);
     }
   }
 }
+
+
 
 bool PlusPlayer::IsReady() {
   return plusplayer::State::kReady == GetState(player_);
@@ -704,6 +710,11 @@ void PlusPlayer::OnAdaptiveStreamingControlEvent(
     if (self->drm_manager_) {
       self->drm_manager_->UpdatePsshData(msg.data.data(), msg.size);
     }
+  } else if(type == plusplayer::StreamingMessageType::kBitrateChange) {
+    int width = 0;
+    int height = 0;
+    self->GetVideoSize(&width, &height);
+    LOG_ERROR("[PlusPlayer] width = %d, height = %d", width, height);
   }
 }
 
