@@ -40,7 +40,7 @@ class BuildExamplesCommand extends PackageLoopingCommand {
           'build',
           'tpk',
           '--device-profile',
-          'wearable',
+          'common',
           '-v',
         ],
         workingDir: example.directory,

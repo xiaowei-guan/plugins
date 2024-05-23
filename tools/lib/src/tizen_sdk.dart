@@ -88,7 +88,7 @@ class Profile {
   /// // Wearable device.
   /// Profile.fromString('wearable')
   /// // Wearable device with Tizen 5.5.
-  /// Profile.fromString('wearable-5.5')
+  /// Profile.fromString('IOT-Headed-6.0')
   /// ```
   ///
   /// To see all supported device types, see [DeviceType].
