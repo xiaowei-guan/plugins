@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of google_maps_flutter_tizen;
+part of '../google_maps_flutter_tizen.dart';
 
 /// A void function that handles a [LatLng] as a parameter.
 ///
@@ -17,13 +17,13 @@ typedef LatLngCallback = void Function(LatLng latLng);
 /// instance and our internal `mapId` value.
 abstract class GeometryController {
   /// The WebView instance that this controller operates on.
-  late WebView webview;
+  late WebViewWidget webview;
 
   /// The map ID for events.
   late int mapId;
 
   /// Binds a `mapId` and the map instance to this controller.
-  void bindToMap(int mapId, WebView webview) {
+  void bindToMap(int mapId, WebViewWidget webview) {
     this.mapId = mapId;
     this.webview = webview;
   }

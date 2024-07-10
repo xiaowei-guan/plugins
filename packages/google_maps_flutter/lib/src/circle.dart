@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of google_maps_flutter_tizen;
+part of '../google_maps_flutter_tizen.dart';
 
 /// The `CircleController` class wraps a [GCircle] and its `onTap` behavior.
 class CircleController {
@@ -12,7 +12,7 @@ class CircleController {
     required util.GCircle circle,
     bool consumeTapEvents = false,
     ui.VoidCallback? onTap,
-    Future<WebViewController>? controller,
+    WebViewController? controller,
   })  : _circle = circle,
         _consumeTapEvents = consumeTapEvents,
         tapEvent = onTap {
@@ -25,10 +25,10 @@ class CircleController {
   /// Circle component's tap event.
   ui.VoidCallback? tapEvent;
 
-  Future<void> _addCircleEvent(Future<WebViewController>? controller) async {
+  Future<void> _addCircleEvent(WebViewController? controller) async {
     final String command =
         "$_circle.addListener('click', (event) => CircleClick.postMessage(JSON.stringify(${_circle?.id})));";
-    await (await controller!).runJavascript(command);
+    await controller!.runJavaScript(command);
   }
 
   /// Returns `true` if this Controller will use its own `onTap` handler to consume events.

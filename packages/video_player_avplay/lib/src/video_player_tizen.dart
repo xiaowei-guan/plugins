@@ -3,8 +3,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:async';
-
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -35,21 +33,23 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
       case DataSourceType.asset:
         message.asset = dataSource.asset;
         message.packageName = dataSource.package;
-        break;
       case DataSourceType.network:
         message.uri = dataSource.uri;
         message.formatHint = _videoFormatStringMap[dataSource.formatHint];
         message.httpHeaders = dataSource.httpHeaders;
         message.drmConfigs = dataSource.drmConfigs?.toMap();
         message.playerOptions = dataSource.playerOptions;
-        message.streamingProperty = dataSource.streamingProperty;
-        break;
+        message.streamingProperty = dataSource.streamingProperty == null
+            ? null
+            : <String, String>{
+                for (final MapEntry<StreamingPropertyType, String> entry
+                    in dataSource.streamingProperty!.entries)
+                  _streamingPropertyType[entry.key]!: entry.value
+              };
       case DataSourceType.file:
         message.uri = dataSource.uri;
-        break;
       case DataSourceType.contentUri:
         message.uri = dataSource.uri;
-        break;
     }
 
     final PlayerMessage response = await _api.create(message);
@@ -198,6 +198,16 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
   }
 
   @override
+  Future<String> getStreamingProperty(
+      int playerId, StreamingPropertyType type) async {
+    final StreamingPropertyMessage streamingPropertyMessage =
+        await _api.getStreamingProperty(StreamingPropertyTypeMessage(
+            playerId: playerId,
+            streamingPropertyType: _streamingPropertyType[type]!));
+    return streamingPropertyMessage.streamingProperty;
+  }
+
+  @override
   Stream<VideoEvent> videoEventsFor(int playerId) {
     return _eventChannelFor(playerId)
         .receiveBroadcastStream()
@@ -285,5 +295,23 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
     1: AudioTrackChannelType.mono,
     2: AudioTrackChannelType.stereo,
     3: AudioTrackChannelType.surround,
+  };
+
+  static const Map<StreamingPropertyType, String> _streamingPropertyType =
+      <StreamingPropertyType, String>{
+    StreamingPropertyType.adaptiveInfo: 'ADAPTIVE_INFO',
+    StreamingPropertyType.availableBitrate: 'AVAILABLE_BITRATE',
+    StreamingPropertyType.cookie: 'COOKIE',
+    StreamingPropertyType.currentBandwidth: 'CURRENT_BANDWIDTH',
+    StreamingPropertyType.getLiveDuration: 'GET_LIVE_DURATION',
+    StreamingPropertyType.inAppMultiView: 'IN_APP_MULTIVIEW',
+    StreamingPropertyType.isLive: 'IS_LIVE',
+    StreamingPropertyType.listenSparseTrack: 'LISTEN_SPARSE_TRACK',
+    StreamingPropertyType.portraitMode: 'PORTRAIT_MODE',
+    StreamingPropertyType.prebufferMode: 'PREBUFFER_MODE',
+    StreamingPropertyType.setMixedFrame: 'SET_MIXEDFRAME',
+    StreamingPropertyType.setMode4K: 'SET_MODE_4K',
+    StreamingPropertyType.userAgent: 'USER_AGENT',
+    StreamingPropertyType.useVideoMixer: 'USE_VIDEOMIXER',
   };
 }

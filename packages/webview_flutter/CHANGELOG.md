@@ -1,6 +1,17 @@
-## NEXT
+## 0.9.3
+
+* Prevent duplicate Dispose() calls.
+
+## 0.9.2
+
+* Supports multiple JavaScriptChannel method call.
+
+## 0.9.1
 
 * Add ewk_set_version_policy() call.
+* Fix new lint warnings.
+* Update minimum Flutter and Dart version to 3.13 and 3.1.
+* Add WebViewController.tizenEnginePolicy extension API temporary.
 
 ## 0.9.0
 

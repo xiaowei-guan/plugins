@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of google_maps_flutter_tizen;
+part of '../google_maps_flutter_tizen.dart';
 
 /// The `PolygonController` class wraps a [GPolygon] and its `onTap` behavior.
 class PolygonController {
@@ -12,7 +12,7 @@ class PolygonController {
     required util.GPolygon polygon,
     bool consumeTapEvents = false,
     ui.VoidCallback? onTap,
-    Future<WebViewController>? controller,
+    WebViewController? controller,
   })  : _polygon = polygon,
         _consumeTapEvents = consumeTapEvents,
         tapEvent = onTap {
@@ -25,10 +25,10 @@ class PolygonController {
   /// Polygon component's tap event.
   ui.VoidCallback? tapEvent;
 
-  Future<void> _addPolygonEvent(Future<WebViewController>? controller) async {
+  Future<void> _addPolygonEvent(WebViewController? controller) async {
     final String command =
         "$_polygon.addListener('click', (event) => PolygonClick.postMessage(JSON.stringify(${_polygon?.id})));";
-    await (await controller!).runJavascript(command);
+    await controller!.runJavaScript(command);
   }
 
   /// Returns `true` if this Controller will use its own `onTap` handler to consume events.

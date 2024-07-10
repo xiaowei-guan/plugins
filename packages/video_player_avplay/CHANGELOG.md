@@ -1,6 +1,43 @@
 ## NEXT
 
+* Remove wrong information in README.
+* Add plusplayer ini.
+
+## 0.4.3
+
+* Update plusplayer
+  1. [libav-common] Fixing libav-common SVACE issue.
+  2. [Dash] Fix when app freeze , cpu usage is high.
+  3. [Dash] Fix issue that report two eos msg to app.
+  4. [Dash] Fix no EOS event of dashplayer.
+  5. [Dash] Fix app freeze issue when calling seek method.
+  6. [Dash] Fix issue that live stream start at the beginning not at live postion.
+
+## 0.4.2
+
+* Add notes for creating dash player.
+* [Dash] Fix no EOS event of dashplayer.
+* Remove set looping failed message.
+* Support Tizen 8.0.
+
+## 0.4.1
+
+* Fix new lint warnings.
+* Update minimum Flutter and Dart version to 3.13 and 3.1.
+* Update plusplayer
+  1. [HLS] Sending dummy audio pkts to minimize pts gap between audio pkts across discontinuity.
+  2. [HLS] Low Latency implementation for external track (audio/subtitle).
+  3. [HLS] Segment list improvement using index offset.
+  4. [SS] Fix for memory leak.
+  5. [DASH] For dash case, adding samplerate change limitation for seamless audio track changes.
+  6. [DASH] Adding dash DRM case for HbbTV fault key test case.
+  7. [DASH] Fixing app_id dummy exception case.
+  8. [DASH] Support ATSC3 L1 time.
+
+## 0.4.0
+
 * Minor refactor.
+* Add getStreamingProperty interface.
 
 ## 0.3.3
 

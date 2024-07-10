@@ -67,7 +67,7 @@ class WebView : public PlatformView {
   std::string GetWebViewControllerChannelName();
   std::string GetNavigationDelegateChannelName();
 
-  void InitWebView();
+  bool InitWebView();
 
   static void OnFrameRendered(void* data, Evas_Object* obj, void* event_info);
   static void OnLoadStarted(void* data, Evas_Object* obj, void* event_info);
@@ -84,6 +84,7 @@ class WebView : public PlatformView {
 
   Evas_Object* webview_instance_ = nullptr;
   flutter::TextureRegistrar* texture_registrar_;
+  bool engine_policy_ = false;
   double width_ = 0.0;
   double height_ = 0.0;
   double left_ = 0.0;
@@ -99,6 +100,7 @@ class WebView : public PlatformView {
   std::unique_ptr<flutter::TextureVariant> texture_variant_;
   std::mutex mutex_;
   std::unique_ptr<BufferPool> tbm_pool_;
+  bool disposed_ = false;
 };
 
 #endif  // FLUTTER_PLUGIN_WEBVIEW_H_

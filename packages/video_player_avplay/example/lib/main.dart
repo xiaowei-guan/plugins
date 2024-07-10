@@ -6,6 +6,7 @@
 
 /// An example of using the plugin, controlling lifecycle and playback of the
 /// video.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -536,9 +537,9 @@ class _ControlsOverlay extends StatelessWidget {
           reverseDuration: const Duration(milliseconds: 200),
           child: controller.value.isPlaying
               ? const SizedBox.shrink()
-              : Container(
+              : const ColoredBox(
                   color: Colors.black26,
-                  child: const Center(
+                  child: Center(
                     child: Icon(
                       Icons.play_arrow,
                       color: Colors.white,
@@ -632,7 +633,7 @@ class _GetVideoTrackButton extends StatelessWidget {
             if (videotracks == null) {
               return;
             }
-            await showDialog(
+            await showDialog<void>(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
@@ -676,7 +677,7 @@ class _GetAudioTrackButton extends StatelessWidget {
             if (audioTracks == null) {
               return;
             }
-            await showDialog(
+            await showDialog<void>(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
@@ -720,7 +721,7 @@ class _GetTextTrackButton extends StatelessWidget {
             if (textTracks == null) {
               return;
             }
-            await showDialog(
+            await showDialog<void>(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
