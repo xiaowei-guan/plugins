@@ -87,6 +87,12 @@ int64_t PlusPlayer::Create(const std::string &uri,
     return -1;
   }
 
+  if (!Open(player_, uri)) {
+    LOG_ERROR("[PlusPlayer] Fail to open uri :  %s.", uri.c_str());
+    return -1;
+  }
+  LOG_INFO("[PlusPlayer] Uri: %s", uri.c_str());
+
   if (create_message.streaming_property() != nullptr &&
       !create_message.streaming_property()->empty()) {
     for (const auto &[key, value] : *create_message.streaming_property()) {
@@ -94,12 +100,6 @@ int64_t PlusPlayer::Create(const std::string &uri,
                            std::get<std::string>(value));
     }
   }
-
-  if (!Open(player_, uri)) {
-    LOG_ERROR("[PlusPlayer] Fail to open uri :  %s.", uri.c_str());
-    return -1;
-  }
-  LOG_INFO("[PlusPlayer] Uri: %s", uri.c_str());
 
   char *appId = nullptr;
   int ret = app_manager_get_app_id(getpid(), &appId);
@@ -345,7 +345,6 @@ std::pair<int64_t, int64_t> PlusPlayer::GetDuration() {
       LOG_ERROR("[PlusPlayer] Player fail to get the duration.");
       return std::make_pair(0, 0);
     }
-    LOG_INFO("[PlusPlayer] Video duration: %lld.", duration);
     return std::make_pair(0, duration);
   }
 }
@@ -581,6 +580,21 @@ std::string PlusPlayer::GetStreamingProperty(
     return "";
   }
   return ::GetStreamingProperty(player_, streaming_property_type);
+}
+
+bool PlusPlayer::SetBufferConfig(const std::string &key, int64_t value) {
+  if (!player_) {
+    LOG_ERROR("[PlusPlayer] Player not created.");
+    return false;
+  }
+
+  plusplayer::State state = GetState(player_);
+  if (state == plusplayer::State::kNone) {
+    LOG_ERROR("[PlusPlayer]:Player is in invalid state[%d]", state);
+    return false;
+  }
+  const std::pair<std::string, int> config = std::make_pair(key, value);
+  return ::SetBufferConfig(player_, config);
 }
 
 bool PlusPlayer::OnLicenseAcquired(int *drm_handle, unsigned int length,

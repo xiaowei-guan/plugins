@@ -200,11 +200,17 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
   @override
   Future<String> getStreamingProperty(
       int playerId, StreamingPropertyType type) async {
-    final StreamingPropertyMessage streamingPropertyMessage =
-        await _api.getStreamingProperty(StreamingPropertyTypeMessage(
-            playerId: playerId,
-            streamingPropertyType: _streamingPropertyType[type]!));
-    return streamingPropertyMessage.streamingProperty;
+    return _api.getStreamingProperty(StreamingPropertyTypeMessage(
+        playerId: playerId,
+        streamingPropertyType: _streamingPropertyType[type]!));
+  }
+
+  @override
+  Future<bool> setBufferConfig(int playerId, BufferConfigType type, int value) {
+    return _api.setBufferConfig(BufferConfigMessage(
+        playerId: playerId,
+        bufferConfigType: _bufferConfigTypeMap[type]!,
+        bufferConfigValue: value));
   }
 
   @override
@@ -313,5 +319,18 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
     StreamingPropertyType.setMode4K: 'SET_MODE_4K',
     StreamingPropertyType.userAgent: 'USER_AGENT',
     StreamingPropertyType.useVideoMixer: 'USE_VIDEOMIXER',
+  };
+
+  static const Map<BufferConfigType, String> _bufferConfigTypeMap =
+      <BufferConfigType, String>{
+    BufferConfigType.totalBufferSizeInByte: 'total_buffer_size_in_byte',
+    BufferConfigType.totalBufferSizeInTime: 'total_buffer_size_in_time',
+    BufferConfigType.bufferSizeInByteForPlay: 'buffer_size_in_byte_for_play',
+    BufferConfigType.bufferSizeInSecForPlay: 'buffer_size_in_sec_for_play',
+    BufferConfigType.bufferSizeInByteForResume:
+        'buffer_size_in_byte_for_resume',
+    BufferConfigType.bufferSizeInSecForResume: 'buffer_size_in_sec_for_resume',
+    BufferConfigType.bufferingTimeoutInSecForPlay:
+        'buffering_timeout_in_sec_for_play',
   };
 }
