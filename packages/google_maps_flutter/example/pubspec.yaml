@@ -3,14 +3,14 @@ description: Demonstrates how to use the google_maps_flutter_tizen plugin.
 publish_to: "none"
 
 environment:
-  sdk: ">=2.18.0 <4.0.0"
-  flutter: ">=3.3.0"
+  sdk: ">=3.1.0 <4.0.0"
+  flutter: ">=3.13.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  google_maps_flutter: ^2.1.7
-  google_maps_flutter_platform_interface: ^2.1.2
+  google_maps_flutter: ^2.7.0
+  google_maps_flutter_platform_interface: ^2.7.0
   google_maps_flutter_tizen:
     path: ../
 

@@ -41,6 +41,11 @@ class PlusPlayer : public VideoPlayer {
   bool IsReady() override;
   flutter::EncodableList GetTrackInfo(std::string track_type) override;
   bool SetTrackSelection(int32_t track_id, std::string track_type) override;
+  std::string GetStreamingProperty(
+      const std::string &streaming_property_type) override;
+  bool SetBufferConfig(const std::string &key, int64_t value) override;
+  void SetStreamingProperty(const std::string &type,
+                            const std::string &value) override;
 
  private:
   bool IsLive();

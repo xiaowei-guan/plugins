@@ -86,8 +86,8 @@ int64_t MediaPlayer::Create(const std::string &uri,
     return -1;
   }
 
-  std::string cookie = flutter_common::GetValue(create_message.http_headers(),
-                                                "Cookie", std::string());
+  std::string cookie = flutter_common::GetValue(
+      create_message.streaming_property(), "COOKIE", std::string());
   if (!cookie.empty()) {
     int ret =
         player_set_streaming_cookie(player_, cookie.c_str(), cookie.size());
@@ -97,7 +97,7 @@ int64_t MediaPlayer::Create(const std::string &uri,
     }
   }
   std::string user_agent = flutter_common::GetValue(
-      create_message.http_headers(), "User-Agent", std::string());
+      create_message.streaming_property(), "USER_AGENT", std::string());
   if (!user_agent.empty()) {
     int ret = player_set_streaming_user_agent(player_, user_agent.c_str(),
                                               user_agent.size());
@@ -692,7 +692,8 @@ void MediaPlayer::OnError(int error_code, void *user_data) {
             get_error_message(error_code));
 
   MediaPlayer *self = static_cast<MediaPlayer *>(user_data);
-  self->SendError("Media Player error", get_error_message(error_code));
+  self->SendError("Media Player error",
+                  std::string("Error: ") + get_error_message(error_code));
 }
 
 void MediaPlayer::OnSubtitleUpdated(unsigned long duration, char *text,

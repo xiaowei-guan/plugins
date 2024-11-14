@@ -55,6 +55,11 @@ class VideoPlayerTizenPlugin : public flutter::Plugin,
       const MixWithOthersMessage &msg) override;
   std::optional<FlutterError> SetDisplayGeometry(
       const GeometryMessage &msg) override;
+  ErrorOr<std::string> GetStreamingProperty(
+      const StreamingPropertyTypeMessage &msg) override;
+  ErrorOr<bool> SetBufferConfig(const BufferConfigMessage &msg) override;
+  std::optional<FlutterError> SetStreamingProperty(
+      const StreamingPropertyMessage &msg) override;
 
   static VideoPlayer *FindPlayerById(int64_t player_id) {
     auto iter = players_.find(player_id);
@@ -296,6 +301,36 @@ std::optional<FlutterError> VideoPlayerTizenPlugin::SetDisplayGeometry(
     return FlutterError("Invalid argument", "Player not found");
   }
   player->SetDisplayRoi(msg.x(), msg.y(), msg.width(), msg.height());
+  return std::nullopt;
+}
+
+ErrorOr<std::string> VideoPlayerTizenPlugin::GetStreamingProperty(
+    const StreamingPropertyTypeMessage &msg) {
+  VideoPlayer *player = FindPlayerById(msg.player_id());
+  if (!player) {
+    return FlutterError("Invalid argument", "Player not found");
+  }
+  return player->GetStreamingProperty(msg.streaming_property_type());
+}
+
+ErrorOr<bool> VideoPlayerTizenPlugin::SetBufferConfig(
+    const BufferConfigMessage &msg) {
+  VideoPlayer *player = FindPlayerById(msg.player_id());
+  if (!player) {
+    return FlutterError("Invalid argument", "Player not found");
+  }
+  return player->SetBufferConfig(msg.buffer_config_type(),
+                                 msg.buffer_config_value());
+}
+
+std::optional<FlutterError> VideoPlayerTizenPlugin::SetStreamingProperty(
+    const StreamingPropertyMessage &msg) {
+  VideoPlayer *player = FindPlayerById(msg.player_id());
+  if (!player) {
+    return FlutterError("Invalid argument", "Player not found");
+  }
+  player->SetStreamingProperty(msg.streaming_property_type(),
+                               msg.streaming_property_value());
   return std::nullopt;
 }
 

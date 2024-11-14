@@ -1,3 +1,16 @@
+## 2.3.0
+
+* Update shared_preferences to 2.3.2.
+* Update shared_preferences_interface to 2.4.0. 
+* Updates minimum supported SDK version to Flutter 3.22/Dart 3.4.
+* Supports `SharedPreferencesAsync` and `SharedPreferencesWithCache` APIs.
+
+## 2.2.1
+
+* Update minimum Flutter and Dart version to 3.13 and 3.1.
+* Fix a type cast error when reading a string list.
+* Update tizen_interop to 0.3.0.
+
 ## 2.2.0
 
 * Increase the minimum Flutter version to 3.3.

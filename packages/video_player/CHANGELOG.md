@@ -1,3 +1,25 @@
+## 2.5.3
+
+* Support `httpHeaders` option of `VideoPlayerController.network`.
+
+## 2.5.2
+
+* Live streaming content starts playing immediately when SeekTo() is called.
+
+## 2.5.1
+
+* Update pigeon to 22.3.0.
+* Temporarily set duration to 1, if duration is 0.
+
+## 2.5.0
+
+* Update video_player to 2.9.1.
+* Update video_player_platform_interface to 6.2.0.
+* Update the example app and integration_test.
+* Fix new lint warnings.
+* Update minimum Flutter and Dart version to 3.19 and 3.3.
+* Synchronize VideoPlayerValue.isPlaying with underlying video player.
+
 ## 2.4.9
 
 * Fix event channel issue, sending messages from native to Flutter on the platform thread.

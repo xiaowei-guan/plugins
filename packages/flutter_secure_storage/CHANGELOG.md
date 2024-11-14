@@ -1,3 +1,9 @@
+## NEXT
+
+* Fixed an issue causing crashes when encrypting or decrypting empty strings by adding appropriate checks and handling in `Encrypt` and `Decrypt` methods.
+* Fix new lint warnings.
+* Update minimum Flutter and Dart version to 3.13 and 3.1.
+
 ## 0.1.1
 
 * Update flutter_secure_storage to 9.0.0.

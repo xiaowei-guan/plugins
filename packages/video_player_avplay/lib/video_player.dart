@@ -53,6 +53,7 @@ class VideoPlayerValue {
     this.volume = 1.0,
     this.playbackSpeed = 1.0,
     this.errorDescription,
+    this.isCompleted = false,
   });
 
   /// Returns an instance for a video that hasn't been loaded.
@@ -117,6 +118,12 @@ class VideoPlayerValue {
   /// If [hasError] is false this is `null`.
   final String? errorDescription;
 
+  /// True if video has finished playing to end.
+  ///
+  /// Reverts to false if video position changes, or video begins playing.
+  /// Does not update if video is looping.
+  final bool isCompleted;
+
   /// The [size] of the currently loaded video.
   final Size size;
 
@@ -161,6 +168,7 @@ class VideoPlayerValue {
     double? volume,
     double? playbackSpeed,
     String? errorDescription = _defaultErrorDescription,
+    bool? isCompleted,
   }) {
     return VideoPlayerValue(
       duration: duration ?? this.duration,
@@ -179,6 +187,7 @@ class VideoPlayerValue {
       errorDescription: errorDescription != _defaultErrorDescription
           ? errorDescription
           : this.errorDescription,
+      isCompleted: isCompleted ?? this.isCompleted,
     );
   }
 
@@ -198,7 +207,8 @@ class VideoPlayerValue {
         'isBuffering: $isBuffering, '
         'volume: $volume, '
         'playbackSpeed: $playbackSpeed, '
-        'errorDescription: $errorDescription)';
+        'errorDescription: $errorDescription, '
+        'isCompleted: $isCompleted),';
   }
 }
 
@@ -315,7 +325,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// Sets specific feature values for HTTP, MMS, or specific streaming engine (Smooth Streaming, HLS, DASH, DivX Plus Streaming, or Widevine).
   /// The available streaming properties depend on the streaming protocol or engine.
   /// Only for [VideoPlayerController.network].
-  final Map<String, String>? streamingProperty;
+  final Map<StreamingPropertyType, String>? streamingProperty;
 
   /// **Android only**. Will override the platform's generic file format
   /// detection with whatever is set here.
@@ -377,7 +387,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           asset: dataSource,
           package: package,
         );
-        break;
       case DataSourceType.network:
         dataSourceDescription = DataSource(
           sourceType: DataSourceType.network,
@@ -388,19 +397,16 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           playerOptions: playerOptions,
           streamingProperty: streamingProperty,
         );
-        break;
       case DataSourceType.file:
         dataSourceDescription = DataSource(
           sourceType: DataSourceType.file,
           uri: dataSource,
         );
-        break;
       case DataSourceType.contentUri:
         dataSourceDescription = DataSource(
           sourceType: DataSourceType.contentUri,
           uri: dataSource,
         );
-        break;
     }
 
     if (videoPlayerOptions?.mixWithOthers != null) {
@@ -425,7 +431,18 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             size: event.size,
             isInitialized: event.duration != null,
             errorDescription: null,
+            isCompleted: false,
           );
+          assert(
+            !initializingCompleter.isCompleted,
+            'VideoPlayerController already initialized. This is typically a '
+            'sign that an implementation of the VideoPlayerPlatform '
+            '(${_videoPlayerPlatform.runtimeType}) has a bug and is sending '
+            'more than one initialized event per instance.',
+          );
+          if (initializingCompleter.isCompleted) {
+            throw StateError('VideoPlayerController already initialized');
+          }
           initializingCompleter.complete(null);
           _applyLooping();
           // NOTE(jsuya): The plusplayer's SetVolume() work when player is
@@ -435,24 +452,20 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _applyVolume();
           _durationTimer?.cancel();
           _durationTimer = _createDurationTimer();
-          break;
         case VideoEventType.completed:
           // In this case we need to stop _timer, set isPlaying=false, and
           // position=value.duration. Instead of setting the values directly,
           // we use pause() and seekTo() to ensure the platform stops playing
           // and seeks to the last frame of the video.
           pause().then((void pauseResult) => seekTo(value.duration.end));
+          value = value.copyWith(isCompleted: true);
           _durationTimer?.cancel();
-          break;
         case VideoEventType.bufferingUpdate:
           value = value.copyWith(buffered: event.buffered);
-          break;
         case VideoEventType.bufferingStart:
           value = value.copyWith(isBuffering: true);
-          break;
         case VideoEventType.bufferingEnd:
           value = value.copyWith(isBuffering: false);
-          break;
         case VideoEventType.subtitleUpdate:
           final Caption caption = Caption(
             number: 0,
@@ -461,7 +474,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             text: event.text ?? '',
           );
           value = value.copyWith(caption: caption);
-          break;
         case VideoEventType.unknown:
           break;
       }
@@ -714,6 +726,36 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _applyVolume();
   }
 
+  /// Retrieves a specific property value obtained by the streaming engine (Smooth Streaming, HLS, DASH, or Widevine).
+  Future<String> getStreamingProperty(StreamingPropertyType type) async {
+    if (_isDisposedOrNotInitialized) {
+      return '';
+    }
+    return _videoPlayerPlatform.getStreamingProperty(_playerId, type);
+  }
+
+  /// Sets specific feature values for HTTP, MMS, or specific streaming engine (Smooth Streaming, HLS, DASH, DivX Plus Streaming, or Widevine).
+  /// The available streaming properties depend on the streaming protocol or engine.
+  /// Use the CUSTOM_MESSAGE property for streaming engine or CP-specific settings.
+  Future<void> setStreamingProperty(
+      StreamingPropertyType type, String value) async {
+    if (_isDisposedOrNotInitialized) {
+      return;
+    }
+    return _videoPlayerPlatform.setStreamingProperty(_playerId, type, value);
+  }
+
+  /// Sets the buffer size for the play and resume scenarios. The time buffer size must be at least 4 seconds.
+  /// For example, if a 10 second buffer size is set, playback can only start or resume after 10 seconds of media has accumulated in the buffer.
+  /// Play scenarios include user-initiated streaming playback and whenever media playback is starting for the first time.
+  /// Resume scenarios include resuming playback after pause or seek operations, or when lack of data causes playback rebuffering.
+  Future<bool> setBufferConfig(BufferConfigType type, int value) async {
+    if (_isDisposedOrNotInitialized) {
+      return false;
+    }
+    return _videoPlayerPlatform.setBufferConfig(_playerId, type, value);
+  }
+
   /// Sets the playback speed of [this].
   ///
   /// [speed] indicates a speed value with different platforms accepting
@@ -791,6 +833,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     value = value.copyWith(
       position: position,
       caption: _getCaptionAt(position),
+      isCompleted: position == value.duration.end,
     );
   }
 

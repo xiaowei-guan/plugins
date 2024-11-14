@@ -1,6 +1,28 @@
-## NEXT
+## 0.1.9
 
-* Increase the minimum Flutter version to 3.3.
+* Update webview_flutter_lwe to 0.3.4.
+* Fix memory alarm and map initialization issues.
+
+## 0.1.8
+
+* Support longpress event.
+
+## 0.1.7
+
+* Update webview_flutter_lwe to 0.3.2.
+* Update google_maps_flutter to 2.7.0.
+* Update google_maps_flutter_platform_interface to 2.7.0.
+* Update example code.
+* Supports BitmapDescriptor.asset/bytes.
+* Supports byte type marker icons.
+* Update integration test.
+
+## 0.1.6
+
+* Fix new lint warnings.
+* Update minimum Flutter and Dart version to 3.13 and 3.1.
+* Update webview_flutter to 4.2.2.
+* Update webview_flutter_lwe to 0.3.1.
 
 ## 0.1.5
 

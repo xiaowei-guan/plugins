@@ -1,3 +1,13 @@
+## 0.5.3
+
+*  Add 'isCompleted' event to 'VideoPlayerEvent'.
+
+## 0.5.2
+
+* Fix new lint warnings.
+* Update minimum Flutter and Dart version to 3.13 and 3.1.
+* Fix getAudioTracks out of bounds issue.
+
 ## 0.5.1
 
 * Free response buffer after install key.

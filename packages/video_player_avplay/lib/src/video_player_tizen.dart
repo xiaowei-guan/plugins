@@ -3,8 +3,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:async';
-
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -35,21 +33,23 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
       case DataSourceType.asset:
         message.asset = dataSource.asset;
         message.packageName = dataSource.package;
-        break;
       case DataSourceType.network:
         message.uri = dataSource.uri;
         message.formatHint = _videoFormatStringMap[dataSource.formatHint];
         message.httpHeaders = dataSource.httpHeaders;
         message.drmConfigs = dataSource.drmConfigs?.toMap();
         message.playerOptions = dataSource.playerOptions;
-        message.streamingProperty = dataSource.streamingProperty;
-        break;
+        message.streamingProperty = dataSource.streamingProperty == null
+            ? null
+            : <String, String>{
+                for (final MapEntry<StreamingPropertyType, String> entry
+                    in dataSource.streamingProperty!.entries)
+                  _streamingPropertyType[entry.key]!: entry.value
+              };
       case DataSourceType.file:
         message.uri = dataSource.uri;
-        break;
       case DataSourceType.contentUri:
         message.uri = dataSource.uri;
-        break;
     }
 
     final PlayerMessage response = await _api.create(message);
@@ -137,14 +137,13 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
     for (final Map<Object?, Object?>? trackMap in response.tracks) {
       final int trackId = trackMap!['trackId']! as int;
       final String language = trackMap['language']! as String;
-      final AudioTrackChannelType channelType =
-          _intChannelTypeMap[trackMap['channel']]!;
+      final int channel = trackMap['channel']! as int;
       final int bitrate = trackMap['bitrate']! as int;
 
       audioTracks.add(AudioTrack(
         trackId: trackId,
         language: language,
-        channel: channelType,
+        channel: channel,
         bitrate: bitrate,
       ));
     }
@@ -195,6 +194,32 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
     final PositionMessage response =
         await _api.position(PlayerMessage(playerId: playerId));
     return Duration(milliseconds: response.position);
+  }
+
+  @override
+  Future<String> getStreamingProperty(
+      int playerId, StreamingPropertyType type) async {
+    return _api.getStreamingProperty(StreamingPropertyTypeMessage(
+        playerId: playerId,
+        streamingPropertyType: _streamingPropertyType[type]!));
+  }
+
+  @override
+  Future<bool> setBufferConfig(
+      int playerId, BufferConfigType type, int value) async {
+    return _api.setBufferConfig(BufferConfigMessage(
+        playerId: playerId,
+        bufferConfigType: _bufferConfigTypeMap[type]!,
+        bufferConfigValue: value));
+  }
+
+  @override
+  Future<void> setStreamingProperty(
+      int playerId, StreamingPropertyType type, String value) async {
+    await _api.setStreamingProperty(StreamingPropertyMessage(
+        playerId: playerId,
+        streamingPropertyType: _streamingPropertyType[type]!,
+        streamingPropertyValue: value));
   }
 
   @override
@@ -280,10 +305,34 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
     VideoFormat.other: 'other',
   };
 
-  static const Map<int, AudioTrackChannelType> _intChannelTypeMap =
-      <int, AudioTrackChannelType>{
-    1: AudioTrackChannelType.mono,
-    2: AudioTrackChannelType.stereo,
-    3: AudioTrackChannelType.surround,
+  static const Map<StreamingPropertyType, String> _streamingPropertyType =
+      <StreamingPropertyType, String>{
+    StreamingPropertyType.adaptiveInfo: 'ADAPTIVE_INFO',
+    StreamingPropertyType.availableBitrate: 'AVAILABLE_BITRATE',
+    StreamingPropertyType.cookie: 'COOKIE',
+    StreamingPropertyType.currentBandwidth: 'CURRENT_BANDWIDTH',
+    StreamingPropertyType.getLiveDuration: 'GET_LIVE_DURATION',
+    StreamingPropertyType.inAppMultiView: 'IN_APP_MULTIVIEW',
+    StreamingPropertyType.isLive: 'IS_LIVE',
+    StreamingPropertyType.listenSparseTrack: 'LISTEN_SPARSE_TRACK',
+    StreamingPropertyType.portraitMode: 'PORTRAIT_MODE',
+    StreamingPropertyType.prebufferMode: 'PREBUFFER_MODE',
+    StreamingPropertyType.setMixedFrame: 'SET_MIXEDFRAME',
+    StreamingPropertyType.setMode4K: 'SET_MODE_4K',
+    StreamingPropertyType.userAgent: 'USER_AGENT',
+    StreamingPropertyType.useVideoMixer: 'USE_VIDEOMIXER',
+  };
+
+  static const Map<BufferConfigType, String> _bufferConfigTypeMap =
+      <BufferConfigType, String>{
+    BufferConfigType.totalBufferSizeInByte: 'total_buffer_size_in_byte',
+    BufferConfigType.totalBufferSizeInTime: 'total_buffer_size_in_time',
+    BufferConfigType.bufferSizeInByteForPlay: 'buffer_size_in_byte_for_play',
+    BufferConfigType.bufferSizeInSecForPlay: 'buffer_size_in_sec_for_play',
+    BufferConfigType.bufferSizeInByteForResume:
+        'buffer_size_in_byte_for_resume',
+    BufferConfigType.bufferSizeInSecForResume: 'buffer_size_in_sec_for_resume',
+    BufferConfigType.bufferingTimeoutInSecForPlay:
+        'buffering_timeout_in_sec_for_play',
   };
 }

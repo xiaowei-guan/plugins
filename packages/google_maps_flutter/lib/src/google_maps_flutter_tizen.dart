@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of google_maps_flutter_tizen;
+part of '../google_maps_flutter_tizen.dart';
 
 /// The Tizen implementation of [GoogleMapsFlutterPlatform].
 ///
@@ -42,8 +42,7 @@ class GoogleMapsPlugin extends GoogleMapsFlutterPlatform {
 
   @override
   Future<void> init(int mapId) async {
-    _map(mapId).init();
-    assert(_map(mapId) != null, 'Must call buildWidget before init!');
+    await _map(mapId).init();
   }
 
   /// Updates the options of a given `mapId`.
@@ -97,6 +96,22 @@ class GoogleMapsPlugin extends GoogleMapsFlutterPlatform {
   @override
   Future<void> updateTileOverlays({
     required Set<TileOverlay> newTileOverlays,
+    required int mapId,
+  }) async {
+    return; // Noop for now!
+  }
+
+  @override
+  Future<void> updateHeatmaps(
+    HeatmapUpdates heatmapUpdates, {
+    required int mapId,
+  }) async {
+    return; // Noop for now!
+  }
+
+  @override
+  Future<void> updateClusterManagers(
+    ClusterManagerUpdates clusterManagerUpdates, {
     required int mapId,
   }) async {
     return; // Noop for now!
@@ -285,6 +300,11 @@ class GoogleMapsPlugin extends GoogleMapsFlutterPlatform {
     return _events(mapId).whereType<MapLongPressEvent>();
   }
 
+  @override
+  Stream<ClusterTapEvent> onClusterTap({required int mapId}) {
+    return _events(mapId).whereType<ClusterTapEvent>();
+  }
+
   /// Disposes of the current map. It can't be used afterwards!
   @override
   void dispose({required int mapId}) {
@@ -307,8 +327,8 @@ class GoogleMapsPlugin extends GoogleMapsFlutterPlatform {
     Map<String, dynamic> mapOptions = const <String, dynamic>{},
   }) {
     // Bail fast if we've already rendered this map ID...
-    if (_mapById[creationId]?.widget != null) {
-      return _mapById[creationId]!.widget!;
+    if (_mapById[creationId]?.webview != null) {
+      return _mapById[creationId]!.webview!;
     }
 
     final StreamController<MapEvent<Object?>> controller =
@@ -336,10 +356,9 @@ class GoogleMapsPlugin extends GoogleMapsFlutterPlatform {
       // Notify the plugin now that there's a fully initialized controller.
       onPlatformViewCreated.call(event.mapId);
     });
-
-    assert(mapController.widget != null,
+    assert(mapController.webview != null,
         'The widget of a GoogleMapsController cannot be null before calling dispose on it.');
 
-    return mapController.widget!;
+    return mapController.webview!;
   }
 }

@@ -1,3 +1,9 @@
+## 1.2.0
+
+* Update minimum Flutter and Dart version to 3.13 and 3.1.
+* Update connectivity_plus to 6.1.0.
+* Update connectivity_plus_platform_interface to 2.0.1.
+
 ## 1.1.4
 
 * Update connectivity_plus to 4.0.1.

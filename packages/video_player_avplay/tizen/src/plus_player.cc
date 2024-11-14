@@ -87,27 +87,19 @@ int64_t PlusPlayer::Create(const std::string &uri,
     return -1;
   }
 
-  std::string cookie = flutter_common::GetValue(create_message.http_headers(),
-                                                "Cookie", std::string());
-  if (!cookie.empty()) {
-    SetStreamingProperty(player_, "COOKIE", cookie);
-  }
-  std::string user_agent = flutter_common::GetValue(
-      create_message.http_headers(), "User-Agent", std::string());
-  if (!user_agent.empty()) {
-    SetStreamingProperty(player_, "USER_AGENT", user_agent);
-  }
-  std::string adaptive_info = flutter_common::GetValue(
-      create_message.streaming_property(), "ADAPTIVE_INFO", std::string());
-  if (!adaptive_info.empty()) {
-    SetStreamingProperty(player_, "ADAPTIVE_INFO", adaptive_info);
-  }
-
   if (!Open(player_, uri)) {
     LOG_ERROR("[PlusPlayer] Fail to open uri :  %s.", uri.c_str());
     return -1;
   }
   LOG_INFO("[PlusPlayer] Uri: %s", uri.c_str());
+
+  if (create_message.streaming_property() != nullptr &&
+      !create_message.streaming_property()->empty()) {
+    for (const auto &[key, value] : *create_message.streaming_property()) {
+      SetStreamingProperty(std::get<std::string>(key),
+                           std::get<std::string>(value));
+    }
+  }
 
   char *appId = nullptr;
   int ret = app_manager_get_app_id(getpid(), &appId);
@@ -143,6 +135,15 @@ int64_t PlusPlayer::Create(const std::string &uri,
   if (is_prebuffer_mode) {
     SetPrebufferMode(player_, true);
     is_prebuffer_mode_ = true;
+  }
+
+  int64_t start_position = flutter_common::GetValue(
+      create_message.player_options(), "startPosition", (int64_t)0);
+  if (start_position > 0) {
+    LOG_INFO("[PlusPlayer] Start position: %lld", start_position);
+    if (!Seek(player_, start_position)) {
+      LOG_INFO("[PlusPlayer] Fail to seek, it's a non-seekable content");
+    }
   }
 
   if (!PrepareAsync(player_)) {
@@ -255,7 +256,7 @@ bool PlusPlayer::Pause() {
 
 bool PlusPlayer::SetLooping(bool is_looping) {
   LOG_ERROR("[PlusPlayer] Not support to set looping.");
-  return false;
+  return true;
 }
 
 bool PlusPlayer::SetVolume(double volume) {
@@ -334,7 +335,7 @@ bool PlusPlayer::IsLive() {
 
 std::pair<int64_t, int64_t> PlusPlayer::GetLiveDuration() {
   std::string live_duration_str =
-      GetStreamingProperty(player_, "GET_LIVE_DURATION");
+      ::GetStreamingProperty(player_, "GET_LIVE_DURATION");
   if (live_duration_str.empty()) {
     LOG_ERROR("[PlusPlayer] Player fail to get live duration.");
     return std::make_pair(0, 0);
@@ -353,7 +354,6 @@ std::pair<int64_t, int64_t> PlusPlayer::GetDuration() {
       LOG_ERROR("[PlusPlayer] Player fail to get the duration.");
       return std::make_pair(0, 0);
     }
-    LOG_INFO("[PlusPlayer] Video duration: %lld.", duration);
     return std::make_pair(0, duration);
   }
 }
@@ -577,6 +577,52 @@ bool PlusPlayer::SetDrm(const std::string &uri, int drm_type,
   return true;
 }
 
+std::string PlusPlayer::GetStreamingProperty(
+    const std::string &streaming_property_type) {
+  if (!player_) {
+    LOG_ERROR("[PlusPlayer] Player not created.");
+    return "";
+  }
+  plusplayer::State state = GetState(player_);
+  if (state == plusplayer::State::kNone || state == plusplayer::State::kIdle) {
+    LOG_ERROR("[PlusPlayer]:Player is in invalid state[%d]", state);
+    return "";
+  }
+  return ::GetStreamingProperty(player_, streaming_property_type);
+}
+
+bool PlusPlayer::SetBufferConfig(const std::string &key, int64_t value) {
+  if (!player_) {
+    LOG_ERROR("[PlusPlayer] Player not created.");
+    return false;
+  }
+
+  plusplayer::State state = GetState(player_);
+  if (state == plusplayer::State::kNone) {
+    LOG_ERROR("[PlusPlayer]:Player is in invalid state[%d]", state);
+    return false;
+  }
+  const std::pair<std::string, int> config = std::make_pair(key, value);
+  return ::SetBufferConfig(player_, config);
+}
+
+void PlusPlayer::SetStreamingProperty(const std::string &type,
+                                      const std::string &value) {
+  if (!player_) {
+    LOG_ERROR("[PlusPlayer] Player not created.");
+    return;
+  }
+  plusplayer::State state = GetState(player_);
+  if (state == plusplayer::State::kNone) {
+    LOG_ERROR("[PlusPlayer] Player is in invalid state[%d]", state);
+    return;
+  }
+
+  LOG_INFO("[PlusPlayer] SetStreamingProp: type[%s], value[%s]", type.c_str(),
+           value.c_str());
+  ::SetStreamingProperty(player_, type, value);
+}
+
 bool PlusPlayer::OnLicenseAcquired(int *drm_handle, unsigned int length,
                                    unsigned char *pssh_data, void *user_data) {
   LOG_INFO("[PlusPlayer] License acquired.");
@@ -651,12 +697,72 @@ void PlusPlayer::OnResourceConflicted(void *user_data) {
   self->SendError("PlusPlayer error", "Resource conflicted");
 }
 
+std::string GetErrorMessage(plusplayer::ErrorType error_code) {
+  switch (error_code) {
+    case plusplayer::ErrorType::kNone:
+      return "Successful";
+    case plusplayer::ErrorType::kOutOfMemory:
+      return "Out of memory";
+    case plusplayer::ErrorType::kInvalidParameter:
+      return "Invalid parameter";
+    case plusplayer::ErrorType::kNoSuchFile:
+      return "No such file or directory";
+    case plusplayer::ErrorType::kInvalidOperation:
+      return "Invalid operation";
+    case plusplayer::ErrorType::kFileNoSpaceOnDevice:
+      return "No space left on the device";
+    case plusplayer::ErrorType::kFeatureNotSupportedOnDevice:
+      return "Not supported file on this device";
+    case plusplayer::ErrorType::kSeekFailed:
+      return "Seek operation failure";
+    case plusplayer::ErrorType::kInvalidState:
+      return "Invalid player state";
+    case plusplayer::ErrorType::kNotSupportedFile:
+      return "File format not supported";
+    case plusplayer::ErrorType::kNotSupportedFormat:
+      return "Not supported media format";
+    case plusplayer::ErrorType::kInvalidUri:
+      return "Invalid URI";
+    case plusplayer::ErrorType::kSoundPolicy:
+      return "Sound policy error";
+    case plusplayer::ErrorType::kConnectionFailed:
+      return "Streaming connection failed";
+    case plusplayer::ErrorType::kVideoCaptureFailed:
+      return "Video capture failed";
+    case plusplayer::ErrorType::kDrmExpired:
+      return "DRM license expired";
+    case plusplayer::ErrorType::kDrmNoLicense:
+      return "DRM no license";
+    case plusplayer::ErrorType::kDrmFutureUse:
+      return "License for future use";
+    case plusplayer::ErrorType::kDrmNotPermitted:
+      return "DRM format not permitted";
+    case plusplayer::ErrorType::kResourceLimit:
+      return "Resource limit";
+    case plusplayer::ErrorType::kPermissionDenied:
+      return "Permission denied";
+    case plusplayer::ErrorType::kServiceDisconnected:
+      return "Service disconnected";
+    case plusplayer::ErrorType::kBufferSpace:
+      return "No buffer space available";
+    case plusplayer::ErrorType::kNotSupportedAudioCodec:
+      return "Not supported audio codec but video can be played";
+    case plusplayer::ErrorType::kNotSupportedVideoCodec:
+      return "Not supported video codec but audio can be played";
+    case plusplayer::ErrorType::kNotSupportedSubtitle:
+      return "Not supported subtitle format";
+    default:
+      return "Not defined error";
+  }
+}
+
 void PlusPlayer::OnError(const plusplayer::ErrorType &error_code,
                          void *user_data) {
   LOG_ERROR("[PlusPlayer] Error code: %d", error_code);
   PlusPlayer *self = reinterpret_cast<PlusPlayer *>(user_data);
 
-  self->SendError("[PlusPlayer] OnError", "");
+  self->SendError("[PlusPlayer] error",
+                  std::string("Error: ") + GetErrorMessage(error_code));
 }
 
 void PlusPlayer::OnErrorMsg(const plusplayer::ErrorType &error_code,
@@ -664,7 +770,7 @@ void PlusPlayer::OnErrorMsg(const plusplayer::ErrorType &error_code,
   LOG_ERROR("[PlusPlayer] Error code: %d, message: %s.", error_code, error_msg);
   PlusPlayer *self = reinterpret_cast<PlusPlayer *>(user_data);
 
-  self->SendError("PlusPlayer error", error_msg);
+  self->SendError("PlusPlayer error", std::string("Error: ") + error_msg);
 }
 
 void PlusPlayer::OnDrmInitData(int *drm_handle, unsigned int len,

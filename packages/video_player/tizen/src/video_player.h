@@ -18,6 +18,7 @@
 #include <queue>
 #include <string>
 
+#include "media_player_proxy.h"
 #include "video_player_options.h"
 
 typedef int (*ScreensaverResetTimeout)(void);
@@ -29,7 +30,8 @@ class VideoPlayer {
 
   explicit VideoPlayer(flutter::PluginRegistrar *plugin_registrar,
                        flutter::TextureRegistrar *texture_registrar,
-                       const std::string &uri, VideoPlayerOptions &options);
+                       const std::string &uri, VideoPlayerOptions &options,
+                       flutter::EncodableMap &http_headers);
   ~VideoPlayer();
 
   void Play();
@@ -54,6 +56,7 @@ class VideoPlayer {
   void SetUpEventChannel(flutter::BinaryMessenger *messenger);
   void Initialize();
   void SendInitialized();
+  void SendIsPlayingStateUpdate(bool is_playing);
   void InitScreenSaverApi();
 
   static void OnPrepared(void *data);
@@ -68,19 +71,25 @@ class VideoPlayer {
 
   void RequestRendering();
   void OnRenderingCompleted();
+  int64_t GetDuration();
+  int64_t GetLiveDuration();
+  bool IsLive();
 
   media_packet_h current_media_packet_ = nullptr;
   media_packet_h previous_media_packet_ = nullptr;
 
   bool is_initialized_ = false;
   bool is_rendering_ = false;
+  bool is_live_ = false;
 
   std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>
       event_channel_;
   std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink_;
 
   player_h player_ = nullptr;
+  std::unique_ptr<MediaPlayerProxy> media_player_proxy_ = nullptr;
   int64_t texture_id_ = -1;
+  std::string uri_;
 
   flutter::TextureRegistrar *texture_registrar_;
   std::unique_ptr<flutter::TextureVariant> texture_variant_;

@@ -1,3 +1,21 @@
+## 0.3.4
+
+* Update lightweight web engine(1.3.3).
+
+## 0.3.3
+
+* Update lightweight web engine(1.3.0).
+
+## 0.3.2
+
+* Update lightweight web engine(1.2.2).
+
+## 0.3.1
+
+* Fix new lint warnings.
+* Update minimum Flutter and Dart version to 3.13 and 3.1.
+* Supports multiple JavaScriptChannel method call.
+
 ## 0.3.0
 
 * Update webivew_flutter to 4.4.2.
