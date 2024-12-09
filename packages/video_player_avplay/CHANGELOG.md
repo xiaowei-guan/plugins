@@ -1,3 +1,11 @@
+## 0.5.6
+
+* Make startPosition support int32_t type.
+
+## 0.5.5
+
+* Fix select audio channel failed issue.
+
 ## 0.5.4
 
 * Fix start position out of range issue.
