@@ -134,9 +134,12 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
 
   /// Retrieves a specific property value obtained by the streaming engine (Smooth Streaming, HLS, DASH, or Widevine).
   Future<String> getStreamingProperty(
-      int playerId, StreamingPropertyType type) {
+    int playerId,
+    StreamingPropertyType type,
+  ) {
     throw UnimplementedError(
-        'getStreamingProperty() has not been implemented.');
+      'getStreamingProperty() has not been implemented.',
+    );
   }
 
   /// Sets the buffer size for the player.
@@ -156,9 +159,13 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
 
   /// Set streamingengine property.
   Future<void> setStreamingProperty(
-      int playerId, StreamingPropertyType type, String value) {
+    int playerId,
+    StreamingPropertyType type,
+    String value,
+  ) {
     throw UnimplementedError(
-        'setStreamingProperty() has not been implemented.');
+      'setStreamingProperty() has not been implemented.',
+    );
   }
 
   /// Returns a widget displaying the video with a given playerId.
@@ -424,6 +431,7 @@ class VideoEvent {
     this.size,
     this.buffered,
     this.text,
+    this.isPlaying,
   });
 
   /// The type of the event.
@@ -448,6 +456,11 @@ class VideoEvent {
   ///
   /// Only used if [eventType] is [VideoEventType.subtitleUpdate].
   final String? text;
+
+  /// Whether the video is currently playing.
+  ///
+  /// Only used if [eventType] is [VideoEventType.isPlayingStateUpdate].
+  final bool? isPlaying;
 
   @override
   bool operator ==(Object other) {
@@ -492,6 +505,12 @@ enum VideoEventType {
 
   /// Updated the video subtitle text.
   subtitleUpdate,
+
+  /// The playback state of the video has changed.
+  ///
+  /// This event is fired when the video starts or pauses due to user actions or
+  /// phone calls, or other app media such as music players.
+  isPlayingStateUpdate,
 
   /// An unknown event has been received.
   unknown,
