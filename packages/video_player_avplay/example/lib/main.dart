@@ -330,7 +330,7 @@ class _DrmRemoteVideoState2 extends State<_DrmRemoteVideo2> {
       drmConfigs: const DrmConfigs(
         type: DrmType.playready,
         licenseServerUrl:
-            'http://test.playready.microsoft.com/service/rightsmanager.asmx',
+            'https://test.playready.microsoft.com/service/rightsmanager.asmx',
       ),
     );
 
@@ -536,20 +536,19 @@ class _ControlsOverlay extends StatelessWidget {
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 50),
           reverseDuration: const Duration(milliseconds: 200),
-          child:
-              controller.value.isPlaying
-                  ? const SizedBox.shrink()
-                  : const ColoredBox(
-                    color: Colors.black26,
-                    child: Center(
-                      child: Icon(
-                        Icons.play_arrow,
-                        color: Colors.white,
-                        size: 100.0,
-                        semanticLabel: 'Play',
-                      ),
+          child: controller.value.isPlaying
+              ? const SizedBox.shrink()
+              : const ColoredBox(
+                  color: Colors.black26,
+                  child: Center(
+                    child: Icon(
+                      Icons.play_arrow,
+                      color: Colors.white,
+                      size: 100.0,
+                      semanticLabel: 'Play',
                     ),
                   ),
+                ),
         ),
         GestureDetector(
           onTap: () {

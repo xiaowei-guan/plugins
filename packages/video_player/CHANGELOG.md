@@ -1,6 +1,11 @@
 ## NEXT
 
+* Update code format.
+
+## 2.5.5
+
 * Add ignore analyzer option to fix analyze issue.
+* Update the LICENSE file so that it is recognized by pub.dev.
 
 ## 2.5.4
 

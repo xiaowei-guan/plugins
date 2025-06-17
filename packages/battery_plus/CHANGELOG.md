@@ -1,7 +1,13 @@
 ## NEXT
 
+* Update code format.
+
+## 1.1.3
+
 * Update minimum Flutter and Dart version to 3.13 and 3.1.
 * Fix analyze issue.
+* Update the LICENSE file.
+* Add more detail to the description field of pubspec.yaml
 
 ## 1.1.2
 

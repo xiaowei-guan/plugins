@@ -206,9 +206,16 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
       final Map<dynamic, dynamic> map = event as Map<dynamic, dynamic>;
       switch (map['event']) {
         case 'initialized':
+        case 'restored':
           final List<dynamic>? durationVal = map['duration'] as List<dynamic>?;
+          VideoEventType videoEventType;
+          if (map['event'] == 'initialized') {
+            videoEventType = VideoEventType.initialized;
+          } else {
+            videoEventType = VideoEventType.restored;
+          }
           return VideoEvent(
-            eventType: VideoEventType.initialized,
+            eventType: videoEventType,
             duration: DurationRange(
               Duration(milliseconds: durationVal?[0] as int),
               Duration(milliseconds: durationVal?[1] as int),
@@ -235,6 +242,11 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
           return VideoEvent(
             eventType: VideoEventType.subtitleUpdate,
             text: map['text']! as String,
+          );
+        case 'isPlayingStateUpdate':
+          return VideoEvent(
+            eventType: VideoEventType.isPlayingStateUpdate,
+            isPlaying: map['isPlaying']! as bool,
           );
         default:
           return VideoEvent(eventType: VideoEventType.unknown);
@@ -273,15 +285,49 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
     );
   }
 
+  @override
+  Future<void> suspend(int playerId) {
+    return _api.suspend(playerId);
+  }
+
+  @override
+  Future<void> restore(
+    int playerId, {
+    DataSource? dataSource,
+    int resumeTime = -1,
+  }) {
+    final CreateMessage message = CreateMessage();
+
+    if (dataSource != null) {
+      switch (dataSource.sourceType) {
+        case DataSourceType.asset:
+          message.asset = dataSource.asset;
+          message.packageName = dataSource.package;
+        case DataSourceType.network:
+          message.uri = dataSource.uri;
+          message.formatHint = _videoFormatStringMap[dataSource.formatHint];
+          message.httpHeaders = dataSource.httpHeaders;
+          message.drmConfigs = dataSource.drmConfigs?.toMap();
+          message.playerOptions = dataSource.playerOptions;
+        case DataSourceType.file:
+          message.uri = dataSource.uri;
+        case DataSourceType.contentUri:
+          message.uri = dataSource.uri;
+      }
+    }
+
+    return _api.restore(playerId, message, resumeTime);
+  }
+
   EventChannel _eventChannelFor(int playerId) {
     return EventChannel('tizen/video_player/video_events_$playerId');
   }
 
   static const Map<VideoFormat, String> _videoFormatStringMap =
       <VideoFormat, String>{
-        VideoFormat.ss: 'ss',
-        VideoFormat.hls: 'hls',
-        VideoFormat.dash: 'dash',
-        VideoFormat.other: 'other',
-      };
+    VideoFormat.ss: 'ss',
+    VideoFormat.hls: 'hls',
+    VideoFormat.dash: 'dash',
+    VideoFormat.other: 'other',
+  };
 }

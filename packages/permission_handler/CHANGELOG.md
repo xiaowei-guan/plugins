@@ -1,7 +1,15 @@
-## NEXT
+## 1.4.1
+
+* Update README.
+* Update the example app.
+
+## 1.4.0
 
 * Update minimum Flutter and Dart version to 3.13 and 3.1.
 * Fix analyze issue.
+* Update code format.
+* Update permission_handler to 12.0.0.
+* Update permission_handler_platform_interface to 4.3.0.
 
 ## 1.3.0
 

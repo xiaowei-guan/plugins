@@ -1,3 +1,11 @@
+## NEXT
+
+* Update code format.
+
+## 0.9.5
+
+* Update the LICENSE file so that it is recognized by pub.dev.
+
 ## 0.9.4
 
 * Disable unnecessary web-engine initialization.
