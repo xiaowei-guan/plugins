@@ -20,7 +20,7 @@
 #include "video_player.h"
 #include "video_player_options.h"
 
-namespace {
+namespace video_player_videohole_tizen {
 
 class VideoPlayerTizenPlugin : public flutter::Plugin,
                                public VideoPlayerVideoholeApi {
@@ -59,6 +59,7 @@ class VideoPlayerTizenPlugin : public flutter::Plugin,
   std::optional<FlutterError> Restore(int64_t palyer_id,
                                       const CreateMessage *msg,
                                       int64_t resume_time) override;
+  ErrorOr<bool> SetDisplayRotate(const RotationMessage &msg) override;
 
   static VideoPlayer *FindPlayerById(int64_t player_id) {
     auto iter = players_.find(player_id);
@@ -330,11 +331,20 @@ std::optional<FlutterError> VideoPlayerTizenPlugin::Restore(
   return std::nullopt;
 }
 
-}  // namespace
+ErrorOr<bool> VideoPlayerTizenPlugin::SetDisplayRotate(
+    const RotationMessage &msg) {
+  VideoPlayer *player = FindPlayerById(msg.player_id());
+  if (!player) {
+    return FlutterError("Invalid argument", "Player not found");
+  }
+  return player->SetDisplayRotate(msg.rotation());
+}
+
+}  // namespace video_player_videohole_tizen
 
 void VideoPlayerTizenPluginRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
-  VideoPlayerTizenPlugin::RegisterWithRegistrar(
+  video_player_videohole_tizen::VideoPlayerTizenPlugin::RegisterWithRegistrar(
       registrar, flutter::PluginRegistrarManager::GetInstance()
                      ->GetRegistrar<flutter::PluginRegistrar>(registrar));
 }

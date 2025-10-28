@@ -7,6 +7,7 @@ import 'package:pigeon/pigeon.dart';
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/src/messages.g.dart',
+    cppOptions: CppOptions(namespace: 'video_player_avplay_tizen'),
     cppHeaderOut: 'tizen/src/messages.h',
     cppSourceOut: 'tizen/src/messages.cc',
   ),
@@ -172,5 +173,6 @@ abstract class VideoPlayerAvplayApi {
   void restore(int playerId, CreateMessage? msg, int resumeTime);
   bool setData(DashPropertyMapMessage msg);
   DashPropertyMapMessage getData(DashPropertyTypeListMessage msg);
+  bool updateDashToken(int playerId, String dashToken);
   TrackMessage getActiveTrackInfo(PlayerMessage msg);
 }

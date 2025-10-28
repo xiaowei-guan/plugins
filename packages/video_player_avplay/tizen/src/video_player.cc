@@ -9,6 +9,8 @@
 
 #include "log.h"
 
+namespace video_player_avplay_tizen {
+
 static int64_t player_index = 1;
 
 VideoPlayer::VideoPlayer(flutter::BinaryMessenger *messenger,
@@ -197,6 +199,14 @@ void VideoPlayer::SendRestored() {
   }
 }
 
+void VideoPlayer::SendADFromDash(flutter::EncodableMap ad_info) {
+  flutter::EncodableMap result = {
+      {flutter::EncodableValue("event"), flutter::EncodableValue("adFromDash")},
+      {flutter::EncodableValue("adInfo"), flutter::EncodableValue(ad_info)},
+  };
+  PushEvent(flutter::EncodableValue(result));
+}
+
 void VideoPlayer::SendError(const std::string &error_code,
                             const std::string &error_message) {
   if (event_sink_) {
@@ -209,3 +219,5 @@ void VideoPlayer::SendError(const std::string &error_code,
 void *VideoPlayer::GetWindowHandle() {
   return FlutterDesktopViewGetNativeHandle(flutter_view_);
 }
+
+}  // namespace video_player_avplay_tizen

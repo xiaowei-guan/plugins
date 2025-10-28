@@ -14,6 +14,8 @@
 #include "log.h"
 #include "video_player_error.h"
 
+namespace video_player_tizen {
+
 static std::string RotationToString(player_display_rotation_e rotation) {
   switch (rotation) {
     case PLAYER_DISPLAY_ROTATION_NONE:
@@ -80,7 +82,9 @@ FlutterDesktopGpuSurfaceDescriptor *VideoPlayer::ObtainGpuSurface(
   return gpu_surface_.get();
 }
 
+#ifdef TV_PROFILE
 void VideoPlayer::InitScreenSaverApi() {
+  LOG_INFO("[VideoPlayer] InitScreenSaverApi()");
   screensaver_handle_ = dlopen("libcapi-screensaver.so", RTLD_LAZY);
   if (!screensaver_handle_) {
     LOG_ERROR("[VideoPlayer] dlopen failed: %s", dlerror());
@@ -108,6 +112,7 @@ void VideoPlayer::InitScreenSaverApi() {
     return;
   }
 }
+#endif
 
 VideoPlayer::VideoPlayer(flutter::PluginRegistrar *plugin_registrar,
                          flutter::TextureRegistrar *texture_registrar,
@@ -324,11 +329,13 @@ void VideoPlayer::Pause() {
     throw VideoPlayerError("player_pause failed", get_error_message(ret));
   }
 
+#ifdef TV_PROFILE
   if (timer_) {
     LOG_DEBUG("[VideoPlayer] Delete ecore timer.");
     ecore_timer_del(timer_);
     timer_ = nullptr;
   }
+#endif
 
   SendIsPlayingStateUpdate(false);
 }
@@ -423,6 +430,7 @@ void VideoPlayer::Dispose() {
     texture_registrar_ = nullptr;
   }
 
+#ifdef TV_PROFILE
   if (screensaver_handle_) {
     dlclose(screensaver_handle_);
     screensaver_handle_ = nullptr;
@@ -432,6 +440,7 @@ void VideoPlayer::Dispose() {
     ecore_timer_del(timer_);
     timer_ = nullptr;
   }
+#endif
 }
 
 void VideoPlayer::SetUpEventChannel(flutter::BinaryMessenger *messenger) {
@@ -534,6 +543,7 @@ void VideoPlayer::SendIsPlayingStateUpdate(bool is_playing) {
   PushEvent(flutter::EncodableValue(result));
 }
 
+#ifdef TV_PROFILE
 Eina_Bool VideoPlayer::ResetScreensaverTimeout(void *data) {
   LOG_DEBUG("[VideoPlayer] Reset screen saver timeout.");
 
@@ -549,6 +559,7 @@ Eina_Bool VideoPlayer::ResetScreensaverTimeout(void *data) {
 
   return ECORE_CALLBACK_RENEW;
 }
+#endif
 
 void VideoPlayer::OnPrepared(void *data) {
   LOG_DEBUG("[VideoPlayer] Player prepared.");
@@ -582,7 +593,12 @@ void VideoPlayer::OnPlayCompleted(void *data) {
   };
   player->PushEvent(flutter::EncodableValue(result));
 
-  player->Pause();
+  try {
+    player->Pause();
+  } catch (const VideoPlayerError &error) {
+    LOG_ERROR("[VideoPlayer] Error code: %s, Error message: %s",
+              error.code().c_str(), error.message().c_str());
+  }
 }
 
 void VideoPlayer::OnInterrupted(player_interrupted_code_e code, void *data) {
@@ -707,3 +723,5 @@ bool VideoPlayer::IsLive() {
   is_live_ = is_live != 0;
   return is_live_;
 }
+
+}  // namespace video_player_tizen

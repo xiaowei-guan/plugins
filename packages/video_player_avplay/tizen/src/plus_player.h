@@ -16,6 +16,8 @@
 #include "plusplayer/plusplayer_wrapper.h"
 #include "video_player.h"
 
+namespace video_player_avplay_tizen {
+
 class PlusPlayer : public VideoPlayer {
  public:
   explicit PlusPlayer(flutter::BinaryMessenger *messenger,
@@ -54,6 +56,7 @@ class PlusPlayer : public VideoPlayer {
                int64_t resume_time) override;
   bool SetData(const flutter::EncodableMap &data) override;
   flutter::EncodableMap GetData(const flutter::EncodableList &data) override;
+  bool UpdateDashToken(const std::string &dashToken) override;
   flutter::EncodableList GetActiveTrackInfo() override;
 
  private:
@@ -98,6 +101,7 @@ class PlusPlayer : public VideoPlayer {
   static void OnCueOutContEvent(const char *cue_out_cont_data, void *user_data);
   static void OnChangeSourceDone(bool ret, void *user_data);
   static void OnStateChangedToPlaying(void *user_data);
+  static void OnADEventFromDash(const char *ad_data, void *user_data);
 
   PlusplayerRef player_ = nullptr;
   PlusplayerListener listener_;
@@ -110,5 +114,7 @@ class PlusPlayer : public VideoPlayer {
   std::unique_ptr<DeviceProxy> device_proxy_ = nullptr;
   CreateMessage create_message_;
 };
+
+}  // namespace video_player_avplay_tizen
 
 #endif  // FLUTTER_PLUGIN_PLUS_PLAYER_H_

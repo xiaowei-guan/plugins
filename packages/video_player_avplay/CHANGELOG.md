@@ -1,6 +1,45 @@
-## NEXT
+## 0.7.3
+* Update plusplayer
+  1. [DASH] Update token value if baseURL not include token.
+
+## 0.7.2
+* Fix type missmatch.
+
+## 0.7.1
+* Fix an assertion issue when getting AD information.
+
+## 0.7.0
+* Add new features for DASH video player
+  1. Support update token before and after player prepare done.
+  2. Support setting resolution, frame rate and whether to update same language code.
+  3. Support obtaining streaming information such as audio, video, and subtitle.
+  4. Support getting the http response header of the requested url.
+  5. Support capturing ad information in the stream.
+* Update plusplayer
+  1. [DASH] Fix the issue of incorrect duration after the stream changes from live to static.
+  2. [Common] Add protect for smpted image subtitle decoder.
+
+## 0.6.0
+* Support multi TizenOS version.
+
+## 0.5.26
+* Add plusplayer library for Tizen10.0.
+* Update plusplayer
+  1. [HLS] Log level correction for Ad timing info.
+  2. [HLS] Defect propogation of robustneess issue & connection failure cases.
+  3. [PLAYER] Upgrade log level in case of download retry case.
+  4. [PLAYER] Avoid making unnecessary copy of streamlist vector.
+  5. [PLAYER] Round off to avoid loss of precision due to floating point multiplication.
+  6. [PLAYER] Build fix for 10.0 in plusplaye.
+  7. [PLAYER] Update plusplayer ini.
+  8. [PLAYER] Update plusplayer-wrapper API.
+  9. [DASH] CLear Key feature support.
+  10. [DASH] Low-latency support.
+
+## 0.5.25
 
 * Update code format.
+* Add namespace to the C++ code to avoid name conflicts with other plugins.
 
 ## 0.5.24
 

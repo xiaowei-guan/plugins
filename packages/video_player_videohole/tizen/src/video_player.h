@@ -19,6 +19,8 @@
 #include "ecore_wl2_window_proxy.h"
 #include "messages.h"
 
+namespace video_player_videohole_tizen {
+
 class VideoPlayer {
  public:
   using SeekCompletedCallback = std::function<void()>;
@@ -51,6 +53,7 @@ class VideoPlayer {
   virtual bool Suspend() = 0;
   virtual bool Restore(const CreateMessage *restore_message,
                        int64_t resume_time) = 0;
+  virtual bool SetDisplayRotate(int64_t rotation) = 0;
 
  protected:
   virtual void GetVideoSize(int32_t *width, int32_t *height) = 0;
@@ -86,6 +89,8 @@ class VideoPlayer {
   std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink_;
   Ecore_Pipe *sink_event_pipe_ = nullptr;
 };
+
+}  // namespace video_player_videohole_tizen
 
 namespace flutter_common {
 

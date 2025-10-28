@@ -7,6 +7,7 @@ import 'package:pigeon/pigeon.dart';
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/src/messages.g.dart',
+    cppOptions: CppOptions(namespace: 'video_player_videohole_tizen'),
     cppHeaderOut: 'tizen/src/messages.h',
     cppSourceOut: 'tizen/src/messages.cc',
   ),
@@ -90,6 +91,12 @@ class DurationMessage {
   List<int?>? durationRange;
 }
 
+class RotationMessage {
+  RotationMessage(this.playerId, this.rotation);
+  int playerId;
+  int rotation;
+}
+
 @HostApi()
 abstract class VideoPlayerVideoholeApi {
   void initialize();
@@ -112,4 +119,5 @@ abstract class VideoPlayerVideoholeApi {
   DurationMessage duration(PlayerMessage msg);
   void suspend(int playerId);
   void restore(int playerId, CreateMessage? msg, int resumeTime);
+  bool setDisplayRotate(RotationMessage msg);
 }

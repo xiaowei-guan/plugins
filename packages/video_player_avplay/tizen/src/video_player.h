@@ -19,6 +19,8 @@
 #include "ecore_wl2_window_proxy.h"
 #include "messages.h"
 
+namespace video_player_avplay_tizen {
+
 class VideoPlayer {
  public:
   using SeekCompletedCallback = std::function<void()>;
@@ -66,6 +68,7 @@ class VideoPlayer {
   virtual flutter::EncodableMap GetData(const flutter::EncodableList &data) {
     return flutter::EncodableMap{};
   }
+  virtual bool UpdateDashToken(const std::string &dashToken) { return false; };
   virtual flutter::EncodableList GetActiveTrackInfo() {
     return flutter::EncodableList{};
   }
@@ -85,6 +88,7 @@ class VideoPlayer {
   void SendPlayCompleted();
   void SendIsPlayingState(bool is_playing);
   void SendRestored();
+  void SendADFromDash(flutter::EncodableMap ad_info);
   void SendError(const std::string &error_code,
                  const std::string &error_message);
 
@@ -106,6 +110,8 @@ class VideoPlayer {
   std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink_;
   Ecore_Pipe *sink_event_pipe_ = nullptr;
 };
+
+}  // namespace video_player_avplay_tizen
 
 namespace flutter_common {
 

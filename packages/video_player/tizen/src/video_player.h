@@ -21,6 +21,8 @@
 #include "media_player_proxy.h"
 #include "video_player_options.h"
 
+namespace video_player_tizen {
+
 typedef int (*ScreensaverResetTimeout)(void);
 typedef int (*ScreensaverOverrideReset)(bool onoff);
 
@@ -57,7 +59,9 @@ class VideoPlayer {
   void Initialize();
   void SendInitialized();
   void SendIsPlayingStateUpdate(bool is_playing);
+#ifdef TV_PROFILE
   void InitScreenSaverApi();
+#endif
 
   static void OnPrepared(void *data);
   static void OnBuffering(int percent, void *data);
@@ -67,7 +71,9 @@ class VideoPlayer {
   static void OnError(int error_code, void *data);
   static void OnVideoFrameDecoded(media_packet_h packet, void *data);
   static void ReleaseMediaPacket(void *packet);
+#ifdef TV_PROFILE
   static Eina_Bool ResetScreensaverTimeout(void *data);
+#endif
 
   void RequestRendering();
   void OnRenderingCompleted();
@@ -99,14 +105,18 @@ class VideoPlayer {
 
   SeekCompletedCallback on_seek_completed_;
 
-  void *screensaver_handle_;
+#ifdef TV_PROFILE
+  void *screensaver_handle_ = nullptr;
   ScreensaverResetTimeout screensaver_reset_timeout_;
-  Ecore_Timer *timer_;
+  Ecore_Timer *timer_ = nullptr;
+#endif
 
   Ecore_Pipe *sink_event_pipe_ = nullptr;
   std::mutex queue_mutex_;
   std::queue<flutter::EncodableValue> encodable_event_queue_;
   std::queue<std::pair<std::string, std::string>> error_event_queue_;
 };
+
+}  // namespace video_player_tizen
 
 #endif  // FLUTTER_PLUGIN_VIDEO_PLAYER_H_

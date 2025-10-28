@@ -1,6 +1,15 @@
-## NEXT
+## 2.5.8
+
+* Fix integration_test crash issue (Issue #890)
+
+## 2.5.7
+
+* Fix multiple-definition error caused by applying multiple plugins at once. (Issue #883)
+
+## 2.5.6
 
 * Update code format.
+* Fix app crash issue when fail to seek.
 
 ## 2.5.5
 
