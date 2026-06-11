@@ -1,3 +1,14 @@
+## 0.10.0
+
+* Update minimum supported SDK version to Flutter 3.32/Dart 3.8.
+* Update webview_flutter to 4.13.1.
+* Update webview_flutter_platform_interface to 2.13.0.
+* Add support for setVerticalScrollBarEnabled, setHorizontalScrollBarEnabled, supportsSetScrollBarsEnabled APIs
+
+## 0.9.7
+
+* Fix back key, exit key handling.
+
 ## 0.9.6
 
 * Update code format.

@@ -436,8 +436,10 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
         case 'subtitleUpdate':
           return VideoEvent(
             eventType: VideoEventType.subtitleUpdate,
-            text: map['text']! as String,
-            subtitleAttributes: map['attributes']! as List<dynamic>,
+            subtitlesInfo: SubtitlesInfo(
+                map['duration'] as int?,
+                map['textsInfo'] as List<dynamic>?,
+                map['pictureInfo'] as Map<Object?, Object?>?),
           );
         case 'isPlayingStateUpdate':
           return VideoEvent(
@@ -448,6 +450,11 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
           return VideoEvent(
             eventType: VideoEventType.adFromDash,
             adInfo: map['adInfo'] as Map<Object?, Object?>?,
+          );
+        case 'manifestInfoUpdated':
+          return VideoEvent(
+            eventType: VideoEventType.manifestInfoUpdated,
+            manifestInfo: map['manifestInfo'] as String?,
           );
         default:
           return VideoEvent(eventType: VideoEventType.unknown);
@@ -514,14 +521,12 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
     StreamingPropertyType.setMode4K: 'SET_MODE_4K',
     StreamingPropertyType.userAgent: 'USER_AGENT',
     StreamingPropertyType.useVideoMixer: 'USE_VIDEOMIXER',
-    StreamingPropertyType.unwantedResolution: 'UNWANTED_RESOLUTION',
-    StreamingPropertyType.unwantedFramerate: 'UNWANTED_FRAMERATE',
     StreamingPropertyType.audioStreamInfo: 'AUDIO_STREAM_INFO',
     StreamingPropertyType.subtitleStreamInfo: 'SUBTITLE_STREAM_INFO',
     StreamingPropertyType.videoStreamInfo: 'VIDEO_STREAM_INFO',
-    StreamingPropertyType.updateSameLanguageCode: 'UPDATE_SAME_LANGUAGE_CODE',
     StreamingPropertyType.dashToken: 'TOKEN',
     StreamingPropertyType.openHttpHeader: 'OPEN_HTTP_HEADER',
+    StreamingPropertyType.openManifest: 'OPEN_MANIFEST',
   };
 
   static const Map<BufferConfigType, String> _bufferConfigTypeMap =

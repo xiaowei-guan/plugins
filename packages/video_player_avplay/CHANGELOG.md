@@ -1,3 +1,101 @@
+## 0.8.13
+
+* Update plusplayer
+  1. Fix SVACE issue.
+
+## 0.8.12
+
+* Update plusplayer
+  1. [DASH] Fixed the screen loading out-of-sync issue.
+
+## 0.8.11
+
+* Update plusplayer
+  1. [DASH] Fixed alternate audio tracks not being exposed for DASH streams with pre-roll ads.
+
+## 0.8.10
+
+* Update the way to call the `SetDisplay` API.
+
+## 0.8.9
+
+* [DASH] Fix seek freeze issue.
+
+## 0.8.8
+
+* Update the conditional statement for the `_currentCaptions`.
+* Update plusplayer
+  1. [DASH] Fix the issue where subtitles for content with pre-roll/inserted ads in DASH could not be rendered.
+
+## 0.8.7
+
+* Update plusplayer
+  1. [DASH] Fix the issue of low resolution when playing DASH streams with pre-roll ads.
+
+## 0.8.6
+
+* Update plusplayer
+  1. [DASH] Fix the issue where seeking the beginning of the live DASH manifest fails.
+
+## 0.8.5
+
+* Update plusplayer
+  1. [DASH] Fix the issue of picture subtitle decoding failure.
+
+## 0.8.4
+
+* Update plusplayer
+  1. [HLS] Fix for sigsegv when external track in content.
+  2. [HLS] Fix for Memory increase after discontinuity due to wrong content format received for cmaf content.
+  3. [HLS] MA Handling for Invalid Cmaf Segment.
+  4. [HLS] Added log for checking ad drift, printing manifest start time and json start time of the ad.
+
+## 0.8.3
+
+* Update plusplayer
+  1. [DASH] Fix picture subtitle display issue.
+
+## 0.8.2
+
+* Adds compatibility with `http` 1.0 in example.
+* Removed unused proxy APIs.
+* Update plusplayer
+  1. [DASH] Fix subtitle crash issue.
+
+## 0.8.1
+
+* Update the error callback when DRM license acquisition fails.
+
+## 0.8.0
+
+* Support parsing SMPE-TT subtitle attributes for DASH.
+* Support displaying multi-line text subtitles for DASH.
+* Support image format subtitles for DASH.
+
+## 0.7.8
+
+* unwantedResolution, unwantedFrameRate and updateSameLanguageCode changed to be a child type of adaptiveInfo in StreamingPropertyType.
+* unwantedResolution renamed to MAX_RESOLUTION, unwantedFrameRate renamed to MAX_FRAMERATE, updateSameLanguageCode renamed to UPDATE_SAME_LANGUAGE_CODE.
+* Add manifest callback for parsing advertisement-related information for DASH.
+* Update plusplayer
+  1. [DASH] Fix picture format crash issue.
+  2. [DASH] Support flutter subtitle style parser feature.
+
+## 0.7.7
+
+* Fix black line issue when playing video.
+
+## 0.7.6
+* Fix video doesn't scale issue.
+
+## 0.7.5
+* Fix the issue of subtitles remaining longer than their end time.
+
+## 0.7.4
+* Update plusplayer
+  1. [DASH] Fix this issue of audio switching not working in the dash video stream.
+  2. [DASH] Fix the issue of excessive switching time between different audio tracks.
+
 ## 0.7.3
 * Update plusplayer
   1. [DASH] Update token value if baseURL not include token.

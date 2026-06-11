@@ -147,15 +147,17 @@ void VideoPlayer::SendBufferingEnd() {
   PushEvent(flutter::EncodableValue(result));
 }
 
-void VideoPlayer::SendSubtitleUpdate(int32_t duration, const std::string &text,
-                                     flutter::EncodableList attributes) {
+void VideoPlayer::SendSubtitleUpdate(int32_t duration,
+                                     flutter::EncodableList texts_info,
+                                     flutter::EncodableMap picture_info) {
   flutter::EncodableMap result = {
       {flutter::EncodableValue("event"),
        flutter::EncodableValue("subtitleUpdate")},
       {flutter::EncodableValue("duration"), flutter::EncodableValue(duration)},
-      {flutter::EncodableValue("text"), flutter::EncodableValue(text)},
-      {flutter::EncodableValue("attributes"),
-       flutter::EncodableValue(attributes)},
+      {flutter::EncodableValue("textsInfo"),
+       flutter::EncodableValue(texts_info)},
+      {flutter::EncodableValue("pictureInfo"),
+       flutter::EncodableValue(picture_info)},
   };
 
   PushEvent(flutter::EncodableValue(result));
@@ -203,6 +205,16 @@ void VideoPlayer::SendADFromDash(flutter::EncodableMap ad_info) {
   flutter::EncodableMap result = {
       {flutter::EncodableValue("event"), flutter::EncodableValue("adFromDash")},
       {flutter::EncodableValue("adInfo"), flutter::EncodableValue(ad_info)},
+  };
+  PushEvent(flutter::EncodableValue(result));
+}
+
+void VideoPlayer::SendManifestInfo(std::string manifest_info) {
+  flutter::EncodableMap result = {
+      {flutter::EncodableValue("event"),
+       flutter::EncodableValue("manifestInfoUpdated")},
+      {flutter::EncodableValue("manifestInfo"),
+       flutter::EncodableValue(manifest_info)},
   };
   PushEvent(flutter::EncodableValue(result));
 }

@@ -302,10 +302,16 @@ bool WebView::SendKey(const char* key, const char* string, const char* compose,
     return false;
   }
 
-  if (strcmp(key, "XF86Back") == 0 && !is_down &&
-      ewk_view_back_possible(webview_instance_)) {
-    ewk_view_back(webview_instance_);
-    return true;
+  if (strcmp(key, "XF86Exit") == 0 && !is_down) {
+    return false;
+  }
+
+  if (strcmp(key, "XF86Back") == 0 && !is_down) {
+    if (ewk_view_back_possible(webview_instance_)) {
+      ewk_view_back(webview_instance_);
+      return true;
+    }
+    return false;
   }
 
   if (is_down) {
@@ -695,6 +701,17 @@ void WebView::HandleWebViewMethodCall(const FlMethodCall& method_call,
     } else {
       result->Error("Invalid argument", "The argument must be a string.");
     }
+  } else if (method_name == "setVerticalScrollBarEnabled" ||
+             method_name == "setHorizontalScrollBarEnabled") {
+    const auto* value = std::get_if<bool>(arguments);
+    if (value) {
+      scrollbar_enabled_ = *value;
+      EwkInternalApiBinding::GetInstance().view.MainFrameScrollbarVisibleSet(
+          webview_instance_, scrollbar_enabled_);
+      result->Success();
+    } else {
+      result->Error("Invalid argument", "The argument must be a bool.");
+    }
   } else {
     result->NotImplemented();
   }
@@ -767,6 +784,9 @@ void WebView::OnFrameRendered(void* data, Evas_Object* obj, void* event_info) {
 
 void WebView::OnLoadStarted(void* data, Evas_Object* obj, void* event_info) {
   WebView* webview = static_cast<WebView*>(data);
+  EwkInternalApiBinding::GetInstance().view.MainFrameScrollbarVisibleSet(
+      webview->webview_instance_, webview->scrollbar_enabled_);
+
   std::string url = std::string(ewk_view_url_get(webview->webview_instance_));
   flutter::EncodableMap args = {
       {flutter::EncodableValue("url"), flutter::EncodableValue(url)}};

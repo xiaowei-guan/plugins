@@ -52,7 +52,7 @@ class VideoPlayerValue {
     required this.duration,
     this.size = Size.zero,
     this.position = Duration.zero,
-    this.caption = Caption.none,
+    this.captions = Captions.none,
     this.captionOffset = Duration.zero,
     this.tracks = const <Track>[],
     this.buffered = 0,
@@ -65,6 +65,7 @@ class VideoPlayerValue {
     this.errorDescription,
     this.isCompleted = false,
     this.adInfo,
+    this.manifestInfo,
   });
 
   /// Returns an instance for a video that hasn't been loaded.
@@ -94,11 +95,11 @@ class VideoPlayerValue {
   /// The current playback position.
   final Duration position;
 
-  /// The [Caption] that should be displayed based on the current [position].
+  /// The [Captions] that should be displayed based on the current [position].
   ///
   /// This field will never be null. If there is no caption for the current
-  /// [position], this will be a [Caption.none] object.
-  final Caption caption;
+  /// [position], this will be a [Captions.none] object.
+  final Captions captions;
 
   /// The [Duration] that should be used to offset the current [position] to get the correct [Caption].
   ///
@@ -158,12 +159,25 @@ class VideoPlayerValue {
   /// to determine if ad information is available.
   final AdInfoFromDash? adInfo;
 
+  /// Provides information about manifest when the DASH streaming manifest is
+  /// updated (e.g., when new video segments become available, bitrate changes
+  /// occur, or the stream configuration is modified), this property will be
+  /// populated with the updated manifest information.
+  ///
+  /// If no manifest update has occurred or if the video format does not
+  /// support dynamic manifest updates, this property will be `null`. You can
+  /// check [hasManifestUpdated] to determine if manifest information is available.
+  final String? manifestInfo;
+
   /// Indicates whether or not the video is in an error state. If this is true
   /// [errorDescription] should have information about the problem.
   bool get hasError => errorDescription != null;
 
   /// Indicates whether or not the video has ADInfo.
   bool get hasAdInfo => adInfo != null;
+
+  /// Indicates whether the video has updated its manifest.
+  bool get hasManifestUpdated => manifestInfo != null;
 
   /// Returns [size.width] / [size.height].
   ///
@@ -182,13 +196,34 @@ class VideoPlayerValue {
     return aspectRatio;
   }
 
+  /// Returns the [Captions] that should be displayed based on the current [position].
+  /// If the end postion of the captions has greater than the current [position], this will be a [Caption.none] object.
+  /// Only used for [copyWith].
+  Captions get _currentCaptions {
+    final List<TextCaption> textCaptions = (captions.textCaptions == null ||
+            captions.textCaptions!.isEmpty ||
+            captions.textCaptions![0] == TextCaption.none ||
+            position > captions.textCaptions![0].end ||
+            position < captions.textCaptions![0].start)
+        ? <TextCaption>[TextCaption.none]
+        : captions.textCaptions!;
+    final PictureCaption pictureCaption = (captions.pictureCaption == null ||
+            captions.pictureCaption == PictureCaption.none ||
+            position > captions.pictureCaption!.end ||
+            position < captions.pictureCaption!.start)
+        ? PictureCaption.none
+        : captions.pictureCaption!;
+
+    return Captions(textCaptions: textCaptions, pictureCaption: pictureCaption);
+  }
+
   /// Returns a new instance that has the same values as this current instance,
   /// except for any overrides passed in as arguments to [copyWidth].
   VideoPlayerValue copyWith({
     DurationRange? duration,
     Size? size,
     Duration? position,
-    Caption? caption,
+    Captions? captions,
     Duration? captionOffset,
     List<Track>? tracks,
     int? buffered,
@@ -201,12 +236,13 @@ class VideoPlayerValue {
     String? errorDescription = _defaultErrorDescription,
     bool? isCompleted,
     AdInfoFromDash? adInfo,
+    String? manifestInfo,
   }) {
     return VideoPlayerValue(
       duration: duration ?? this.duration,
       size: size ?? this.size,
       position: position ?? this.position,
-      caption: caption ?? this.caption,
+      captions: captions ?? _currentCaptions,
       captionOffset: captionOffset ?? this.captionOffset,
       tracks: tracks ?? this.tracks,
       buffered: buffered ?? this.buffered,
@@ -221,6 +257,7 @@ class VideoPlayerValue {
           : this.errorDescription,
       isCompleted: isCompleted ?? this.isCompleted,
       adInfo: adInfo,
+      manifestInfo: manifestInfo,
     );
   }
 
@@ -230,7 +267,7 @@ class VideoPlayerValue {
         'duration: $duration, '
         'size: $size, '
         'position: $position, '
-        'caption: $caption, '
+        'captions: $captions, '
         'captionOffset: $captionOffset, '
         'tracks: $tracks, '
         'buffered: $buffered, '
@@ -242,6 +279,7 @@ class VideoPlayerValue {
         'playbackSpeed: $playbackSpeed, '
         'errorDescription: $errorDescription, '
         'adInfo: $adInfo, '
+        'manifestInfo: $manifestInfo, '
         'isCompleted: $isCompleted),';
   }
 
@@ -253,7 +291,7 @@ class VideoPlayerValue {
           duration == other.duration &&
           size == other.size &&
           position == other.position &&
-          caption == other.caption &&
+          captions == other.captions &&
           captionOffset == other.captionOffset &&
           listEquals(tracks, other.tracks) &&
           buffered == other.buffered &&
@@ -265,6 +303,7 @@ class VideoPlayerValue {
           playbackSpeed == other.playbackSpeed &&
           errorDescription == other.errorDescription &&
           adInfo == other.adInfo &&
+          manifestInfo == other.manifestInfo &&
           isCompleted == other.isCompleted;
 
   @override
@@ -272,7 +311,7 @@ class VideoPlayerValue {
         duration,
         size,
         position,
-        caption,
+        captions,
         captionOffset,
         tracks,
         buffered,
@@ -284,6 +323,7 @@ class VideoPlayerValue {
         playbackSpeed,
         errorDescription,
         adInfo,
+        manifestInfo,
         isCompleted,
       );
 }
@@ -594,7 +634,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           // we use pause() and seekTo() to ensure the platform stops playing
           // and seeks to the last frame of the video.
           pause().then((void pauseResult) => seekTo(value.duration.end));
-          value = value.copyWith(isCompleted: true);
+          value = value.copyWith(isCompleted: true, captions: Captions.none);
           _durationTimer?.cancel();
         case VideoEventType.bufferingUpdate:
           value = value.copyWith(buffered: event.buffered);
@@ -603,18 +643,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         case VideoEventType.bufferingEnd:
           value = value.copyWith(isBuffering: false);
         case VideoEventType.subtitleUpdate:
-          final List<SubtitleAttribute> subtitleAttributes =
-              SubtitleAttribute.fromEventSubtitleAttrList(
-            event.subtitleAttributes,
-          );
-          final Caption caption = Caption(
-            number: 0,
-            start: value.position,
-            end: value.position + (event.duration?.end ?? Duration.zero),
-            text: event.text ?? '',
-            subtitleAttributes: subtitleAttributes,
-          );
-          value = value.copyWith(caption: caption);
+          final Captions? captions =
+              Captions.parseSubtitle(value.position, event.subtitlesInfo!);
+          value = value.copyWith(captions: captions);
         case VideoEventType.isPlayingStateUpdate:
           if (event.isPlaying ?? false) {
             value = value.copyWith(
@@ -626,10 +657,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             value = value.copyWith(isPlaying: event.isPlaying);
           }
         case VideoEventType.adFromDash:
-          final AdInfoFromDash? adInfo = AdInfoFromDash.fromAdInfoMap(
-            event.adInfo,
-          );
+          final AdInfoFromDash? adInfo =
+              AdInfoFromDash.fromAdInfoMap(event.adInfo);
           value = value.copyWith(adInfo: adInfo);
+        case VideoEventType.manifestInfoUpdated:
+          value = value.copyWith(manifestInfo: event.manifestInfo);
         case VideoEventType.unknown:
           break;
       }
@@ -637,7 +669,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
     if (closedCaptionFile != null) {
       _closedCaptionFile ??= await closedCaptionFile;
-      value = value.copyWith(caption: _getCaptionAt(value.position));
+      value = value.copyWith(
+          captions: Captions(
+              textCaptions: _getCaptionAt(value.position),
+              pictureCaption: _getPictureCaptionAt(value.position)));
     }
 
     if (drmConfigs?.licenseCallback != null) {
@@ -907,10 +942,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       return;
     }
     if (formatHint != VideoFormat.dash &&
-        (type == StreamingPropertyType.unwantedResolution ||
-            type == StreamingPropertyType.unwantedFramerate ||
-            type == StreamingPropertyType.updateSameLanguageCode ||
-            type == StreamingPropertyType.dashToken ||
+        (type == StreamingPropertyType.dashToken ||
             type == StreamingPropertyType.openHttpHeader)) {
       throw Exception(
           'setStreamingProperty().$type only support for dash format!');
@@ -1050,7 +1082,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       return false;
     }
 
-    if (formatHint == null || formatHint != VideoFormat.dash) {
+    if (formatHint != VideoFormat.dash) {
       throw Exception('updateDashToken() only support for dash format!');
     }
 
@@ -1112,7 +1144,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   void setCaptionOffset(Duration offset) {
     value = value.copyWith(
       captionOffset: offset,
-      caption: _getCaptionAt(value.position),
+      captions: Captions(
+          textCaptions: _getCaptionAt(value.position),
+          pictureCaption: _getPictureCaptionAt(value.position)),
     );
   }
 
@@ -1123,26 +1157,44 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   ///
   /// If no [closedCaptionFile] was specified, this will always return an empty
   /// [Caption].
-  Caption _getCaptionAt(Duration position) {
+  List<TextCaption> _getCaptionAt(Duration position) {
     if (_closedCaptionFile == null) {
-      return value.caption;
+      return (value.captions.textCaptions == null ||
+              value.captions.textCaptions!.isEmpty ||
+              value.captions.textCaptions![0] == TextCaption.none ||
+              position > value.captions.textCaptions![0].end ||
+              position < value.captions.textCaptions![0].start)
+          ? <TextCaption>[TextCaption.none]
+          : value.captions.textCaptions!;
     }
 
     final Duration delayedPosition = position + value.captionOffset;
     // TODO(johnsonmh): This would be more efficient as a binary search.
-    for (final Caption caption in _closedCaptionFile!.captions) {
-      if (caption.start <= delayedPosition && caption.end >= delayedPosition) {
-        return caption;
+    for (final TextCaption textCaption in _closedCaptionFile!.textCaptions) {
+      if (textCaption.start <= delayedPosition &&
+          textCaption.end >= delayedPosition) {
+        return <TextCaption>[textCaption];
       }
     }
 
-    return Caption.none;
+    return <TextCaption>[TextCaption.none];
+  }
+
+  PictureCaption _getPictureCaptionAt(Duration position) {
+    return (value.captions.pictureCaption == null ||
+            value.captions.pictureCaption == PictureCaption.none ||
+            position > value.captions.pictureCaption!.end ||
+            position < value.captions.pictureCaption!.start)
+        ? PictureCaption.none
+        : value.captions.pictureCaption!;
   }
 
   void _updatePosition(Duration position) {
     value = value.copyWith(
       position: position,
-      caption: _getCaptionAt(position),
+      captions: Captions(
+          textCaptions: _getCaptionAt(position),
+          pictureCaption: _getPictureCaptionAt(position)),
       isCompleted: position == value.duration.end,
     );
   }
@@ -1189,11 +1241,14 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
 /// Widget that displays the video controlled by [controller].
 class VideoPlayer extends StatefulWidget {
   /// Uses the given [controller] for all video rendered in this widget.
-  const VideoPlayer(this.controller, {super.key});
+  const VideoPlayer(this.controller, {super.key, this.scale = 1.0});
 
   /// The [VideoPlayerController] responsible for the video being rendered in
   /// this widget.
   final VideoPlayerController controller;
+
+  /// Scales the VideoPlayer widget size.
+  final double scale;
 
   @override
   State<VideoPlayer> createState() => _VideoPlayerState();
@@ -1233,26 +1288,30 @@ class _VideoPlayerState extends State<VideoPlayer> {
     WidgetsBinding.instance.addPostFrameCallback(_afterFrameLayout);
   }
 
+  bool _isInvalid(double value) {
+    return value.isInfinite || value.isNaN;
+  }
+
   void _afterFrameLayout(_) {
     if (widget.controller.value.isInitialized) {
-      final Rect currentRect = _getCurrentRect();
-      if (currentRect != Rect.zero && _playerRect != currentRect) {
+      final Rect rect = _getCurrentRect();
+      if (rect != Rect.zero && _playerRect != rect) {
+        final double offsetLeft = rect.left - rect.left.floor();
+        final double offsetTop = rect.top - rect.top.floor();
+        final double offsetWidth = rect.width.ceil() - rect.width;
+        final double offsetHeight = rect.height.ceil() - rect.height;
+        final int left = _isInvalid(rect.left) ? 0 : rect.left.floor();
+        final int top = _isInvalid(rect.top) ? 0 : rect.top.floor();
+        final int width = _isInvalid(rect.width)
+            ? 1
+            : rect.width.ceil() + ((offsetLeft > offsetWidth) ? 1 : 0);
+        final int height = _isInvalid(rect.height)
+            ? 1
+            : rect.height.ceil() + ((offsetTop > offsetHeight) ? 1 : 0);
+
         _videoPlayerPlatform.setDisplayGeometry(
-          _playerId,
-          (currentRect.left.isInfinite || currentRect.left.isNaN)
-              ? 0
-              : currentRect.left.toInt(),
-          (currentRect.top.isInfinite || currentRect.top.isNaN)
-              ? 0
-              : currentRect.top.toInt(),
-          (currentRect.width.isInfinite || currentRect.width.isNaN)
-              ? 1
-              : currentRect.width.toInt(),
-          (currentRect.height.isInfinite || currentRect.height.isNaN)
-              ? 1
-              : currentRect.height.toInt(),
-        );
-        _playerRect = currentRect;
+            _playerId, left, top, width, height);
+        _playerRect = rect;
       }
     }
     WidgetsBinding.instance.addPostFrameCallback(_afterFrameLayout);
@@ -1268,7 +1327,7 @@ class _VideoPlayerState extends State<VideoPlayer> {
     final double pixelRatio = WidgetsBinding.instance.window.devicePixelRatio;
     final RenderBox renderBox = renderObject as RenderBox;
     final Offset offset = renderBox.localToGlobal(Offset.zero) * pixelRatio;
-    final Size size = renderBox.size * pixelRatio;
+    final Size size = renderBox.size * pixelRatio * widget.scale;
     return offset & size;
   }
 
@@ -1549,50 +1608,143 @@ class _VideoProgressIndicatorState extends State<VideoProgressIndicator> {
 /// ```
 class ClosedCaption extends StatelessWidget {
   /// Creates a a new closed caption, designed to be used with
-  /// [VideoPlayerValue.caption].
+  /// [VideoPlayerValue.textCaption] and [VideoPlayerValue.pictureCaption].
   ///
   /// If [text] is null or empty, nothing will be displayed.
-  const ClosedCaption({super.key, this.text, this.textStyle});
+  const ClosedCaption({super.key, this.captions, this.customTextStyle});
 
-  /// The text that will be shown in the closed caption, or null if no caption
-  /// should be shown.
-  /// If the text is empty the caption will not be shown.
-  final String? text;
+  /// The captions that will be shown in the closed caption, or null.
+  final Captions? captions;
 
-  /// Specifies how the text in the closed caption should look.
-  ///
-  /// If null, defaults to [DefaultTextStyle.of(context).style] with size 36
-  /// font colored white.
-  final TextStyle? textStyle;
+  /// Users can use it to customize the subtitle style.
+  final TextStyle? customTextStyle;
 
   @override
   Widget build(BuildContext context) {
-    final String? text = this.text;
-    if (text == null || text.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (captions?.pictureCaption?.picture?.isNotEmpty ?? false) {
+      final PictureCaption pictureCaption = captions!.pictureCaption!;
+      final Image subtitleImage = Image.memory(pictureCaption.picture!,
+          width: pictureCaption.pictureWidth,
+          height: pictureCaption.pictureHeight, errorBuilder:
+              (BuildContext context, Object error, StackTrace? stackTrace) {
+        // ignore: avoid_print
+        print('[ClosedCaption] Image.memory error: $error');
+        // ignore: avoid_print
+        print('[ClosedCaption] StackTrace: $stackTrace');
 
-    final TextStyle effectiveTextStyle = textStyle ??
-        DefaultTextStyle.of(
-          context,
-        ).style.copyWith(fontSize: 36.0, color: Colors.white);
-
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 24.0),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: const Color(0xB8000000),
-            borderRadius: BorderRadius.circular(2.0),
-          ),
+        return const Text('');
+      });
+      return Align(
+          alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2.0),
-            child: Text(text, style: effectiveTextStyle),
-          ),
-        ),
-      ),
-    );
+            padding: const EdgeInsets.only(bottom: 24.0),
+            child: subtitleImage,
+          ));
+    } else {
+      if (captions?.textCaptions == null ||
+          captions?.textCaptions![0] == null) {
+        return const SizedBox.shrink();
+      }
+
+      final List<TextCaption> textCaptions = captions!.textCaptions!;
+
+      return Stack(
+        alignment: AlignmentDirectional.bottomCenter,
+        children: textCaptions
+            .asMap()
+            .entries
+            .map((MapEntry<int, TextCaption?> entry) {
+          final int index = entry.key;
+          final TextCaption? textCaption = entry.value;
+          final String? text = textCaption?.text;
+          if (text == null || text.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          return Positioned.fill(child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+            final double dynamicFontSize =
+                constraints.maxHeight * (textCaption?.fontSize ?? 1 / 15.0);
+
+            final TextStyle effectiveTextStyle = customTextStyle ??
+                ((textCaption?.textStyle == null)
+                    ? DefaultTextStyle.of(
+                        context,
+                      ).style.copyWith(fontSize: 36.0, color: Colors.white)
+                    : textCaption!.textStyle!
+                        .copyWith(fontSize: dynamicFontSize));
+
+            if (customTextStyle != null ||
+                textCaption?.textOriginAndExtent == null) {
+              const double bottomOffset = 24.0;
+              const double lineHeight = 43.5;
+              return Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                      bottom: bottomOffset +
+                          (textCaptions.length - 1 - index) * lineHeight),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                        color: textCaption?.windowBgColor ??
+                            const Color(0xB8000000),
+                        borderRadius: BorderRadius.circular(2.0)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                      child: Text(
+                        text,
+                        style: effectiveTextStyle,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            } else {
+              return Align(
+                alignment: Alignment(
+                  -1 + 2 * textCaption!.textOriginAndExtent!.originX,
+                  -1 + 2 * textCaption.textOriginAndExtent!.originY,
+                ),
+                child: FractionallySizedBox(
+                  widthFactor: textCaption.textOriginAndExtent?.extentWidth,
+                  heightFactor: textCaption.textOriginAndExtent?.extentHeight,
+                  child: Stack(
+                    children: <Widget>[
+                      ColoredBox(
+                        color: textCaption.windowBgColor ??
+                            const Color(0xB8000000),
+                        child: Align(
+                            alignment:
+                                textCaption.textAlign ?? Alignment.center,
+                            child: Text(
+                              text,
+                              style: effectiveTextStyle,
+                              textAlign: TextAlign.center,
+                            )),
+                      ),
+                      ColoredBox(
+                        color: Colors.transparent,
+                        child: Align(
+                            alignment:
+                                textCaption.textAlign ?? Alignment.center,
+                            child: Text(
+                              text,
+                              style: effectiveTextStyle.copyWith(
+                                  backgroundColor: Colors.transparent,
+                                  foreground: textCaption.fontForeground),
+                              textAlign: TextAlign.center,
+                            )),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+          }));
+        }).toList(),
+      );
+    }
   }
 }
 
