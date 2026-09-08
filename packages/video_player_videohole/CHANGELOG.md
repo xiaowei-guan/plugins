@@ -1,3 +1,7 @@
+## 0.5.11
+
+* Replace ecore-wl2 code with tizen window manager plugin.
+
 ## 0.5.10
 
 * Update the repository URL to use the `main` branch.
