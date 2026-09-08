@@ -371,8 +371,6 @@ bool MediaPlayer::SetDisplay() {
     return false;
   }
 
-  // The window geometry is passed from the Dart side via the window channel
-  // (tizen/internal/window -> getWindowGeometry) through the CreateMessage.
   int32_t x = 0, y = 0, width = 0, height = 0;
   const flutter::EncodableMap *window_geometry =
       create_message_.window_geometry();
@@ -382,12 +380,12 @@ bool MediaPlayer::SetDisplay() {
     width = flutter_common::GetValue(window_geometry, "width", 0);
     height = flutter_common::GetValue(window_geometry, "height", 0);
   }
-  LOG_INFO("[MediaPlayer] Window geometry: x[%d], y[%d], width[%d], height[%d].",
-           x, y, width, height);
+  LOG_INFO(
+      "[MediaPlayer] Window geometry: x[%d], y[%d], width[%d], height[%d].", x,
+      y, width, height);
 
   int ret = media_player_proxy_->player_set_ecore_wl_display(
-      player_, PLAYER_DISPLAY_TYPE_OVERLAY, native_window, x, y, width,
-      height);
+      player_, PLAYER_DISPLAY_TYPE_OVERLAY, native_window, x, y, width, height);
   if (ret != PLAYER_ERROR_NONE) {
     LOG_ERROR("[MediaPlayer] player_set_ecore_wl_display failed: %s.",
               get_error_message(ret));

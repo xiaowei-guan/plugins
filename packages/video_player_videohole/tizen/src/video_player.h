@@ -15,6 +15,7 @@
 #include <queue>
 #include <string>
 #include <utility>
+
 #include "messages.h"
 
 namespace video_player_videohole_tizen {
