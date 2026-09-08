@@ -830,6 +830,13 @@ bool MediaPlayer::RestorePlayer(const CreateMessage *restore_message,
              restore_message->uri()->c_str());
     url_ = *restore_message->uri();
     create_message_ = *restore_message;
+  } else {
+    if (restore_message->window_geometry()) {
+      // Apply the refreshed geometry even when the URI is absent, so a window
+      // moved or resized while suspended recreates its overlay at the new
+      // bounds.
+      create_message_.set_window_geometry(*restore_message->window_geometry());
+    }
   }
 
   LOG_INFO("[MediaPlayer] Player previous playing time: %llu ms",
