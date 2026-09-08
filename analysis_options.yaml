@@ -89,7 +89,7 @@ linter:
     # - cascade_invocations # doesn't match the typical style of this repo
     - cast_nullable_to_non_nullable
     # - close_sinks # not reliable enough
-    # - collection_methods_unrelated_type # TODO(jsuya): Different from flutter/packages: temporary. Disabled to pass CI on Flutter 3.47.0; re-enable after fixing existing violations (https://github.com/flutter-tizen/plugins/issues/1089).
+    - collection_methods_unrelated_type
     - combinators_ordering
     # - comment_references # blocked on https://github.com/dart-lang/linter/issues/1142
     - conditional_uri_does_not_exist
@@ -205,14 +205,14 @@ linter:
     - sort_unnamed_constructors_first
     - specify_nonobvious_local_variable_types
     - specify_nonobvious_property_types
-    # - strict_top_level_inference # TODO(jsuya): Different from flutter/packages: temporary. Disabled to pass CI on Flutter 3.47.0; re-enable after fixing existing violations (https://github.com/flutter-tizen/plugins/issues/1089).
+    - strict_top_level_inference
     - test_types_in_equals
     - throw_in_finally
     - tighten_type_of_initializing_formals
     - type_annotate_public_apis
     - type_init_formals
     - type_literal_in_constant_pattern
-    # - unintended_html_in_doc_comment # TODO(jsuya): Different from flutter/packages: temporary. Disabled to pass CI on Flutter 3.47.0; re-enable after fixing existing violations (https://github.com/flutter-tizen/plugins/issues/1089).
+    - unintended_html_in_doc_comment
     - unawaited_futures # DIFFERENT FROM FLUTTER/FLUTTER: It's disabled there for "too many false positives"; that's not an issue here, and missing awaits have caused production issues in plugins.
     - unnecessary_await_in_return
     - unnecessary_brace_in_string_interps
@@ -260,7 +260,7 @@ linter:
     - use_setters_to_change_properties
     # - use_string_buffers # has false positives: https://github.com/dart-lang/sdk/issues/34182
     - use_string_in_part_of_directives
-    # - use_super_parameters # TODO(jsuya): Different from flutter/packages: temporary. Disabled to pass CI on Flutter 3.47.0; re-enable after fixing existing violations (https://github.com/flutter-tizen/plugins/issues/1089).
+    - use_super_parameters
     - use_test_throws_matchers
     # - use_to_and_as_if_applicable # has false positives, so we prefer to catch this by code-review
     - use_truncating_division
