@@ -7,6 +7,8 @@
 
 #include <Evas.h>
 
+#include <optional>
+
 typedef enum {
   EWK_TOUCH_START,
   EWK_TOUCH_MOVE,
@@ -68,7 +70,7 @@ typedef void (*EwkViewOffscreenRenderingEnabledSetFnPtr)(Evas_Object* obj,
 typedef void (*EwkViewImeWindowSetFnPtr)(Evas_Object* obj, void* window);
 typedef Eina_Bool (*EwkViewKeyEventsEnabledSetFnPtr)(Evas_Object* obj,
                                                      Eina_Bool enabled);
-typedef Eina_Bool (*EwkViewSupportVideoHoleSetFnPtr)(Evas_Object* obj,
+typedef Eina_Bool (*EwkViewSetSupportVideoHoleFnPtr)(Evas_Object* obj,
                                                      void* window,
                                                      Eina_Bool enabled,
                                                      Eina_Bool boo);
@@ -90,7 +92,7 @@ typedef Eina_Bool (*EwkViewMainFrameScrollbarVisibleSetFnPtr)(
     Evas_Object* obj, Eina_Bool enabled);
 
 typedef struct {
-  EwkViewBgColorSetFnPtr SetBackgroundColor = nullptr;
+  EwkViewBgColorSetFnPtr BgColorSet = nullptr;
   EwkViewTouchEventsEnabledSetFnPtr TouchEventsEnabledSet = nullptr;
   EwkViewFeedTouchEventFnPtr FeedTouchEvent = nullptr;
   EwkViewMouseEventsEnabledSetFnPtr MouseEventsEnabledSet = nullptr;
@@ -103,7 +105,7 @@ typedef struct {
       nullptr;
   EwkViewImeWindowSetFnPtr ImeWindowSet = nullptr;
   EwkViewKeyEventsEnabledSetFnPtr KeyEventsEnabledSet = nullptr;
-  EwkViewSupportVideoHoleSetFnPtr SupportVideoHoleSet = nullptr;
+  EwkViewSetSupportVideoHoleFnPtr SetSupportVideoHole = nullptr;
   EwkViewJavaScriptAlertCallbackSetFnPtr OnJavaScriptAlert = nullptr;
   EwkViewJavaScriptConfirmCallbackSetFnPtr OnJavaScriptConfirm = nullptr;
   EwkViewJavaScriptPromptCallbackSetFnPtr OnJavaScriptPrompt = nullptr;
@@ -172,6 +174,8 @@ class EwkInternalApiBinding {
   EwkInternalApiBinding(const EwkInternalApiBinding&) = delete;
   EwkInternalApiBinding& operator=(const EwkInternalApiBinding&) = delete;
 
+  // Resolves every symbol, and returns true only if all of them were found.
+  // Safe to call more than once — the first result is cached.
   bool Initialize();
 
   EwkViewProcTable view;
@@ -183,6 +187,7 @@ class EwkInternalApiBinding {
   EwkInternalApiBinding();
 
   void* handle_ = nullptr;
+  std::optional<bool> initialize_result_;
 };
 
 #endif  // FLUTTER_PLUGIN_EWK_INTERNAL_API_BINDING_H_
