@@ -371,14 +371,21 @@ bool MediaPlayer::SetDisplay() {
     return false;
   }
 
-  int32_t x = 0, y = 0, width = 0, height = 0;
   const flutter::EncodableMap *window_geometry =
       create_message_.window_geometry();
-  if (window_geometry) {
-    x = flutter_common::GetValue(window_geometry, "x", 0);
-    y = flutter_common::GetValue(window_geometry, "y", 0);
-    width = flutter_common::GetValue(window_geometry, "width", 0);
-    height = flutter_common::GetValue(window_geometry, "height", 0);
+  if (!window_geometry) {
+    LOG_ERROR("[MediaPlayer] Window geometry is missing.");
+    return false;
+  }
+  int32_t x = flutter_common::GetValue(window_geometry, "x", 0);
+  int32_t y = flutter_common::GetValue(window_geometry, "y", 0);
+  int32_t width = flutter_common::GetValue(window_geometry, "width", 0);
+  int32_t height = flutter_common::GetValue(window_geometry, "height", 0);
+  if (width <= 0 || height <= 0) {
+    LOG_ERROR(
+        "[MediaPlayer] Invalid window geometry size: width[%d], height[%d].",
+        width, height);
+    return false;
   }
   LOG_INFO(
       "[MediaPlayer] Window geometry: x[%d], y[%d], width[%d], height[%d].", x,
@@ -832,9 +839,6 @@ bool MediaPlayer::RestorePlayer(const CreateMessage *restore_message,
     create_message_ = *restore_message;
   } else {
     if (restore_message->window_geometry()) {
-      // Apply the refreshed geometry even when the URI is absent, so a window
-      // moved or resized while suspended recreates its overlay at the new
-      // bounds.
       create_message_.set_window_geometry(*restore_message->window_geometry());
     }
   }
