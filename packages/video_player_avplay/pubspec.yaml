@@ -22,6 +22,7 @@ dependencies:
   flutter_tizen: ^0.2.4
   html: ^0.15.0
   plugin_platform_interface: ^2.1.0
+  tizen_window_manager: ^0.2.0
 
 dev_dependencies:
   flutter_test:

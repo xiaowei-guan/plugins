@@ -132,7 +132,7 @@ int64_t MediaPlayer::Create(const std::string &uri,
     }
   }
 
-  if (!SetDisplay()) {
+  if (!SetDisplay(create_message.window_geometry())) {
     LOG_ERROR("[MediaPlayer] Failed to set display.");
     return -1;
   }
@@ -418,16 +418,29 @@ bool MediaPlayer::IsReady() {
   return PLAYER_STATE_READY == state;
 }
 
-bool MediaPlayer::SetDisplay() {
+bool MediaPlayer::SetDisplay(const flutter::EncodableMap *window_geometry) {
+  if (!window_geometry) {
+    LOG_ERROR("[MediaPlayer] window_geometry is null.");
+    return false;
+  }
+
   void *native_window = GetWindowHandle();
   if (!native_window) {
     LOG_ERROR("[MediaPlayer] Could not get a native window handle.");
     return false;
   }
 
-  int x = 0, y = 0, width = 0, height = 0;
-  ecore_wl2_window_proxy_->ecore_wl2_window_geometry_get(native_window, &x, &y,
-                                                         &width, &height);
+  int x = flutter_common::GetValue(window_geometry, "x", 0);
+  int y = flutter_common::GetValue(window_geometry, "y", 0);
+  int width = flutter_common::GetValue(window_geometry, "width", 0);
+  int height = flutter_common::GetValue(window_geometry, "height", 0);
+
+  if (width <= 0 || height <= 0) {
+    LOG_ERROR("[MediaPlayer] Invalid window geometry: width=%d, height=%d.",
+              width, height);
+    return false;
+  }
+
   int ret = media_player_proxy_->player_set_ecore_wl_display(
       player_, PLAYER_DISPLAY_TYPE_OVERLAY, native_window, x, y, width, height);
   if (ret != PLAYER_ERROR_NONE) {
