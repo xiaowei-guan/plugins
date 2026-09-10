@@ -1,6 +1,13 @@
-## NEXT
+## 0.8.17
 
 * Resolve `strict_top_level_inference` lint.
+* Update plusplayer
+  1. [DASH] Refactor engine into modular directories.
+  2. [DASH] Improve SAM score calculation.
+  3. [DASH] Fix CURLE_OPERATION_TIMEOUT error with big segment size under poor network.
+  4. [HLS] Fix audio avio_read stuck issue for MPEGTS content.
+  5. [HLS] Fix feeder::stop stuck when trackrenderer is under prepare.
+
 
 ## 0.8.16
 
