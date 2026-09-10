@@ -436,10 +436,12 @@ bool PlusPlayer::SetDisplay(const flutter::EncodableMap *window_geometry) {
     LOG_ERROR("[PlusPlayer] Could not get a native window handle.");
     return false;
   }
-  int x = flutter_common::GetValue(window_geometry, "x", 0);
-  int y = flutter_common::GetValue(window_geometry, "y", 0);
-  int width = flutter_common::GetValue(window_geometry, "width", 0);
-  int height = flutter_common::GetValue(window_geometry, "height", 0);
+  int64_t x = flutter_common::GetValue(window_geometry, "x", (int64_t)0);
+  int64_t y = flutter_common::GetValue(window_geometry, "y", (int64_t)0);
+  int64_t width =
+      flutter_common::GetValue(window_geometry, "width", (int64_t)0);
+  int64_t height =
+      flutter_common::GetValue(window_geometry, "height", (int64_t)0);
 
   if (width <= 0 || height <= 0) {
     LOG_ERROR("[PlusPlayer] Invalid window geometry: width=%d, height=%d.",
