@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:tizen_window_manager/tizen_window_manager.dart';
 
 import '../video_player_platform_interface.dart';
 import 'messages.g.dart';
@@ -16,6 +17,18 @@ import 'tracks.dart';
 /// Pigeon-generated [VideoPlayerVideoholeApi].
 class VideoPlayerTizen extends VideoPlayerPlatform {
   final VideoPlayerVideoholeApi _api = VideoPlayerVideoholeApi();
+
+  /// Fetches the window geometry via the tizen_window_manager plugin.
+  ///
+  /// Returns null if the geometry is not available.
+  Future<Map<Object?, Object?>?> _getWindowGeometry() async {
+    try {
+      final Map<String, int> geometry = await WindowManager.getGeometry();
+      return Map<Object?, Object?>.from(geometry);
+    } on Exception {
+      return null;
+    }
+  }
 
   @override
   Future<void> init() {
@@ -46,6 +59,8 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
       case DataSourceType.contentUri:
         message.uri = dataSource.uri;
     }
+
+    message.windowGeometry = await _getWindowGeometry();
 
     final PlayerMessage response = await _api.create(message);
     return response.playerId;
@@ -295,7 +310,7 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
     int playerId, {
     DataSource? dataSource,
     int resumeTime = -1,
-  }) {
+  }) async {
     final CreateMessage message = CreateMessage();
 
     if (dataSource != null) {
@@ -315,6 +330,8 @@ class VideoPlayerTizen extends VideoPlayerPlatform {
           message.uri = dataSource.uri;
       }
     }
+
+    message.windowGeometry = await _getWindowGeometry();
 
     return _api.restore(playerId, message, resumeTime);
   }

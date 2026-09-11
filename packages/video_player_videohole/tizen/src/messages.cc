@@ -264,7 +264,8 @@ CreateMessage::CreateMessage(const std::string* asset, const std::string* uri,
                              const std::string* format_hint,
                              const EncodableMap* http_headers,
                              const EncodableMap* drm_configs,
-                             const EncodableMap* player_options)
+                             const EncodableMap* player_options,
+                             const EncodableMap* window_geometry)
     : asset_(asset ? std::optional<std::string>(*asset) : std::nullopt),
       uri_(uri ? std::optional<std::string>(*uri) : std::nullopt),
       package_name_(package_name ? std::optional<std::string>(*package_name)
@@ -277,7 +278,10 @@ CreateMessage::CreateMessage(const std::string* asset, const std::string* uri,
                                : std::nullopt),
       player_options_(player_options
                           ? std::optional<EncodableMap>(*player_options)
-                          : std::nullopt) {}
+                          : std::nullopt),
+      window_geometry_(window_geometry
+                           ? std::optional<EncodableMap>(*window_geometry)
+                           : std::nullopt) {}
 
 const std::string* CreateMessage::asset() const {
   return asset_ ? &(*asset_) : nullptr;
@@ -366,9 +370,22 @@ void CreateMessage::set_player_options(const EncodableMap& value_arg) {
   player_options_ = value_arg;
 }
 
+const EncodableMap* CreateMessage::window_geometry() const {
+  return window_geometry_ ? &(*window_geometry_) : nullptr;
+}
+
+void CreateMessage::set_window_geometry(const EncodableMap* value_arg) {
+  window_geometry_ =
+      value_arg ? std::optional<EncodableMap>(*value_arg) : std::nullopt;
+}
+
+void CreateMessage::set_window_geometry(const EncodableMap& value_arg) {
+  window_geometry_ = value_arg;
+}
+
 EncodableList CreateMessage::ToEncodableList() const {
   EncodableList list;
-  list.reserve(7);
+  list.reserve(8);
   list.push_back(asset_ ? EncodableValue(*asset_) : EncodableValue());
   list.push_back(uri_ ? EncodableValue(*uri_) : EncodableValue());
   list.push_back(package_name_ ? EncodableValue(*package_name_)
@@ -381,6 +398,8 @@ EncodableList CreateMessage::ToEncodableList() const {
                               : EncodableValue());
   list.push_back(player_options_ ? EncodableValue(*player_options_)
                                  : EncodableValue());
+  list.push_back(window_geometry_ ? EncodableValue(*window_geometry_)
+                                  : EncodableValue());
   return list;
 }
 
@@ -414,6 +433,11 @@ CreateMessage CreateMessage::FromEncodableList(const EncodableList& list) {
   if (!encodable_player_options.IsNull()) {
     decoded.set_player_options(
         std::get<EncodableMap>(encodable_player_options));
+  }
+  auto& encodable_window_geometry = list[7];
+  if (!encodable_window_geometry.IsNull()) {
+    decoded.set_window_geometry(
+        std::get<EncodableMap>(encodable_window_geometry));
   }
   return decoded;
 }

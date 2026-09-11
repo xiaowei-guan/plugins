@@ -1,5 +1,6 @@
-## NEXT
+## 0.5.11
 
+* Replace ecore-wl2 code with tizen window manager plugin.
 * Resolve `strict_top_level_inference` lint.
 
 ## 0.5.10

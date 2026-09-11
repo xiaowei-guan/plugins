@@ -15,9 +15,7 @@ static int64_t player_index = 1;
 
 VideoPlayer::VideoPlayer(flutter::BinaryMessenger *messenger,
                          FlutterDesktopViewRef flutter_view)
-    : ecore_wl2_window_proxy_(std::make_unique<EcoreWl2WindowProxy>()),
-      binary_messenger_(messenger),
-      flutter_view_(flutter_view) {
+    : binary_messenger_(messenger), flutter_view_(flutter_view) {
   // Initialize GMainContext and event dispatch state
   main_context_ = std::unique_ptr<GMainContext, GMainContextDeleter>(
       g_main_context_ref_thread_default());
